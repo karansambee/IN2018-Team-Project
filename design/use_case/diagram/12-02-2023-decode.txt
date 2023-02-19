@@ -1,0 +1,58 @@
+Author:
+Alfred Manville
+Key:
+0^ - Inherit / Include 0
+^0 - Base 0
+[0]x - x Extends 0
+x[0] - x Provides 0
+= - Done
+Actors:
+User^0
+0^Advisor
+0^Office Manager
+0^System Administrator
+Time
+Database
+Logbook
+Use Cases:
+=SignIn
+=SignOut
+=1^ApplyDiscount[0]
+=[0]FixedDiscount
+=[0]FlexibleDiscount
+=BackupData
+=RestoreData
+=GenerateTicketStockReport
+=GenerateInterlineSalesReport^5
+=5^2^GenerateInterlineIndividualSalesReport
+=5^GenerateInterlineFullSalesReport
+=GenerateLocalSalesReport^6
+=6^2^GenerateLocalIndividualSalesReport
+=6^GenerateLocalFullSalesReport
+=RecordPayment[1]^0
+=0^RecordCardPayment
+=0^RecordCashPayment
+=[1]RecordUSDConvertedPayment
+=1^[1]RecordLatePayment
+=RetrievePaymentRecord^3
+=3^ModifyPaymentRecord
+=3^RecordRefund
+=CreateCustomerAccount
+=1^ModifyCustomerAccount
+=1^DeleteCustomerAccount
+=RetrieveCustomerAccount^1
+=CreateBlankStock
+=AccessBlankStock^4
+=4^RecordRevokeBlank
+=4^AssignBlank[3]
+=4^ReturnUnusedBlankStock
+=[3]ReassignBlank
+=2^SetCommissionRate[2]
+=[2]SetAdvisorCommissionRate
+=SetExchangeRates
+=SetTaxRates
+=CreateAccount
+=2^ModifyAccount
+=2^DeleteAccount
+=RetrieveAccount^2
+=1^3^PaymentTooLateAlert
