@@ -1,7 +1,7 @@
 /* Complete set of DDL statements (CREATE TABLE statements) */
 
 CREATE TABLE Blank (
-  BlankNumber      int(10) NOT NULL, 
+  BlankNumber      varchar(10) NOT NULL, 
   StaffID          int(10) NOT NULL, 
   BlankDescription varchar(255) NOT NULL, 
   Returned         int(1) NOT NULL, 
@@ -13,14 +13,14 @@ CREATE TABLE Blank (
 CREATE TABLE Customer (
   CustomerID           int(10) NOT NULL AUTO_INCREMENT, 
   DiscountPlanID       int(10), 
-  CurrencyName         varchar(10), 
-  DiscountAccumulation decimal(10, 2), 
+  CurrencyName         varchar(10) NOT NULL, 
+  DiscountAccumulation decimal(10, 2) NOT NULL, 
   Firstname            varchar(15) NOT NULL, 
   Surname              varchar(15) NOT NULL, 
   PhoneNumber          varchar(15) NOT NULL, 
   EmailAddress         varchar(25), 
   DateOfBirth          date NOT NULL, 
-  Postocde             varchar(7) NOT NULL, 
+  Postcode             varchar(7) NOT NULL, 
   HouseNumber          varchar(4) NOT NULL, 
   StreetName           varchar(20) NOT NULL, 
   PRIMARY KEY (CustomerID)
@@ -30,9 +30,7 @@ CREATE TABLE DiscountPlan (
   DiscountPlanID     int(10) NOT NULL AUTO_INCREMENT, 
   DiscountType       varchar(8) NOT NULL, 
   DiscountPercentage decimal(4, 2) NOT NULL, 
-  PRIMARY KEY (DiscountPlanID)
-);
-
+  PRIMARY KEY (DiscountPlanID));
 CREATE TABLE ExchangeRate (
   CurrencyName      varchar(10) NOT NULL, 
   USDConversionRate decimal(8, 6) NOT NULL, 
@@ -48,7 +46,7 @@ CREATE TABLE Refund (
 );
 
 CREATE TABLE Sale (
-  BlankNumber   int(10) NOT NULL, 
+  BlankNumber   varchar(10) NOT NULL, 
   CustomerID    int(10) NOT NULL, 
   SaleType      varchar(10) NOT NULL, 
   CommissonRate decimal(4, 2) NOT NULL, 
@@ -80,21 +78,22 @@ CREATE TABLE Staff (
 
 CREATE TABLE Transcation (
   TranscationID   int(10) NOT NULL AUTO_INCREMENT, 
-  BlankNumber     int(10) NOT NULL, 
+  BlankNumber     varchar(10) NOT NULL, 
   CurrencyName    varchar(10) NOT NULL, 
   AmountPaid      decimal(11, 2) NOT NULL, 
   AmountPaidInUSD decimal(7, 2), 
   TransactionDate date NOT NULL, 
-  PaymentType     varchar(4) NOT NULL, 
+  PaymentType     varchar(6) NOT NULL, 
   CardNumber      int(19), 
   ChequeNumber    int(6), 
   PRIMARY KEY (TranscationID)
 );
 
+
 /* 2 INSERT Statements */
 
 INSERT INTO Customer VALUES (
-    NULL,
+    DEFAULT,
     NULL,
     "USD",
     0,
@@ -105,11 +104,11 @@ INSERT INTO Customer VALUES (
     "1965-05-12",
     "RG3 2IK",
     "233",
-    "Albert Road",  
+    "Albert Road"
 );
 
 INSERT INTO DiscountPlan VALUES (
-    NULL,
+    DEFAULT,
     "FIXED",
     4.5
 );
@@ -122,7 +121,7 @@ SET DiscountPlanID = 1
 WHERE CustomerID = 1;
 
 UPDATE Customer 
-SET PostCode = "PG4 4JK", HouseNumber = "5A", StreetName = "St. Johns Street"
+SET Postcode = "PG4 4JK", HouseNumber = "5A", StreetName = "St. Johns Street"
 WHERE CustomerID = 1;
 
 
@@ -150,7 +149,7 @@ WHERE DiscountPlanID = 1;
 /* Report 1 would be an Interline Sales Report an Report 2 would be a Domestic Sales Report */
 
 INSERT INTO Staff VALUES (
-    NULL,
+    DEFAULT,
     "Travel Agent",
     3.50,
     "GDP",
@@ -166,26 +165,23 @@ INSERT INTO Staff VALUES (
     "DD$%FdsNC2!Dnd"
 );
 
-INSERT INTO Blank VALUES (
-    444 10023489, 1, "London to Seoul, Seoul to Manila", 0, 0, 0,
-    444 43432435, 1, "London to Tokoyo, Tokoyo to Dublin", 0, 0, 0,
-    440 13434491, 1, "London to Pairs, Paris to Lyon", 0, 0, 0,
-    101 50023455, 1, "Liverpool to London", 0, 0, 0,
-    101 40454431, 1, "Manchester to Luton", 0, 0, 0
-);
+INSERT INTO Blank VALUES 
+    ("4441003489", 1, "London to Seoul, Seoul to Manila", 0, 0, 0),
+    ("4444343235", 1, "London to Tokoyo, Tokoyo to Dublin", 0, 0, 0),
+    ("4401344491", 1, "London to Pairs, Paris to Lyon", 0, 0, 0),
+    ("1015003455", 1, "Liverpool to London", 0, 0, 0),
+    ("1014044431", 1, "Manchester to Luton", 0, 0, 0);
 
-INSERT INTO Sale VALUES (
-    444 10023489, 1, "INTERLINE", 3.50, "2023-02-01", "2023-03-02", 1000.50, 200.00, 30.00,
-    444 43432435, 1, "INTERLINE", 3.50, "2023-02-04", "2023-03-05", 500.00, 100.00, 56.00,
-    440 13434491, 1, "INTERLINE", 3.50, "2023-02-05", "2023-03-06", 350.50, 50.00, 20.00,
-    101 50023455, 1, "DOMESTIC", 3.50, "2023-02-25", "2023-03-26", 187.40, 65.00, NULL,
-    101 40454431, 1, "DOMESTIC", 3.50, "2023-02-25", "2023-03-26", 187.00, 75.00, NULL
-);
+INSERT INTO Sale VALUES 
+    ("4441023489", 1, "INTERLINE", 3.50, "2023-02-01", "2023-03-02", 1000.50, 200.00, 30.00),
+    ("4444343235", 1, "INTERLINE", 3.50, "2023-02-04", "2023-03-05", 500.00, 100.00, 56.00),
+    ("4401343491", 1, "INTERLINE", 3.50, "2023-02-05", "2023-03-06", 350.50, 50.00, 20.00),
+    ("1015023455", 1, "DOMESTIC", 3.50, "2023-02-25", "2023-03-26", 187.40, 65.00, NULL),
+    ("1014054431", 1, "DOMESTIC", 3.50, "2023-02-25", "2023-03-26", 187.00, 75.00, NULL);
 
-INSERT INTO Transcation VALUES (
-    1, 444 10023489, "USD", 1230.50, NULL, "2023-02-04", "CASH", NULL, NULL,
-    2, 444 43432435, "USD", 656.00, NULL, "2023-02-06", "CARD", 353435218, NULL,
-    3, 440 13434491, "USD", 420.00, NULL, "2023-02-08", "CASH", NULL, NULL,
-    4, 101 50023455, "GDP", 252.40, 302.52, "2023-02-25", "CASH", NULL, NULL,
-    5, 101 40454431, "GDP", 262.00, 314.04, "2023-02-27", "CHEQUE", NULL, 978424910
-);
+INSERT INTO Transcation VALUES 
+    (1, "4441023489", "USD", 1230.50, NULL, "2023-02-04", "CASH", NULL, NULL),
+    (2, "4444332435", "USD", 656.00, NULL, "2023-02-06", "CARD", 353435218, NULL),
+    (3, "4401344491", "USD", 420.00, NULL, "2023-02-08", "CASH", NULL, NULL),
+    (4, "1015002455", "GDP", 252.40, 302.52, "2023-02-25", "CASH", NULL, NULL),
+    (5, "1014045431", "GDP", 262.00, 314.04, "2023-02-27", "CHEQUE", NULL, 978424910);
