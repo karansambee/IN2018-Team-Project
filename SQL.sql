@@ -110,7 +110,7 @@ INSERT INTO Customer VALUES (
 
 INSERT INTO DiscountPlan VALUES (
     NULL,
-    "FIXED"
+    "FIXED",
     4.5
 );
 
@@ -153,7 +153,7 @@ INSERT INTO Staff VALUES (
     NULL,
     "Travel Agent",
     3.50,
-    "GDP"
+    "GDP",
     "Percy",
     "Benedict",
     "0421135672",
@@ -167,10 +167,10 @@ INSERT INTO Staff VALUES (
 );
 
 INSERT INTO Blank VALUES (
-    444 10023489, 1, "London to Seoul, Seoul to Manila", 0, 0, 0
-    444 43432435, 1, "London to Tokoyo, Tokoyo to Dublin", 0, 0, 0
-    440 13434491, 1, "London to Pairs, Paris to Lyon", 0, 0, 0
-    101 50023455, 1, "Liverpool to London", 0, 0, 0
+    444 10023489, 1, "London to Seoul, Seoul to Manila", 0, 0, 0,
+    444 43432435, 1, "London to Tokoyo, Tokoyo to Dublin", 0, 0, 0,
+    440 13434491, 1, "London to Pairs, Paris to Lyon", 0, 0, 0,
+    101 50023455, 1, "Liverpool to London", 0, 0, 0,
     101 40454431, 1, "Manchester to Luton", 0, 0, 0
 );
 
@@ -178,14 +178,14 @@ INSERT INTO Sale VALUES (
     444 10023489, 1, "INTERLINE", 3.50, "2023-02-01", "2023-03-02", 1000.50, 200.00, 30.00,
     444 43432435, 1, "INTERLINE", 3.50, "2023-02-04", "2023-03-05", 500.00, 100.00, 56.00,
     440 13434491, 1, "INTERLINE", 3.50, "2023-02-05", "2023-03-06", 350.50, 50.00, 20.00,
-    101 50023455, 1, "DOMESTIC", 3.50, "2023-02-25", "2023-03-26", 187.40, 65.00, NULL
+    101 50023455, 1, "DOMESTIC", 3.50, "2023-02-25", "2023-03-26", 187.40, 65.00, NULL,
     101 40454431, 1, "DOMESTIC", 3.50, "2023-02-25", "2023-03-26", 187.00, 75.00, NULL
 );
 
 INSERT INTO Transcation VALUES (
     1, 444 10023489, "USD", 1230.50, NULL, "2023-02-04", "CASH", NULL, NULL,
-    2, 444 43432435, "USD", 656.00, NULL, "2023-02-06", "CARD", 353435218, NULL
-    3, 440 13434491, "USD", 420.00, NULL, "2023-02-08", "CASH", NULL, NULL
-    4, 101 50023455, "GDP", 252.40, 302.52, "2023-02-25", "CASH", NULL, NULL
+    2, 444 43432435, "USD", 656.00, NULL, "2023-02-06", "CARD", 353435218, NULL,
+    3, 440 13434491, "USD", 420.00, NULL, "2023-02-08", "CASH", NULL, NULL,
+    4, 101 50023455, "GDP", 252.40, 302.52, "2023-02-25", "CASH", NULL, NULL,
     5, 101 40454431, "GDP", 262.00, 314.04, "2023-02-27", "CHEQUE", NULL, 978424910
 );
