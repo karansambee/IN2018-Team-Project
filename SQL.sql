@@ -71,7 +71,7 @@ CREATE TABLE Staff (
   EmailAddress   varchar(25) NOT NULL, 
   DateOfBirth    date NOT NULL, 
   Postcode       varchar(7) NOT NULL, 
-  MobileNumber   varchar(4) NOT NULL, 
+  HouseNumber    varchar(4) NOT NULL, 
   StreetName     varchar(20) NOT NULL, 
   HashedPassword varchar(255) NOT NULL, 
   PasswordSalt   varchar(255) NOT NULL, 
