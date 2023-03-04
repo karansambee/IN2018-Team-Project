@@ -30,7 +30,9 @@ CREATE TABLE DiscountPlan (
   DiscountPlanID     int(10) NOT NULL AUTO_INCREMENT, 
   DiscountType       varchar(8) NOT NULL, 
   DiscountPercentage decimal(4, 2) NOT NULL, 
-  PRIMARY KEY (DiscountPlanID));
+  PRIMARY KEY (DiscountPlanID)
+);
+
 CREATE TABLE ExchangeRate (
   CurrencyName      varchar(10) NOT NULL, 
   USDConversionRate decimal(8, 6) NOT NULL, 
