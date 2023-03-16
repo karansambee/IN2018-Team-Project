@@ -1,4 +1,4 @@
-package skywaysolutions.app.database;
 /**
  * This package provides database access.
  */
+package skywaysolutions.app.database;

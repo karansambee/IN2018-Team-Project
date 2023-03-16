@@ -37,7 +37,11 @@ public enum PlanType {
      */
     @Override
     public String toString() {
-        return (theValue == 0) ? "Fixed Discount" : "Flexible Discount";
+        return switch (theValue) {
+            case -1 -> "Any";
+            case 0 -> "Fixed Discount";
+            default -> "Flexible Discount";
+        };
     }
     /**
      * Gets the plan type given its ID.
@@ -46,6 +50,10 @@ public enum PlanType {
      * @return The plan type enum value.
      */
     public static PlanType getPlanTypeFromValue(int theValueIn) {
-        return (theValueIn == 0) ? PlanType.FixedDiscount : PlanType.FlexibleDiscount;
+        return switch (theValueIn) {
+            case -1 -> PlanType.Any;
+            case 0 -> PlanType.FixedDiscount;
+            default -> PlanType.FlexibleDiscount;
+        };
     }
 }

@@ -42,6 +42,7 @@ public enum StaffRole {
     @Override
     public String toString() {
         return switch (theValue) {
+            case -1 -> "Any";
             case 1 -> "Manager";
             case 2 -> "Administrator";
             default -> "Advisor";
@@ -55,6 +56,7 @@ public enum StaffRole {
      */
     public static StaffRole getStaffRoleFromValue(int theValueIn) {
         return switch (theValueIn) {
+            case -1 -> StaffRole.Any;
             case 1 -> StaffRole.Manager;
             case 2 -> StaffRole.Administrator;
             default -> StaffRole.Advisor;

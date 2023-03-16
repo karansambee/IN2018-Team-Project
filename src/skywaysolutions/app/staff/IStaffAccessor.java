@@ -101,4 +101,22 @@ public interface IStaffAccessor {
      * @throws CheckedException The commission rate storage operation failed.
      */
     void setCommission(String emailAddress, Decimal commission) throws CheckedException;
+
+    /**
+     * Gets the local currency of an account.
+     *
+     * @param emailAddress The email address of the account.
+     * @return The local currency name.
+     * @throws CheckedException The account currency could not be retrieved.
+     */
+    String getCurrency(String emailAddress) throws CheckedException;
+
+    /**
+     * Sets the local currency of an account.
+     *
+     * @param emailAddress The email address of the account.
+     * @param currency The new local currency of the account.
+     * @throws CheckedException The local currency update operation failed.
+     */
+    void setCurrency(String emailAddress, String currency) throws CheckedException;
 }
