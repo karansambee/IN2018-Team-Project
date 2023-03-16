@@ -7,6 +7,10 @@ package skywaysolutions.app.customers;
  */
 public enum PlanType {
     /**
+     * Any discount plan, used for filtering.
+     */
+    Any(-1),
+    /**
      * Fixed discount.
      */
     FixedDiscount(0),
