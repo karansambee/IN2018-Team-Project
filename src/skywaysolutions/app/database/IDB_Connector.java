@@ -4,7 +4,6 @@ import skywaysolutions.app.utils.CheckedException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 /**
  * Provides an Interface for using a database connection.

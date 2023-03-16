@@ -48,8 +48,7 @@ public final class MonthPeriod {
      * @return If the date is within the month period.
      */
     public boolean dateInPeriod(Date date) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        return _month == cal.get(Calendar.MONTH) + 1 && _year == cal.get(Calendar.YEAR) + 1;
+        Calendar cal = Time.getCalendar(date);
+        return _month == cal.get(Calendar.MONTH) + 1 && _year == cal.get(Calendar.YEAR);
     }
 }
