@@ -3,6 +3,7 @@ package skywaysolutions.app.database;
 import skywaysolutions.app.utils.CheckedException;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 /**
@@ -23,22 +24,14 @@ public interface IDB_Connector {
     Connection connect(String databasePath, String username, String password) throws CheckedException;
 
     /**
-     * Executes the SQL on the contained connection.
+     * Gets a prepared statement for the provided SQL template string.
+     * DO NOT forget to use {@link PreparedStatement#close()} when finished.
      *
-     * @param sql The SQL to execute.
-     * @return The exit code of the SQL.
-     * @throws CheckedException The execution failed.
+     * @param sqlTemplate The SQL template string.
+     * @return The prepared statement for parameterization and execution.
+     * @throws CheckedException The statement creation failed.
      */
-    int execute(String sql) throws CheckedException;
-
-    /**
-     * Execute and return a result set from an SQL execution on the contained connection.
-     *
-     * @param sql The SQL to execute.
-     * @return The result set of the executed SQL.
-     * @throws CheckedException
-     */
-    ResultSet executeAndReturn(String sql) throws CheckedException;
+    PreparedStatement getStatement(String sqlTemplate) throws CheckedException;
 
     /**
      * Backups the database contents.

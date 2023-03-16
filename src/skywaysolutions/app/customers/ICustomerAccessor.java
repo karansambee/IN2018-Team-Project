@@ -1,6 +1,7 @@
 package skywaysolutions.app.customers;
 
 import skywaysolutions.app.utils.CheckedException;
+import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.PersonalInformation;
 
 /**
@@ -79,7 +80,7 @@ public interface ICustomerAccessor {
      * @return The plan ID.
      * @throws CheckedException The plan creation operation fails.
      */
-    long createPlan(PlanType type, double percentage) throws CheckedException;
+    long createPlan(PlanType type, Decimal percentage) throws CheckedException;
 
     /**
      * Gets the plan type of the specified plan.
@@ -95,9 +96,18 @@ public interface ICustomerAccessor {
      *
      * @param plan The plan ID.
      * @return The discount percentage.
-     * @throws CheckedException
+     * @throws CheckedException The retrieval of the plan fails.
      */
-    double getPlanPercentage(long plan) throws CheckedException;
+    Decimal getPlanPercentage(long plan) throws CheckedException;
+
+    /**
+     * Sets the plan's discount percentage.
+     *
+     * @param plan The plan ID.
+     * @param percentage The new discount percentage.
+     * @throws CheckedException The storing of the plan fails.
+     */
+    void setPlanPercentage(long plan, Decimal percentage) throws CheckedException;
 
     /**
      * Uses the specified plan on the given amount returning the result.
@@ -107,7 +117,7 @@ public interface ICustomerAccessor {
      * @return The discounted amount.
      * @throws CheckedException The retrieval of the plan failed.
      */
-    double usePlan(long plan, double amount) throws CheckedException;
+    Decimal usePlan(long plan, Decimal amount) throws CheckedException;
 
     /**
      * Removes the specified plan.
@@ -116,4 +126,42 @@ public interface ICustomerAccessor {
      * @throws CheckedException The plan removal operation failed.
      */
     void removePlan(long plan) throws CheckedException;
+
+    /**
+     * Gets the list of flexible plan ranges applied to a flexible plan.
+     *
+     * @param plan The plan ID.
+     * @return The ranges.
+     * @throws CheckedException The retrieval of the flexible plans failed.
+     */
+    FlexiblePlanRange[] getFlexiblePlanRanges(long plan) throws CheckedException;
+
+    /**
+     * Creates or updates a flexible plan entry with the specified percentage.
+     *
+     * @param plan The plan ID.
+     * @param range The flexible plan range.
+     * @param percentage The percentage to store.
+     * @throws CheckedException Storing the flexible plan entry has failed.
+     */
+    void createOrUpdateFlexiblePlanEntry(long plan, FlexiblePlanRange range, Decimal percentage) throws CheckedException;
+
+    /**
+     * Removes a flexible plan entry.
+     *
+     * @param plan The plan ID.
+     * @param range The flexible plan range.
+     * @throws CheckedException Removing the flexible plan entry has failed.
+     */
+    void removeFlexiblePlanRange(long plan, FlexiblePlanRange range) throws CheckedException;
+
+    /**
+     * Gets a flexible plan entry percentage.
+     *
+     * @param plan The plan ID.
+     * @param range The flexible plan range.
+     * @return The discount percentage.
+     * @throws CheckedException Retrieving the flexible plan has failed.
+     */
+    Decimal getFlexiblePlanEntry(long plan, FlexiblePlanRange range) throws CheckedException;
 }

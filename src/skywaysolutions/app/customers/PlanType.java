@@ -35,4 +35,13 @@ public enum PlanType {
     public String toString() {
         return (theValue == 0) ? "Fixed Discount" : "Flexible Discount";
     }
+    /**
+     * Gets the plan type given its ID.
+     *
+     * @param theValueIn The plan type ID.
+     * @return The plan type enum value.
+     */
+    public static PlanType getPlanTypeFromValue(int theValueIn) {
+        return (theValueIn == 0) ? PlanType.FixedDiscount : PlanType.FlexibleDiscount;
+    }
 }

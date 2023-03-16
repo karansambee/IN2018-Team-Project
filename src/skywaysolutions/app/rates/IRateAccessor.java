@@ -2,6 +2,7 @@ package skywaysolutions.app.rates;
 
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
+import skywaysolutions.app.utils.Decimal;
 
 /**
  * Provides an interface for rate access.
@@ -23,7 +24,7 @@ public interface IRateAccessor {
      * @return The conversion rate to USD.
      * @throws CheckedException The conversion rate retrieval failed.
      */
-    double getConversionRate(String currency) throws CheckedException;
+    Decimal getConversionRate(String currency) throws CheckedException;
 
     /**
      * Sets the conversion rate for a specified currency to USD.
@@ -32,7 +33,7 @@ public interface IRateAccessor {
      * @param rate The new conversion rate to USD.
      * @throws CheckedException The conversion rate storing failed.
      */
-    void setConversionRate(String currency, double rate) throws CheckedException;
+    void setConversionRate(String currency, Decimal rate) throws CheckedException;
 
     /**
      * Removes the conversion rate for a specified currency.
