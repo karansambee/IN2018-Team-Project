@@ -9,7 +9,7 @@ import java.io.OutputStream;
  *
  * @author Alfred Manville
  */
-public class Stream {
+public final class Stream {
     /**
      * Reads an integer from a stream.
      *
