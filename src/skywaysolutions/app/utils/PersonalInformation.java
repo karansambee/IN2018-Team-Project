@@ -2,8 +2,12 @@ package skywaysolutions.app.utils;
 
 import java.util.Date;
 
-
-public class PersonalInformation {
+/**
+ *
+ *
+ * @author Samina Matin
+ */
+public final class PersonalInformation {
     private String firstName;
     private String lastName;
     private String phoneNumber;
@@ -13,7 +17,18 @@ public class PersonalInformation {
     private String houseNumber;
     private String streetName;
 
-
+    /**
+     *
+     *
+     * @param firstName
+     * @param lastName
+     * @param phoneNumber
+     * @param emailAddress
+     * @param dateOfBirth
+     * @param postcode
+     * @param houseNumber
+     * @param streetName
+     */
     public PersonalInformation(String firstName, String lastName, String phoneNumber, String emailAddress, Date dateOfBirth, String postcode, String houseNumber, String streetName) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -25,12 +40,20 @@ public class PersonalInformation {
         this.streetName = streetName;
     }
 
-
-
+    /**
+     * This gets the first name of the person.
+     *
+     * @return The first name.
+     */
     public String getFirstName() {
         return firstName;
     }
 
+    /**
+     * This sets the first name of the person.
+     *
+     * @param firstName The new first name.
+     */
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
