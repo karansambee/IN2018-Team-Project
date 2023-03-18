@@ -1,9 +1,12 @@
 package skywaysolutions.app.customers;
 
+import skywaysolutions.app.database.DatabaseTableBase;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.IRepairable;
 import skywaysolutions.app.utils.PersonalInformation;
+
+import java.util.Date;
 
 /**
  * Provides the customer accessor interface for the package.
@@ -72,6 +75,76 @@ public interface ICustomerAccessor extends IRepairable {
      * @throws CheckedException The list of customers could not be retrieved.
      */
     long[] listAccounts() throws CheckedException;
+
+    /**
+     * This checks if the customer is accumulating discount credit.
+     * <p>
+     * If false the discounts should be applied to each purchase.
+     * If true the discounts should be {@link #addCustomerDiscountCredit(long, Decimal)} and the full price paid.
+     * </p>
+     *
+     * @param customer The customer ID.
+     * @return If the customer is accumulating discount credit.
+     * @throws CheckedException The customer information could not be retrieved.
+     */
+    boolean isCustomerDiscountCredited(long customer) throws CheckedException;
+
+    /**
+     * Sets if the customer is to accumulate discount credit.
+     * <p>
+     * If false the discounts should be applied to each purchase.
+     * If true the discounts should be {@link #addCustomerDiscountCredit(long, Decimal)} and the full price paid.
+     * </p>
+     *
+     * @param customer The customer ID.
+     * @param isDiscountCredited If the customer should accumulate discount credit.
+     * @throws CheckedException The customer information could not be stored.
+     */
+    void setIfCustomerIsDiscountCredited(long customer, boolean isDiscountCredited) throws CheckedException;
+
+    /**
+     * Gets the customer discount credit, zeroing it if told to take it.
+     *
+     * @param customer The customer ID.
+     * @param take If the credit should be considered given.
+     * @return The value of the discount credit.
+     * @throws CheckedException The customer information could not be retrieved.
+     */
+    Decimal getCustomerDiscountCredit(long customer, boolean take) throws CheckedException;
+
+    /**
+     * Adds more customer discount credit.
+     *
+     * @param customer The customer ID.
+     * @param amount The amount of credit.
+     * @throws CheckedException The customer information could not be stored.
+     */
+    void addCustomerDiscountCredit(long customer, Decimal amount) throws CheckedException;
+
+    /**
+     * Gets the monthly purchase accumulation used for flexible discount plans.
+     * If the current date is in a different month to the stored amount,
+     * the accumulated value should be zeroed and the current month set as the stored month.
+     *
+     * @param customer The customer ID.
+     * @param date The current date.
+     * @return The current monthly purchase accumulation amount.
+     * @throws CheckedException The customer information could not be retrieved or updated.
+     */
+    Decimal getMonthlyPurchaseAccumulation(long customer, Date date) throws CheckedException;
+
+    /**
+     * Adds a purchase to the monthly purchase accumulation.
+     * If the current date is in a different month to the stored amount,
+     * the accumulated value should be zeroed and the current month set as the stored month,
+     * then the amount is added.
+     *
+     * @param customer The customer ID.
+     * @param date The current date.
+     * @param amount The amount to add.
+     * @throws CheckedException The customer information could not be updated.
+     */
+    void addPurchase(long customer, Date date, Decimal amount) throws CheckedException;
 
     /**
      * Create a plan with a specific type and percentage.
