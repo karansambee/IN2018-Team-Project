@@ -2,6 +2,7 @@ package skywaysolutions.app.customers;
 
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
+import skywaysolutions.app.utils.IRepairable;
 import skywaysolutions.app.utils.PersonalInformation;
 
 /**
@@ -9,7 +10,7 @@ import skywaysolutions.app.utils.PersonalInformation;
  *
  * @author Alfred Manville
  */
-public interface ICustomerAccessor {
+public interface ICustomerAccessor extends IRepairable {
     /**
      * Allows for an account to be created.
      *

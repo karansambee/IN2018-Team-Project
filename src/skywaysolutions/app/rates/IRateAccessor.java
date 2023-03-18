@@ -3,13 +3,14 @@ package skywaysolutions.app.rates;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
+import skywaysolutions.app.utils.IRepairable;
 
 /**
  * Provides an interface for rate access.
  *
  * @author Alfred Manville
  */
-public interface IRateAccessor {
+public interface IRateAccessor extends IRepairable {
     /**
      * Sets the database connector used for conversion.
      *

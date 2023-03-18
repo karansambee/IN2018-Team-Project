@@ -1,13 +1,14 @@
 package skywaysolutions.app.stock;
 
 import skywaysolutions.app.utils.CheckedException;
+import skywaysolutions.app.utils.IRepairable;
 
 /**
  * Provides the stock management system for blanks and tickets.
  *
  * @author Alfred Manville
  */
-public interface IStockAccessor {
+public interface IStockAccessor extends IRepairable {
     /**
      * Creates a blank with the specified ID and
      * an ID of a staff member it's assigned to (Not assigned if -1)

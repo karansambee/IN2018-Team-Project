@@ -2,6 +2,7 @@ package skywaysolutions.app.sales;
 
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
+import skywaysolutions.app.utils.IRepairable;
 import skywaysolutions.app.utils.MonthPeriod;
 
 import java.util.Date;
@@ -11,7 +12,7 @@ import java.util.Date;
  *
  * @author Alfred Manville
  */
-public interface ISalesAccessor {
+public interface ISalesAccessor extends IRepairable {
     /**
      * Sells a blank to the specified customer for the specified type of sale, with a specific commission rate,
      * a due date, a sale date, a cost and taxes.
@@ -118,4 +119,13 @@ public interface ISalesAccessor {
      * @throws CheckedException Retrieving the refund has failed.
      */
     Refund getRefund(long refundID) throws CheckedException;
+
+    /**
+     * Gets if the specified blank has been sold.
+     *
+     * @param blankID The blank ID.
+     * @return If the blank has been sold.
+     * @throws CheckedException Retrieving the sales has failed.
+     */
+    boolean blankSold(long blankID) throws CheckedException;
 }

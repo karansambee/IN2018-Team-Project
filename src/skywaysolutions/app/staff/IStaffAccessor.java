@@ -2,6 +2,7 @@ package skywaysolutions.app.staff;
 
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
+import skywaysolutions.app.utils.IRepairable;
 import skywaysolutions.app.utils.PersonalInformation;
 
 /**
@@ -9,7 +10,7 @@ import skywaysolutions.app.utils.PersonalInformation;
  *
  * @author Alfred Manville
  */
-public interface IStaffAccessor {
+public interface IStaffAccessor extends IRepairable {
     /**
      * Creates an account with the specified personal information, role, commission rate,
      * local currency and password.
