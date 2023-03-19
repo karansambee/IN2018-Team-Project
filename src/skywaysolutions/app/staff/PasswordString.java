@@ -1,4 +1,6 @@
-package skywaysolutions.app.utils;
+package skywaysolutions.app.staff;
+
+import skywaysolutions.app.utils.CheckedException;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

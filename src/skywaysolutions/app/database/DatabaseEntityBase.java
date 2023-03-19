@@ -94,7 +94,7 @@ public abstract class DatabaseEntityBase {
      * Use {@link #getTableName()} to get the table name.
      * DO NOT use any public functions provided by {@link DatabaseEntityBase} in here otherwise a deadlock could occur.
      *
-     * @throws CheckedException An error has occurred.
+     * @throws CheckedException An error has occurred (EG: Row does not exist).
      */
     protected abstract void loadRow() throws CheckedException;
 
@@ -183,7 +183,8 @@ public abstract class DatabaseEntityBase {
     public final void load() throws CheckedException {
         synchronized (slock) {
             if (!_lock) throw new CheckedException("Lock not applied");
-            if (exists(true)) loadRow(); else throw new CheckedException("Row does not exist");
+            loadRow();
+            _exists = true;
         }
     }
 
