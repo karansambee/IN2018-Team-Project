@@ -10,14 +10,16 @@ import skywaysolutions.app.utils.IRepairable;
  */
 public interface IStockAccessor extends IRepairable {
     /**
-     * Creates a blank with the specified ID and
+     * Creates a blank with the specified ID,
      * an ID of a staff member it's assigned to (Not assigned if -1)
+     * and a description of the blanks contents.
      *
      * @param id The ID of the blank.
      * @param assignedID The staff member ID it is assigned to or -1 if not assigned.
+     * @param description The description of the blank's contents.
      * @throws CheckedException The blank creation operation has failed.
      */
-    void createBlank(long id, long assignedID) throws CheckedException;
+    void createBlank(long id, long assignedID, String description) throws CheckedException;
 
     /**
      * Returns a blank with the specified ID.
@@ -137,4 +139,22 @@ public interface IStockAccessor extends IRepairable {
      * @throws CheckedException The blank types could not be retrieved.
      */
     int[] listBlankTypes() throws CheckedException;
+
+    /**
+     * Gets the description of the blank's contents.
+     *
+     * @param id The blank ID.
+     * @return The blank's description.
+     * @throws CheckedException The description of the blank could not be retrieved.
+     */
+    String getBlankDescription(long id) throws CheckedException;
+
+    /**
+     * Sets the description of the blank's contents.
+     *
+     * @param id The blank ID.
+     * @param description The blank's description.
+     * @throws CheckedException The description of the blank could not be stored.
+     */
+    void setBlankDescription(long id, String description) throws CheckedException;
 }
