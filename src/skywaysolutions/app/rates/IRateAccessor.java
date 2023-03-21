@@ -37,7 +37,25 @@ public interface IRateAccessor extends IRepairable {
     void setConversionRate(String currency, Decimal rate) throws CheckedException;
 
     /**
-     * Removes the conversion rate for a specified currency.
+     * Gets the currency symbol.
+     *
+     * @param currency The currency code.
+     * @return The currency symbol.
+     * @throws CheckedException The conversion rate retrieval failed.
+     */
+    String getCurrencySymbol(String currency) throws CheckedException;
+
+    /**
+     * Sets the currency symbol.
+     *
+     * @param currency The currency code.
+     * @param symbol The new currency symbol.
+     * @throws CheckedException The conversion rate storing failed.
+     */
+    void setCurrencySymbol(String currency, String symbol) throws CheckedException;
+
+    /**
+     * Removes the conversion rate and symbol for a specified currency.
      *
      * @param currency The currency code.
      * @throws CheckedException The conversion rate removal failed.
