@@ -13,16 +13,17 @@ import skywaysolutions.app.utils.PersonalInformation;
 public interface IStaffAccessor extends IRepairable {
     /**
      * Creates an account with the specified personal information, role, commission rate,
-     * local currency and password.
+     * local currency and password. An ID can also be specified for creation.
      *
      * @param info The personal information of the user.
      * @param role The role of the user.
      * @param commission The commission rate percentage of the user.
      * @param currency The local currency of the user.
      * @param password The user's password.
+     * @param id The user's ID, null to generate a new one.
      * @throws CheckedException Account creation fails.
      */
-    void createAccount(PersonalInformation info, StaffRole role, Decimal commission, String currency, String password) throws CheckedException;
+    long createAccount(PersonalInformation info, StaffRole role, Decimal commission, String currency, String password, Long id) throws CheckedException;
 
     /**
      * Authenticates an account with the specified emailAddress and password.
@@ -70,6 +71,33 @@ public interface IStaffAccessor extends IRepairable {
     void setPersonalInformation(String emailAddress, PersonalInformation info) throws CheckedException;
 
     /**
+     * Gets the account ID.
+     *
+     * @param emailAddress The email address of the account (Null for the current logged-in account).
+     * @return The account ID.
+     * @throws CheckedException The account could not be retrieved.
+     */
+    long getAccountID(String emailAddress) throws CheckedException;
+
+    /**
+     * Gets the account staff role.
+     *
+     * @param emailAddress The email address of the account (Null for the current logged-in account).
+     * @return The staff role.
+     * @throws CheckedException The account could not be retrieved.
+     */
+    StaffRole getAccountRole(String emailAddress) throws CheckedException;
+
+    /**
+     * Sets the account staff role.
+     *
+     * @param emailAddress The email address of the account (Null for the current logged-in account).
+     * @param role The staff role.
+     * @throws CheckedException The account could not be stored.
+     */
+    void setAccountRole(String emailAddress, StaffRole role) throws CheckedException;
+
+    /**
      * Gets an array of all account email addresses for the specific role.
      *
      * @param role The role to filter by.
@@ -106,7 +134,7 @@ public interface IStaffAccessor extends IRepairable {
     /**
      * Gets the local currency of an account.
      *
-     * @param emailAddress The email address of the account.
+     * @param emailAddress The email address of the account (Null for the current logged-in account).
      * @return The local currency name.
      * @throws CheckedException The account currency could not be retrieved.
      */
@@ -115,7 +143,7 @@ public interface IStaffAccessor extends IRepairable {
     /**
      * Sets the local currency of an account.
      *
-     * @param emailAddress The email address of the account.
+     * @param emailAddress The email address of the account (Null for the current logged-in account).
      * @param currency The new local currency of the account.
      * @throws CheckedException The local currency update operation failed.
      */

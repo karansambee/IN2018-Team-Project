@@ -15,7 +15,7 @@ import java.util.Date;
 public interface ISalesAccessor extends IRepairable {
     /**
      * Sells a blank to the specified customer for the specified type of sale, with a specific commission rate,
-     * a due date, a sale date, a cost and taxes.
+     * a due date, a sale date, a cost, taxes, currency and a cost pre discount.
      *
      * @param blank The blank to be sold.
      * @param customer The customer ID to sell the blank to.
@@ -26,10 +26,12 @@ public interface ISalesAccessor extends IRepairable {
      * @param cost The cost of the blank.
      * @param tax The tax on the blank.
      * @param secondaryTax The secondary tax on the blank.
+     * @param currency The currency of the sale.
+     * @param costPreDiscount The cost pre discount, can be null.
      * @return The sale ID.
      * @throws CheckedException An error occurred during the sale.
      */
-    long sell(long blank, long customer, SaleType type, double commissionRate, Date dueDate, Date saleDate, Decimal cost, Decimal tax, Decimal secondaryTax) throws CheckedException;
+    long sell(long blank, long customer, SaleType type, double commissionRate, Date dueDate, Date saleDate, Decimal cost, Decimal tax, Decimal secondaryTax, String currency, Decimal costPreDiscount) throws CheckedException;
 
     /**
      * Performs a transaction for the specified sale on a specified date with the type of currency being used and the payment being made.
@@ -72,35 +74,38 @@ public interface ISalesAccessor extends IRepairable {
     long[] refund(long saleID) throws CheckedException;
 
     /**
-     * Gets the sales given the period and the type of payment.
+     * Gets the sales given the period, type of payment and the currency.
      *
      * @param period The month of the sales (Null for any time).
      * @param type The type of payment.
+     * @param currency The currency of the sale, if null, this filter is ignored.
      * @return An array of sale IDs.
      * @throws CheckedException Retrieving the sales has failed.
      */
-    long[] getSales(MonthPeriod period, PaymentType type) throws CheckedException;
+    long[] getSales(MonthPeriod period, PaymentType type, String currency) throws CheckedException;
 
     /**
-     * Gets the sales given the period, type of payment and the staff ID.
+     * Gets the sales given the period, type of payment, the currency and the staff ID.
      *
      * @param period The month of the sales (Null for any time).
      * @param type The type of payment.
+     * @param currency The currency of the sale, if null, this filter is ignored.
      * @param staffID The ID of the staff member.
      * @return An array of sale IDs.
      * @throws CheckedException Retrieving the sales has failed.
      */
-    long[] getSalesByStaff(MonthPeriod period, PaymentType type, long staffID) throws CheckedException;
+    long[] getSalesByStaff(MonthPeriod period, PaymentType type, String currency, long staffID) throws CheckedException;
 
     /**
-     * Gets the sales given the period, type of payment and the customer ID.
+     * Gets the sales given the period, type of payment, the currency and the customer ID.
      * @param period The month of the sales (Null for any time).
      * @param type The type of payment.
+     * @param currency The currency of the sale, if null, this filter is ignored.
      * @param customerID The ID of the customer.
      * @return An array of sale IDs.
      * @throws CheckedException Retrieving the sales has failed.
      */
-    long[] getSalesByCustomers(MonthPeriod period, PaymentType type, long customerID) throws CheckedException;
+    long[] getSalesByCustomers(MonthPeriod period, PaymentType type, String currency, long customerID) throws CheckedException;
 
     /**
      * Gets the sale given the ID.
