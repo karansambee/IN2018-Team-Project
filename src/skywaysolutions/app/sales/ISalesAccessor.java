@@ -31,7 +31,7 @@ public interface ISalesAccessor extends IRepairable {
      * @return The sale ID.
      * @throws CheckedException An error occurred during the sale.
      */
-    long sell(long blank, long customer, SaleType type, double commissionRate, Date dueDate, Date saleDate, Decimal cost, Decimal tax, Decimal secondaryTax, String currency, Decimal costPreDiscount) throws CheckedException;
+    long sell(long blank, long customer, SaleType type, Decimal commissionRate, Date dueDate, Date saleDate, Decimal cost, Decimal tax, Decimal secondaryTax, String currency, Decimal costPreDiscount) throws CheckedException;
 
     /**
      * Performs a transaction for the specified sale on a specified date with the type of currency being used and the payment being made.
