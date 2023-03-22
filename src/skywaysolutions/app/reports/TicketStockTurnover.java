@@ -43,6 +43,7 @@ public class TicketStockTurnover implements IReportGenerator {
      */
     @Override
     public TableCell[][][] generateTables() throws CheckedException {
+
         return new TableCell[0][][];
     }
 
@@ -66,7 +67,7 @@ public class TicketStockTurnover implements IReportGenerator {
      */
     @Override
     public void setPeriod(MonthPeriod period) throws CheckedException {
-
+        //
     }
 
     /**
@@ -86,6 +87,6 @@ public class TicketStockTurnover implements IReportGenerator {
      */
     @Override
     public String getReportName() {
-        return null;
+        return "Ticket Stock Turnover Report";
     }
 }
