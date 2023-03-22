@@ -15,6 +15,7 @@ public abstract class DatabaseEntityBase {
     private final Object slock = new Object();
     private boolean _lock;
     private boolean _exists;
+    private boolean _loaded;
     protected final IDB_Connector conn;
 
     /**
@@ -185,6 +186,7 @@ public abstract class DatabaseEntityBase {
             if (!_lock) throw new CheckedException("Lock not applied");
             loadRow();
             _exists = true;
+            _loaded = true;
         }
     }
 
@@ -200,6 +202,7 @@ public abstract class DatabaseEntityBase {
         synchronized (slock) {
             //Allow for non-existent objects to be stored, even if they are not locked
             if ((!_lock) && _exists) throw new CheckedException("Lock not applied");
+            if (!_loaded && _exists) throw new CheckedException("Entity not loaded");
             if (_exists) updateRow(); else {
                 createRow();
                 _exists = true;
@@ -220,9 +223,19 @@ public abstract class DatabaseEntityBase {
             if (_exists) {
                 deleteRow();
                 _exists = false;
+                _loaded = false;
                 //Mark lock as disabled once deleted
                 _lock = false;
             } else throw new CheckedException("Row does not exist");
         }
+    }
+
+    /**
+     * Gets if the object is loaded.
+     *
+     * @return If the object is loaded.
+     */
+    public final boolean isLoaded() {
+        return _loaded;
     }
 }

@@ -73,7 +73,7 @@ public interface IStockAccessor extends IRepairable {
     /**
      * Gets a list of blanks that may be filtered by a provided staff member ID.
      *
-     * @param assignedID The staff ID to filter by, -2 for no filtering or -1 for un-assigned.
+     * @param assignedID The staff ID to filter by, -1 for no filtering or -2 for un-assigned.
      * @return The list of blank IDs.
      * @throws CheckedException The blanks could not be retrieved.
      */
