@@ -98,6 +98,7 @@ public interface ISalesAccessor extends IRepairable {
 
     /**
      * Gets the sales given the period, type of payment, the currency and the customer ID.
+     *
      * @param period The month of the sales (Null for any time).
      * @param type The type of payment.
      * @param currency The currency of the sale, if null, this filter is ignored.
@@ -105,7 +106,7 @@ public interface ISalesAccessor extends IRepairable {
      * @return An array of sale IDs.
      * @throws CheckedException Retrieving the sales has failed.
      */
-    long[] getSalesByCustomers(MonthPeriod period, PaymentType type, String currency, long customerID) throws CheckedException;
+    long[] getSalesByCustomer(MonthPeriod period, PaymentType type, String currency, long customerID) throws CheckedException;
 
     /**
      * Gets the sale given the ID.
