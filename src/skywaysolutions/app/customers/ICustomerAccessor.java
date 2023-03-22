@@ -19,10 +19,11 @@ public interface ICustomerAccessor extends IRepairable {
      *
      * @param info The personal information of the account.
      * @param plan The plan ID the account should use (Set to -1 for no plan).
+     * @param alias The alias of the account.
      * @return The ID of the created account.
      * @throws CheckedException Account creation fails.
      */
-    long createAccount(PersonalInformation info, long plan) throws CheckedException;
+    long createAccount(PersonalInformation info, long plan, String alias) throws CheckedException;
 
     /**
      * Gets the personal information of the account.
@@ -41,6 +42,33 @@ public interface ICustomerAccessor extends IRepairable {
      * @throws CheckedException Setting the personal information fails.
      */
     void setPersonalInformation(long customer, PersonalInformation info) throws CheckedException;
+
+    /**
+     * Gets the account alias of the specified account.
+     *
+     * @param customer The customer ID of the account.
+     * @return The customer alias.
+     * @throws CheckedException Getting the customer information has failed.
+     */
+    String getAccountAlias(long customer) throws CheckedException;
+
+    /**
+     * Sets the account alias of the specified account.
+     *
+     * @param customer The customer ID of the account.
+     * @param alias The customer alias.
+     * @throws CheckedException Setting the customer information has failed.
+     */
+    void setAccountAlias(long customer, String alias) throws CheckedException;
+
+    /**
+     * Gets the account ID give the alias.
+     *
+     * @param alias The alias of the account.
+     * @return The customer ID.
+     * @throws CheckedException A customer ID did not correspond to the alias.
+     */
+    long getAccountIDGivenAlias(String alias) throws CheckedException;
 
     /**
      * Gets the account plan ID.
@@ -123,11 +151,11 @@ public interface ICustomerAccessor extends IRepairable {
 
     /**
      * Gets the monthly purchase accumulation used for flexible discount plans.
-     * If the current date is in a different month to the stored amount,
+     * If the given [Could be current] date is in a different month to the stored amount,
      * the accumulated value should be zeroed and the current month set as the stored month.
      *
      * @param customer The customer ID.
-     * @param date The current date.
+     * @param date The given [Could be current] date.
      * @return The current monthly purchase accumulation amount.
      * @throws CheckedException The customer information could not be retrieved or updated.
      */
@@ -135,12 +163,12 @@ public interface ICustomerAccessor extends IRepairable {
 
     /**
      * Adds a purchase to the monthly purchase accumulation.
-     * If the current date is in a different month to the stored amount,
+     * If the given [Could be current] date is in a different month to the stored amount,
      * the accumulated value should be zeroed and the current month set as the stored month,
      * then the amount is added.
      *
      * @param customer The customer ID.
-     * @param date The current date.
+     * @param date The given [Could be current] date.
      * @param amount The amount to add.
      * @throws CheckedException The customer information could not be updated.
      */
