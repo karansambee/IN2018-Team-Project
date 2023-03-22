@@ -1,26 +1,31 @@
 CREATE TABLE Blank (
   BlankNumber      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
-  StaffID          bigint(19) NOT NULL, 
+  StaffID          bigint(19), 
   TypeNumber       integer(3) NOT NULL, 
   BlankDescription varchar(255) NOT NULL, 
-  Returned         boolean NOT NULL, 
   Blacklisted      boolean NOT NULL, 
   Void             boolean NOT NULL, 
+  ReceivedDate     date NOT NULL, 
+  AssignedDate     date, 
+  ReturnedDate     date, 
   FOREIGN KEY(StaffID) REFERENCES Staff(StaffID), 
   FOREIGN KEY(TypeNumber) REFERENCES BlankType(TypeNumber));
 CREATE TABLE Sale (
-  BlankNumber   bigint(19) NOT NULL, 
-  CustomerID    bigint(19) NOT NULL, 
-  SaleType      integer(1) NOT NULL, 
-  CommissonRate numeric(4, 2) NOT NULL, 
-  SaleDate      date NOT NULL, 
-  DueDate       date NOT NULL, 
-  Cost          numeric(8, 2) NOT NULL, 
-  Tax           numeric(8, 2) NOT NULL, 
-  AdditionalTax numeric(8, 2), 
+  BlankNumber     bigint(19) NOT NULL, 
+  CustomerID      bigint(19) NOT NULL, 
+  CurrencyName    char(4) NOT NULL, 
+  SaleType        integer(1) NOT NULL, 
+  CommissonRate   numeric(4, 2) NOT NULL, 
+  SaleDate        date NOT NULL, 
+  DueDate         date NOT NULL, 
+  Cost            numeric(8, 2) NOT NULL, 
+  Tax             numeric(8, 2) NOT NULL, 
+  AdditionalTax   numeric(8, 2), 
+  PreDiscountCost numeric(8, 2), 
   PRIMARY KEY (BlankNumber), 
   FOREIGN KEY(CustomerID) REFERENCES Customer(CustomerID), 
-  FOREIGN KEY(BlankNumber) REFERENCES Blank(BlankNumber));
+  FOREIGN KEY(BlankNumber) REFERENCES Blank(BlankNumber), 
+  FOREIGN KEY(CurrencyName) REFERENCES ExchangeRate(CurrencyName));
 CREATE TABLE Staff (
   StaffID        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
   CurrencyName   char(4), 
@@ -58,6 +63,7 @@ CREATE TABLE Customer (
   AccountDiscountCredit  numeric(12, 2), 
   PurchaseAccumulation   numeric(10, 2) NOT NULL, 
   PurchaseMonthBeginning date NOT NULL, 
+  Alias                  varchar(32) NOT NULL UNIQUE, 
   FOREIGN KEY(DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID), 
   FOREIGN KEY(CurrencyName) REFERENCES ExchangeRate(CurrencyName));
 CREATE TABLE Transcation (
@@ -91,3 +97,5 @@ CREATE TABLE FlexibleDiscountEntries (
   AmountUpperBound   numeric(12, 2) NOT NULL, 
   DiscountPercentage numeric(4, 2) NOT NULL, 
   FOREIGN KEY(DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID));
+CREATE UNIQUE INDEX Staff_EmailAddress 
+  ON Staff (EmailAddress);
