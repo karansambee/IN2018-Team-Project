@@ -15,10 +15,11 @@ CREATE TABLE Sale (
   CustomerID      bigint(19) NOT NULL, 
   CurrencyName    char(4) NOT NULL, 
   SaleType        integer(1) NOT NULL, 
-  CommissonRate   numeric(4, 2) NOT NULL, 
+  CommissonRate   numeric(8, 6) NOT NULL, 
   SaleDate        date NOT NULL, 
   DueDate         date NOT NULL, 
   Cost            numeric(8, 2) NOT NULL, 
+  CostInUSD       numeric(8, 2), 
   Tax             numeric(8, 2) NOT NULL, 
   AdditionalTax   numeric(8, 2), 
   PreDiscountCost numeric(8, 2), 
@@ -30,11 +31,11 @@ CREATE TABLE Staff (
   StaffID        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
   CurrencyName   char(4), 
   StaffRole      integer(1) NOT NULL, 
-  ComissionRate  numeric(4, 2), 
+  ComissionRate  numeric(8, 6), 
   Firstname      varchar(15) NOT NULL, 
   Surname        varchar(15) NOT NULL, 
   PhoneNumber    varchar(15) NOT NULL, 
-  EmailAddress   varchar(25) NOT NULL, 
+  EmailAddress   varchar(25) NOT NULL UNIQUE, 
   DateOfBirth    date NOT NULL, 
   Postcode       varchar(7) NOT NULL, 
   HouseNumber    varchar(4) NOT NULL, 
@@ -43,10 +44,10 @@ CREATE TABLE Staff (
   PasswordSalt   blob NOT NULL, 
   FOREIGN KEY(CurrencyName) REFERENCES ExchangeRate(CurrencyName));
 CREATE TABLE Refund (
-  RefundID                  INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
-  TranscationID             bigint(19) NOT NULL, 
-  RefudDate                 date NOT NULL, 
-  LocalCurrencyRefundAmount numeric(11, 2) NOT NULL, 
+  RefundID      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+  TranscationID bigint(19) NOT NULL, 
+  RefundDate    date NOT NULL, 
+  LocalCurrency integer(10) NOT NULL, 
   FOREIGN KEY(TranscationID) REFERENCES Transcation(TranscationID));
 CREATE TABLE Customer (
   CustomerID             INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
@@ -64,6 +65,7 @@ CREATE TABLE Customer (
   PurchaseAccumulation   numeric(10, 2) NOT NULL, 
   PurchaseMonthBeginning date NOT NULL, 
   Alias                  varchar(32) NOT NULL UNIQUE, 
+  CustomerType           integer(1) NOT NULL, 
   FOREIGN KEY(DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID), 
   FOREIGN KEY(CurrencyName) REFERENCES ExchangeRate(CurrencyName));
 CREATE TABLE Transcation (
@@ -86,7 +88,7 @@ CREATE TABLE ExchangeRate (
 CREATE TABLE DiscountPlan (
   DiscountPlanID     INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
   DiscountType       integer(1) NOT NULL, 
-  DiscountPercentage numeric(4, 2));
+  DiscountPercentage numeric(8, 6));
 CREATE TABLE BlankType (
   TypeNumber      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
   TypeDescription varchar(255) NOT NULL);
@@ -95,7 +97,5 @@ CREATE TABLE FlexibleDiscountEntries (
   DiscountPlanID     bigint(19) NOT NULL, 
   AmountLowerBound   numeric(12, 2) NOT NULL, 
   AmountUpperBound   numeric(12, 2) NOT NULL, 
-  DiscountPercentage numeric(4, 2) NOT NULL, 
+  DiscountPercentage numeric(8, 6) NOT NULL, 
   FOREIGN KEY(DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID));
-CREATE UNIQUE INDEX Staff_EmailAddress 
-  ON Staff (EmailAddress);
