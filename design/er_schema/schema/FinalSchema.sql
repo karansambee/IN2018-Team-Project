@@ -9,11 +9,11 @@ CREATE TABLE Staff (
   StaffID        bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT, 
   CurrencyName   char(4), 
   StaffRole      integer(1) NOT NULL, 
-  ComissionRate  numeric(4, 2), 
+  ComissionRate  numeric(8, 6), 
   Firstname      varchar(15) NOT NULL, 
   Surname        varchar(15) NOT NULL, 
   PhoneNumber    varchar(15) NOT NULL, 
-  EmailAddress   varchar(25) NOT NULL, 
+  EmailAddress   varchar(25) NOT NULL UNIQUE, 
   DateOfBirth    date NOT NULL, 
   Postcode       varchar(7) NOT NULL, 
   HouseNumber    varchar(4) NOT NULL, 
@@ -21,9 +21,6 @@ CREATE TABLE Staff (
   HashedPassword binary(32) NOT NULL, 
   PasswordSalt   binary(32) NOT NULL, 
   FOREIGN KEY (CurrencyName) REFERENCES ExchangeRate(CurrencyName));
-
-CREATE UNIQUE INDEX Staff_EmailAddress 
-  ON Staff (EmailAddress);
 
 CREATE TABLE BlankType (
   TypeNumber      INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT, 
@@ -45,14 +42,14 @@ CREATE TABLE Blank (
 CREATE TABLE DiscountPlan (
   DiscountPlanID     bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT, 
   DiscountType       integer(1) NOT NULL, 
-  DiscountPercentage numeric(4, 2));
+  DiscountPercentage numeric(8, 6));
 
 CREATE TABLE FlexibleDiscountEntries (
   EntryID            bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT, 
   DiscountPlanID     bigint(19) NOT NULL, 
   AmountLowerBound   numeric(12, 2) NOT NULL, 
   AmountUpperBound   numeric(12, 2) NOT NULL, 
-  DiscountPercentage numeric(4, 2) NOT NULL, 
+  DiscountPercentage numeric(8, 6) NOT NULL, 
   FOREIGN KEY (DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID));
 
 CREATE TABLE Customer (
@@ -83,6 +80,7 @@ CREATE TABLE Sale (
   SaleDate      date NOT NULL, 
   DueDate       date NOT NULL, 
   Cost          numeric(8, 2) NOT NULL, 
+  CostInUSD     numeric(8, 2), 
   Tax           numeric(8, 2) NOT NULL, 
   AdditionalTax numeric(8, 2), 
   PRIMARY KEY (BlankNumber), 
@@ -106,8 +104,8 @@ CREATE TABLE Transcation (
 CREATE TABLE Refund (
   RefundID                  bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT, 
   TranscationID             bigint(19) NOT NULL, 
-  RefudDate                 date NOT NULL, 
-  LocalCurrencyRefundAmount numeric(11, 2) NOT NULL, 
+  RefundDate                date NOT NULL, 
+  LocalCurrency             integer(10) NOT NULL, 
   FOREIGN KEY (TranscationID) REFERENCES Transcation(TranscationID));
 
 /* 2 INSERT Statements */
