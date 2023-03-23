@@ -68,21 +68,23 @@ CREATE TABLE Customer (
   PurchaseAccumulation   numeric(10, 2) NOT NULL, 
   PurchaseMonthBeginning date NOT NULL, 
   Alias                  varchar(32) NOT NULL UNIQUE, 
+  CustomerType           integer(1) NOT NULL, 
   FOREIGN KEY (DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID), 
   FOREIGN KEY (CurrencyName) REFERENCES ExchangeRate(CurrencyName));
 
 CREATE TABLE Sale (
-  BlankNumber   bigint(19) NOT NULL, 
-  CustomerID    bigint(19) NOT NULL, 
-  CurrencyName  char(4) NOT NULL, 
-  SaleType      integer(1) NOT NULL, 
-  CommissonRate numeric(4, 2) NOT NULL, 
-  SaleDate      date NOT NULL, 
-  DueDate       date NOT NULL, 
-  Cost          numeric(8, 2) NOT NULL, 
-  CostInUSD     numeric(8, 2), 
-  Tax           numeric(8, 2) NOT NULL, 
-  AdditionalTax numeric(8, 2), 
+  BlankNumber     bigint(19) NOT NULL, 
+  CustomerID      bigint(19) NOT NULL, 
+  CurrencyName    char(4) NOT NULL, 
+  SaleType        integer(1) NOT NULL, 
+  CommissonRate   numeric(8, 6) NOT NULL, 
+  SaleDate        date NOT NULL, 
+  DueDate         date NOT NULL, 
+  Cost            numeric(8, 2) NOT NULL, 
+  CostInUSD       numeric(8, 2), 
+  Tax             numeric(8, 2) NOT NULL, 
+  AdditionalTax   numeric(8, 2), 
+  PreDiscountCost numeric(8, 2), 
   PRIMARY KEY (BlankNumber), 
   FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID), 
   FOREIGN KEY (BlankNumber) REFERENCES Blank(BlankNumber))
@@ -137,7 +139,8 @@ INSERT INTO Customer VALUES (
 	NULL,
 	0,
 	'2023-03-01',
-	'JohnD'
+	'JohnD',
+	1
 );
 
 
@@ -207,7 +210,8 @@ INSERT INTO Customer VALUES (
 	NULL,
 	0,
 	'2023-03-01',
-	'JohnD'
+	'JohnD',
+	1
 );
 
 INSERT INTO BlankType VALUES
@@ -222,11 +226,11 @@ INSERT INTO Blank VALUES
     (1014044431, 1, 101, 'Manchester to Luton', 0, 0, '2023-03-04', '2023-03-04', NULL);
 
 INSERT INTO Sale VALUES 
-    (4441023489, 1, 'GBP', 1, 3.50, '2023-02-01', '2023-03-02', 1000.50, 200.00, 30.00),
-    (4444343235, 1, 'GBP', 1, 3.50, '2023-02-04', '2023-03-05', 500.00, 100.00, 56.00),
-    (4441344491, 1, 'GBP', 1, 3.50, '2023-02-05', '2023-03-06', 350.50, 50.00, 20.00),
-    (1015003455, 1, 'GBP', 0, 3.50, '2023-02-25', '2023-03-26', 187.40, 65.00, NULL),
-    (1014044431, 1, 'GBP', 0, 3.50, '2023-02-25', '2023-03-26', 187.00, 75.00, NULL);
+    (4441023489, 1, 'GBP', 1, 3.50, '2023-02-01', '2023-03-02', 1000.50, NULL, 200.00, 30.00, NULL),
+    (4444343235, 1, 'GBP', 1, 3.50, '2023-02-04', '2023-03-05', 500.00, NULL, 100.00, 56.00, NULL),
+    (4441344491, 1, 'GBP', 1, 3.50, '2023-02-05', '2023-03-06', 350.50, NULL, 50.00, 20.00, NULL),
+    (1015003455, 1, 'GBP', 0, 3.50, '2023-02-25', '2023-03-26', 187.40, NULL, 65.00, NULL, NULL),
+    (1014044431, 1, 'GBP', 0, 3.50, '2023-02-25', '2023-03-26', 187.00, NULL, 75.00, NULL, NULL);
 
 INSERT INTO Transcation VALUES 
     (1, 4441023489, 'GBP', 1230.50, 1501.21, '2023-02-04', 0, NULL, NULL),
