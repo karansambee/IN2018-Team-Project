@@ -30,11 +30,25 @@ public class Blank  extends DatabaseEntityBase {
         blankID = id;
     }
 
-    public Blank(IDB_Connector conn, long id, long assigned, String description) {
+    public Blank(IDB_Connector conn, long id, long assigned, String description, Date creation, Date assignment) {
         super(conn);
         blankID = id;
         assignedStaffID = assigned;
         this.description = description;
+        creationDate = creation;
+        assignmentDate = assignment;
+    }
+
+    public Blank(IDB_Connector conn, ResultSet rs) throws SQLException {
+        super(conn);
+        blankID = rs.getInt("BlankNumber");
+        assignedStaffID = rs.getLong("StaffID");
+        description = rs.getString("BlankDescription");
+        blackListed = rs.getBoolean("BlackListed");
+        voided = rs.getBoolean("Void");
+        creationDate = rs.getDate("ReceivedDate");
+        assignmentDate = rs.getDate("AssignedDate");
+        returned = rs.getDate("ReturnedDate");
     }
 
     @Override
@@ -154,8 +168,9 @@ public class Blank  extends DatabaseEntityBase {
         return assignedStaffID;
     }
 
-    public void setAssignedStaffID(long assignedStaffID) {
+    public void setAssignedStaffID(long assignedStaffID, Date assignmentDate) {
         this.assignedStaffID = assignedStaffID;
+        this.assignmentDate = assignmentDate;
     }
 
     public String getDescription() {

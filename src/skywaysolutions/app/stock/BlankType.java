@@ -28,6 +28,11 @@ public class BlankType extends DatabaseEntityBase {
         blankTypeID = id;
         this.description = description;
     }
+    public BlankType(IDB_Connector conn, ResultSet rs) throws SQLException {
+        super(conn);
+        blankTypeID = rs.getInt("TypeNumber");
+        description = rs.getString("TypeDescription");
+    }
 
     @Override
     protected String getTableName() {

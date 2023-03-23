@@ -1,8 +1,18 @@
 package skywaysolutions.app.stock;
 
+import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
 
-public class BlankController implements IStockAccessor{
+import java.util.Date;
+
+public class BlankController implements IStockAccessor {
+    private IDB_Connector conn;
+
+    public BlankController(IDB_Connector conn) {
+        this.conn = conn;
+    }
+
+
     /**
      * Creates a blank with the specified ID,
      * an ID of a staff member it's assigned to (Not assigned if -1)
@@ -14,7 +24,7 @@ public class BlankController implements IStockAccessor{
      * @throws CheckedException The blank creation operation has failed.
      */
     @Override
-    public void createBlank(long id, long assignedID, String description) throws CheckedException {
+    public void createBlank(long id, long assignedID, String description, Date creationDate, Date assignmentDate) throws CheckedException {
 
     }
 
@@ -25,7 +35,7 @@ public class BlankController implements IStockAccessor{
      * @throws CheckedException The blank could not be marked as returned.
      */
     @Override
-    public void returnBlank(long id) throws CheckedException {
+    public void returnBlank(long id, Date returnedDate) throws CheckedException {
         return;
 
     }
@@ -52,18 +62,6 @@ public class BlankController implements IStockAccessor{
 
     }
 
-    /**
-     * Re-assigns a blank with the specified ID to the
-     * staff member with the specified ID.
-     *
-     * @param id         The ID of the blank.
-     * @param assignedID The ID of the staff member.
-     * @throws CheckedException Blank re-assigning has failed.
-     */
-    @Override
-    public void reAssignBlank(long id, long assignedID) throws CheckedException {
-
-    }
 
     /**
      * Gets the blank type code for the specified blank ID.
@@ -203,6 +201,34 @@ public class BlankController implements IStockAccessor{
     @Override
     public void setBlankDescription(long id, String description) throws CheckedException {
 
+    }
+
+    /**
+     * Re-assigns a blank with the specified ID to the
+     * staff member with the specified ID.
+     *
+     * @param id         The ID of the blank.
+     * @param assignedID The ID of the staff member.
+     * @throws CheckedException Blank re-assigning has failed.
+     */
+    @Override
+    public void reAssignBlank(long id, long assignedID, Date assignmentDate) throws CheckedException {
+
+    }
+
+    @Override
+    public Date getBlankCreationDate(long id) throws CheckedException {
+        return;
+    }
+
+    @Override
+    public void setCreationDate(long id, Date date) throws CheckedException {
+
+    }
+
+    @Override
+    public Date getBlankAssignmentDate(long id) throws CheckedException {
+        return;
     }
 
     /**
