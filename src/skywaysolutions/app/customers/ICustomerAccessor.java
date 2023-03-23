@@ -1,6 +1,5 @@
 package skywaysolutions.app.customers;
 
-import skywaysolutions.app.database.DatabaseTableBase;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.IRepairable;
@@ -20,10 +19,11 @@ public interface ICustomerAccessor extends IRepairable {
      * @param info The personal information of the account.
      * @param plan The plan ID the account should use (Set to -1 for no plan).
      * @param alias The alias of the account.
+     * @param type The type of the customer.
      * @return The ID of the created account.
      * @throws CheckedException Account creation fails.
      */
-    long createAccount(PersonalInformation info, long plan, String alias) throws CheckedException;
+    long createAccount(PersonalInformation info, long plan, String alias, CustomerType type) throws CheckedException;
 
     /**
      * Gets the personal information of the account.
@@ -266,4 +266,22 @@ public interface ICustomerAccessor extends IRepairable {
      * @throws CheckedException Retrieving the flexible plan has failed.
      */
     Decimal getFlexiblePlanEntry(long plan, FlexiblePlanRange range) throws CheckedException;
+
+    /**
+     * Gets the type of customer.
+     *
+     * @param customer The customer to check.
+     * @return The type of customer.
+     * @throws CheckedException Retrieving customer information has failed.
+     */
+    CustomerType getCustomerType(long customer) throws CheckedException;
+
+    /**
+     * Sets the type of customer.
+     *
+     * @param customer The customer to switch types.
+     * @param type The new type of customer.
+     * @throws CheckedException Storing the customer information has failed.
+     */
+    void setCustomerType(long customer, CustomerType type) throws CheckedException;
 }
