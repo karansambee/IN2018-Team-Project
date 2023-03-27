@@ -19,6 +19,8 @@ public class Account extends DatabaseEntityBase {
     private String currency;
     private PersonalInformation info;
 
+
+
     /**
      * Constructs a new DatabaseEntityBase with the specified connection.
      *
@@ -37,6 +39,28 @@ public class Account extends DatabaseEntityBase {
         this.commission = commission;
         this.currency = currency;
         this.password = password;
+    }
+
+
+    /**
+     * Returns ID for a given email address
+     *
+     * @return AccountID
+     */
+    public static Long getID(IDB_Connector conn, String emailAddress) throws CheckedException {
+        try(PreparedStatement pre = conn.getStatement(
+                "SELECT StaffID FROM Staff WHERE EmailAddress = ?")){
+            pre.setString(1, emailAddress);
+            ResultSet rs = pre.executeQuery();
+            rs.next();
+            Long ID = rs.getLong("StaffID");
+            pre.close();
+            return ID;
+
+        } catch (SQLException throwables){
+            throw new CheckedException(throwables);
+        }
+
     }
 
     /**
@@ -121,9 +145,20 @@ public class Account extends DatabaseEntityBase {
             pre.setString(12, info.getStreetName());
             pre.setBytes(13, password.getHash());
             pre.setBytes(14, password.getSalt());
-
+            pre.executeUpdate();
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
+        }
+
+        if (accountID == null) {
+            try (PreparedStatement pre = conn.getStatement(
+                    "SELECT MAX(StaffID) FROM Staff")){
+            pre.executeUpdate();
+            }
+
+         catch(SQLException throwables){
+                throw new CheckedException(throwables);
+            }
         }
     }
 
@@ -157,6 +192,7 @@ public class Account extends DatabaseEntityBase {
             pre.setBytes(12, password.getHash());
             pre.setBytes(13, password.getSalt());
             pre.setLong(14, accountID);
+            pre.executeUpdate();
 
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
@@ -194,6 +230,7 @@ public class Account extends DatabaseEntityBase {
             info.setStreetName(rs.getString("StreetName"));
 
             password = new PasswordString(rs.getBytes("HashedPassword"), rs.getBytes("PasswordSalt"));
+
 
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
