@@ -10,7 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 
-public class Blank  extends DatabaseEntityBase {
+public class Blank extends DatabaseEntityBase {
     private long blankID;
     private long assignedStaffID;
     private String description;
@@ -213,6 +213,7 @@ public class Blank  extends DatabaseEntityBase {
     }
 
     public Date getAssignmentDate() {
-        return assignmentDate;
+    return assignmentDate;
     }
+
 }
