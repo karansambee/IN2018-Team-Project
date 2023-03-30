@@ -1,5 +1,6 @@
 package skywaysolutions.app.staff;
 
+import skywaysolutions.app.database.DB_Connector;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.staff.IStaffAccessor;
 import skywaysolutions.app.staff.StaffRole;
@@ -11,6 +12,7 @@ import java.net.Authenticator;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 public class AccountController implements IStaffAccessor {
     private IDB_Connector conn;
@@ -86,8 +88,20 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void changePassword(String emailAddress, String password) throws CheckedException {
-
+        if (emailAddress == null){
+            currentAccount.setPassword(new PasswordString(password, PasswordString.getRandomSalt()));
+            currentAccount.store();
+        } else if (currentAccount.getRole().getValue() == 2){
+            Long id = Account.getID(conn, emailAddress);
+            Account account = new Account(conn, id);
+            account.loadRow();
+            account.setPassword(new PasswordString(password, PasswordString.getRandomSalt()));
+            account.store();
+        } else {
+            throw new CheckedException("Cannot change the password of another account unless you are System Administrator");
+        }
     }
+
 
     /**
      * Gets the personal information of an account.
@@ -98,7 +112,16 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public PersonalInformation getPersonalInformation(String emailAddress) throws CheckedException {
-        return null;
+        if (emailAddress == null) {
+            return currentAccount.getInfo();
+        } else if (currentAccount.getRole().getValue() == 2) {
+            Long id = Account.getID(conn, emailAddress);
+            Account account = new Account(conn, id);
+            account.loadRow();
+            return account.getInfo();
+        } else {
+            throw new CheckedException("Cannot retrieve info of another account unless you are System Administrator");
+        }
     }
 
     /**
@@ -111,7 +134,17 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void setPersonalInformation(String emailAddress, PersonalInformation info) throws CheckedException {
-
+        if (emailAddress == null) {
+            currentAccount.setInfo(info);
+        } else if (currentAccount.getRole().getValue() == 2) {
+            Long id = Account.getID(conn, emailAddress);
+            Account account = new Account(conn, id);
+            account.loadRow();
+            account.setInfo(info);
+            account.store();
+        } else {
+            throw new CheckedException("Cannot change the info of another account unless you are System Administrator");
+        }
     }
 
     /**
@@ -123,7 +156,13 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public long getAccountID(String emailAddress) throws CheckedException {
-        return 0;
+        Long id;
+        if (emailAddress == null) {
+            id = currentAccount.getAccountID();
+        } else {
+            id = Account.getID(conn, emailAddress);
+        }
+        return id;
     }
 
     /**
@@ -135,7 +174,16 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public StaffRole getAccountRole(String emailAddress) throws CheckedException {
-        return null;
+        if (emailAddress == null) {
+            return currentAccount.getRole();
+        } else if (currentAccount.getRole().getValue() == 2) {
+            Long id = Account.getID(conn, emailAddress);
+            Account account = new Account(conn, id);
+            account.loadRow();
+            return account.getRole();
+        } else {
+            throw new CheckedException("Cannot get the role of another account unless you are System Administrator");
+        }
     }
 
     /**
@@ -147,7 +195,15 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void setAccountRole(String emailAddress, StaffRole role) throws CheckedException {
-
+        if (currentAccount.getRole().getValue() == 2) {
+            Long id = Account.getID(conn, emailAddress);
+            Account account = new Account(conn, id);
+            account.loadRow();
+            account.setRole(role);
+            account.store();
+        } else {
+            throw new CheckedException("Cannot change the role of an account unless you are System Administrator");
+        }
     }
 
     /**
@@ -158,7 +214,7 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public String[] listAccounts(StaffRole role) {
-        return new String[0];
+        return null;
     }
 
     /**
@@ -169,7 +225,13 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void deleteAccount(String emailAddress) throws CheckedException {
-
+        if (currentAccount.getRole().getValue() == 2) {
+            Long id = Account.getID(conn, emailAddress);
+            Account account = new Account(conn, id);
+            account.deleteRow();
+        } else {
+            throw new CheckedException("Cannot delete an account unless you are System Administrator");
+        }
     }
 
     /**
@@ -181,7 +243,15 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public Decimal getCommission(String emailAddress) throws CheckedException {
-        return null;
+        if (emailAddress == null) {
+            return currentAccount.getCommission();
+        } else if (currentAccount.getRole().getValue() == 1 || currentAccount.getRole().getValue() == 2) {
+            Long id = Account.getID(conn, emailAddress);
+            Account account = new Account(conn, id);
+            return account.getCommission();
+        } else {
+            throw new CheckedException("Cannot retrieve commission rates of another account unless you are System Administrator or Manager");
+        }
     }
 
     /**
@@ -193,7 +263,13 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void setCommission(String emailAddress, Decimal commission) throws CheckedException {
-
+        if (currentAccount.getRole().getValue() == 1 || currentAccount.getRole().getValue() == 2) {
+            Long id = Account.getID(conn, emailAddress);
+            Account account = new Account(conn, id);
+            account.loadRow();
+            account.setCommission(commission);
+            account.store();
+        }
     }
 
     /**
@@ -205,7 +281,14 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public String getCurrency(String emailAddress) throws CheckedException {
-        return null;
+        if (emailAddress == null) {
+            return currentAccount.getCurrency();
+        } else {
+            Long id = Account.getID(conn, emailAddress);
+            Account account = new Account(conn, id);
+            account.loadRow();
+            return account.getCurrency();
+        }
     }
 
     /**
@@ -217,7 +300,17 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void setCurrency(String emailAddress, String currency) throws CheckedException {
-
+        if (currentAccount.getRole().getValue() == 1 || currentAccount.getRole().getValue() == 2) {
+            if (emailAddress == null) {
+                currentAccount.setCurrency(currency);
+            } else {
+                Long id = Account.getID(conn, emailAddress);
+                Account account = new Account(conn, id);
+                account.loadRow();
+                account.setCurrency(currency);
+                account.store();
+            }
+        }
     }
 
     /**
@@ -238,6 +331,6 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void forceFullUnlock(String tableName) throws CheckedException {
-
+        //
     }
 }
