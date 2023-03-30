@@ -31,6 +31,23 @@ public class Account extends DatabaseEntityBase {
         accountID = id;
     }
 
+    public Account(IDB_Connector conn, ResultSet rs) throws SQLException {
+        super(conn);
+        accountID = rs.getLong("StaffID");
+        currency = rs.getString("CurrencyName");
+        role = StaffRole.getStaffRoleFromValue(rs.getInt("StaffRole"));
+        commission = new Decimal(rs.getDouble("CommissionRate"), 2);
+        info.setFirstName(rs.getString("Firstname"));
+        info.setLastName(rs.getString("Surname"));
+        info.setPhoneNumber(rs.getString("PhoneNumber"));
+        info.setEmailAddress(rs.getString("EmailAddress"));
+        info.setDateOfBirth(rs.getDate("DateOfBirth"));
+        info.setPostcode(rs.getString("Postcode"));
+        info.setHouseNumber(rs.getString("HouseNumber"));
+        info.setStreetName(rs.getString("StreetName"));
+
+    }
+
     public Account(IDB_Connector conn, PersonalInformation info, StaffRole role, Decimal commission, String currency, PasswordString password, Long id) {
         super(conn);
         accountID = id;
