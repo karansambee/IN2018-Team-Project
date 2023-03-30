@@ -1,7 +1,6 @@
 package skywaysolutions.app.staff;
 
-import skywaysolutions.app.database.DB_Connector;
-import skywaysolutions.app.database.IDB_Connector;
+import skywaysolutions.app.database.*;
 import skywaysolutions.app.staff.IStaffAccessor;
 import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.CheckedException;
@@ -12,15 +11,25 @@ import java.net.Authenticator;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AccountController implements IStaffAccessor {
     private IDB_Connector conn;
     private Account currentAccount;
-    private Object slock;
+    private StaffTableAccessor accessor;
+    private EmailFinder finder = new EmailFinder();
+    private final Object slock = new Object();
 
     public AccountController(IDB_Connector conn){
         this.conn = conn;
+        this.accessor = new StaffTableAccessor(conn);
+    }
+
+    private Account getAccountFromEmailAddress(String emailAddress, MultiLoadSyncMode mode) throws CheckedException {
+        finder.email = emailAddress;
+        List<Account> accounts = accessor.loadMany(finder, mode);
+        if (accounts.size() > 0) return accounts.get(0); else throw new CheckedException("Account Does Not Exist");
     }
 
     /**
@@ -37,12 +46,14 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public long createAccount(PersonalInformation info, StaffRole role, Decimal commission, String currency, String password, Long id) throws CheckedException {
-        Account newAccount = new Account(this.conn, info, role, commission,currency, new PasswordString(password, PasswordString.getRandomSalt()), id);
-        if (newAccount.exists(true)){
-            throw new CheckedException("Account already exists");
-        } else {
-            newAccount.store();
-            return newAccount.getAccountID();
+        synchronized (slock) {
+            Account newAccount = new Account(this.conn, info, role, commission,currency, new PasswordString(password, PasswordString.getRandomSalt()), id);
+            if (newAccount.exists(true)){
+                throw new CheckedException("Account already exists");
+            } else {
+                newAccount.store();
+                return newAccount.getAccountID();
+            }
         }
     }
 
@@ -56,14 +67,14 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public boolean authenticateAccount(String emailAddress, String password) throws CheckedException {
-        Long ID = Account.getID(conn, emailAddress);
-        Account newAccount = new Account(conn, ID);
-        newAccount.load();
-        if (newAccount.getPassword().checkPassword(password)){
-            currentAccount = newAccount;
-            return true;
-        } else {
-            return false;
+        synchronized (slock) {
+            Account newAccount = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.UnlockAfterLoad);
+            if (newAccount.getPassword().checkPassword(password)){
+               currentAccount = newAccount;
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -74,9 +85,11 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public boolean logoutAccount() {
-        if (currentAccount == null) return false;
-        currentAccount = null;
-        return true;
+        synchronized (slock) {
+            if (currentAccount == null) return false;
+            currentAccount = null;
+            return true;
+        }
     }
 
     /**
@@ -88,17 +101,22 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void changePassword(String emailAddress, String password) throws CheckedException {
-        if (emailAddress == null){
-            currentAccount.setPassword(new PasswordString(password, PasswordString.getRandomSalt()));
-            currentAccount.store();
-        } else if (currentAccount.getRole().getValue() == 2){
-            Long id = Account.getID(conn, emailAddress);
-            Account account = new Account(conn, id);
-            account.loadRow();
-            account.setPassword(new PasswordString(password, PasswordString.getRandomSalt()));
-            account.store();
-        } else {
-            throw new CheckedException("Cannot change the password of another account unless you are System Administrator");
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (emailAddress == null){
+              currentAccount.lock();
+              currentAccount.load();
+              currentAccount.setPassword(new PasswordString(password, PasswordString.getRandomSalt()));
+              currentAccount.store();
+              currentAccount.unlock();
+            } else if (currentAccount.getRole() == StaffRole.Administrator){
+               Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
+               account.setPassword(new PasswordString(password, PasswordString.getRandomSalt()));
+               account.store();
+               account.unlock();
+            } else {
+                throw new CheckedException("Cannot change the password of another account unless you are System Administrator");
+            }
         }
     }
 
@@ -112,15 +130,16 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public PersonalInformation getPersonalInformation(String emailAddress) throws CheckedException {
-        if (emailAddress == null) {
-            return currentAccount.getInfo();
-        } else if (currentAccount.getRole().getValue() == 2) {
-            Long id = Account.getID(conn, emailAddress);
-            Account account = new Account(conn, id);
-            account.loadRow();
-            return account.getInfo();
-        } else {
-            throw new CheckedException("Cannot retrieve info of another account unless you are System Administrator");
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (emailAddress == null) {
+                return currentAccount.getInfo();
+            } else if (currentAccount.getRole() == StaffRole.Administrator) {
+                Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.UnlockAfterLoad);
+                return account.getInfo();
+            } else {
+                throw new CheckedException("Cannot retrieve info of another account unless you are System Administrator");
+            }
         }
     }
 
@@ -134,16 +153,22 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void setPersonalInformation(String emailAddress, PersonalInformation info) throws CheckedException {
-        if (emailAddress == null) {
-            currentAccount.setInfo(info);
-        } else if (currentAccount.getRole().getValue() == 2) {
-            Long id = Account.getID(conn, emailAddress);
-            Account account = new Account(conn, id);
-            account.loadRow();
-            account.setInfo(info);
-            account.store();
-        } else {
-            throw new CheckedException("Cannot change the info of another account unless you are System Administrator");
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (emailAddress == null) {
+                currentAccount.lock();
+                currentAccount.load();
+                currentAccount.setInfo(info);
+                currentAccount.store();
+                currentAccount.unlock();
+            } else if (currentAccount.getRole() == StaffRole.Administrator) {
+                Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
+                account.setInfo(info);
+                account.store();
+                account.unlock();
+            } else {
+                throw new CheckedException("Cannot change the info of another account unless you are System Administrator");
+            }
         }
     }
 
@@ -156,13 +181,14 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public long getAccountID(String emailAddress) throws CheckedException {
-        Long id;
-        if (emailAddress == null) {
-            id = currentAccount.getAccountID();
-        } else {
-            id = Account.getID(conn, emailAddress);
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (emailAddress == null) {
+                return currentAccount.getAccountID();
+            } else {
+                return getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.UnlockAfterLoad).getAccountID();
+            }
         }
-        return id;
     }
 
     /**
@@ -174,15 +200,16 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public StaffRole getAccountRole(String emailAddress) throws CheckedException {
-        if (emailAddress == null) {
-            return currentAccount.getRole();
-        } else if (currentAccount.getRole().getValue() == 2) {
-            Long id = Account.getID(conn, emailAddress);
-            Account account = new Account(conn, id);
-            account.loadRow();
-            return account.getRole();
-        } else {
-            throw new CheckedException("Cannot get the role of another account unless you are System Administrator");
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (emailAddress == null) {
+                return currentAccount.getRole();
+            } else if (currentAccount.getRole() == StaffRole.Administrator || currentAccount.getRole() == StaffRole.Manager) {
+                Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.UnlockAfterLoad);
+                return account.getRole();
+            } else {
+                throw new CheckedException("Cannot get the role of another account unless you are System Administrator or Manager");
+            }
         }
     }
 
@@ -195,14 +222,24 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void setAccountRole(String emailAddress, StaffRole role) throws CheckedException {
-        if (currentAccount.getRole().getValue() == 2) {
-            Long id = Account.getID(conn, emailAddress);
-            Account account = new Account(conn, id);
-            account.loadRow();
-            account.setRole(role);
-            account.store();
-        } else {
-            throw new CheckedException("Cannot change the role of an account unless you are System Administrator");
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (currentAccount.getRole() == StaffRole.Administrator) {
+                if (emailAddress == null) {
+                    currentAccount.lock();
+                    currentAccount.load();
+                    currentAccount.setRole(role);
+                    currentAccount.store();
+                    currentAccount.unlock();
+                } else {
+                    Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
+                    account.setRole(role);
+                    account.store();
+                    account.unlock();
+                }
+            } else {
+                throw new CheckedException("Cannot change the role of an account unless you are System Administrator");
+            }
         }
     }
 
@@ -213,8 +250,20 @@ public class AccountController implements IStaffAccessor {
      * @return An array of account email addresses.
      */
     @Override
-    public String[] listAccounts(StaffRole role) {
-        return null;
+    public String[] listAccounts(StaffRole role) throws CheckedException {
+        synchronized (slock) {
+            try(PreparedStatement pre = conn.getStatement(
+                    "SELECT EmailAddress FROM Staff WHERE StaffRole = ?")){
+                pre.setInt(1, role.getValue());
+                ResultSet rs = pre.executeQuery();
+                ArrayList<String> addresses = new ArrayList<>();
+                while (rs.next()) addresses.add(rs.getString("EmailAddress"));
+                rs.close();
+                return addresses.toArray(new String[0]);
+            } catch (SQLException | CheckedException throwables){
+                throw new CheckedException(throwables);
+            }
+        }
     }
 
     /**
@@ -225,12 +274,13 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void deleteAccount(String emailAddress) throws CheckedException {
-        if (currentAccount.getRole().getValue() == 2) {
-            Long id = Account.getID(conn, emailAddress);
-            Account account = new Account(conn, id);
-            account.deleteRow();
-        } else {
-            throw new CheckedException("Cannot delete an account unless you are System Administrator");
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (currentAccount.getRole() == StaffRole.Administrator) {
+                getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad).delete();
+            } else {
+                throw new CheckedException("Cannot delete an account unless you are System Administrator");
+            }
         }
     }
 
@@ -243,14 +293,16 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public Decimal getCommission(String emailAddress) throws CheckedException {
-        if (emailAddress == null) {
-            return currentAccount.getCommission();
-        } else if (currentAccount.getRole().getValue() == 1 || currentAccount.getRole().getValue() == 2) {
-            Long id = Account.getID(conn, emailAddress);
-            Account account = new Account(conn, id);
-            return account.getCommission();
-        } else {
-            throw new CheckedException("Cannot retrieve commission rates of another account unless you are System Administrator or Manager");
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (emailAddress == null) {
+                return currentAccount.getCommission();
+            } else if (currentAccount.getRole() == StaffRole.Advisor || currentAccount.getRole() == StaffRole.Administrator) {
+                Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.UnlockAfterLoad);
+                return account.getCommission();
+            } else {
+                throw new CheckedException("Cannot retrieve commission rates of another account unless you are System Administrator or Manager");
+            }
         }
     }
 
@@ -263,12 +315,14 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void setCommission(String emailAddress, Decimal commission) throws CheckedException {
-        if (currentAccount.getRole().getValue() == 1 || currentAccount.getRole().getValue() == 2) {
-            Long id = Account.getID(conn, emailAddress);
-            Account account = new Account(conn, id);
-            account.loadRow();
-            account.setCommission(commission);
-            account.store();
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (currentAccount.getRole() == StaffRole.Manager || currentAccount.getRole() == StaffRole.Administrator) {
+                Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
+                account.setCommission(commission);
+                account.store();
+                account.unlock();
+            }
         }
     }
 
@@ -281,13 +335,14 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public String getCurrency(String emailAddress) throws CheckedException {
-        if (emailAddress == null) {
-            return currentAccount.getCurrency();
-        } else {
-            Long id = Account.getID(conn, emailAddress);
-            Account account = new Account(conn, id);
-            account.loadRow();
-            return account.getCurrency();
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (emailAddress == null) {
+                return currentAccount.getCurrency();
+            } else {
+                Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.UnlockAfterLoad);
+                return account.getCurrency();
+            }
         }
     }
 
@@ -300,15 +355,17 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void setCurrency(String emailAddress, String currency) throws CheckedException {
-        if (currentAccount.getRole().getValue() == 1 || currentAccount.getRole().getValue() == 2) {
-            if (emailAddress == null) {
-                currentAccount.setCurrency(currency);
-            } else {
-                Long id = Account.getID(conn, emailAddress);
-                Account account = new Account(conn, id);
-                account.loadRow();
-                account.setCurrency(currency);
-                account.store();
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (currentAccount.getRole() == StaffRole.Administrator || currentAccount.getRole() == StaffRole.Manager) {
+                if (emailAddress == null) {
+                    currentAccount.setCurrency(currency);
+                } else {
+                    Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
+                    account.setCurrency(currency);
+                    account.store();
+                    account.unlock();
+                }
             }
         }
     }
@@ -320,7 +377,7 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public String[] getTables() {
-        return new String[0];
+        return new String[] {"Staff"};
     }
 
     /**
@@ -331,6 +388,22 @@ public class AccountController implements IStaffAccessor {
      */
     @Override
     public void forceFullUnlock(String tableName) throws CheckedException {
-        //
+      synchronized (slock) {
+          if (tableName.equals("Staff")) accessor.unlockAll();
+      }
+    }
+
+    private class EmailFinder implements IFilterStatementCreator {
+        public String email;
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) {
+            try {
+                PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "EmailAddress = ?");
+                sta.setString(1, email);
+                return sta;
+            } catch (SQLException | CheckedException e) {
+                return null;
+            }
+        }
     }
 }

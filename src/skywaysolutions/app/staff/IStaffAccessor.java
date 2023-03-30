@@ -103,7 +103,7 @@ public interface IStaffAccessor extends IRepairable {
      * @param role The role to filter by.
      * @return An array of account email addresses.
      */
-    String[] listAccounts(StaffRole role);
+    String[] listAccounts(StaffRole role) throws CheckedException;
 
     /**
      * Deletes an account given the email address.

@@ -19,8 +19,6 @@ public class Account extends DatabaseEntityBase {
     private String currency;
     private PersonalInformation info;
 
-
-
     /**
      * Constructs a new DatabaseEntityBase with the specified connection.
      *
@@ -56,28 +54,6 @@ public class Account extends DatabaseEntityBase {
         this.commission = commission;
         this.currency = currency;
         this.password = password;
-    }
-
-
-    /**
-     * Returns ID for a given email address
-     *
-     * @return AccountID
-     */
-    public static Long getID(IDB_Connector conn, String emailAddress) throws CheckedException {
-        try(PreparedStatement pre = conn.getStatement(
-                "SELECT StaffID FROM Staff WHERE EmailAddress = ?")){
-            pre.setString(1, emailAddress);
-            ResultSet rs = pre.executeQuery();
-            rs.next();
-            Long ID = rs.getLong("StaffID");
-            pre.close();
-            return ID;
-
-        } catch (SQLException throwables){
-            throw new CheckedException(throwables);
-        }
-
     }
 
     /**
@@ -168,12 +144,12 @@ public class Account extends DatabaseEntityBase {
         }
 
         if (accountID == null) {
-            try (PreparedStatement pre = conn.getStatement(
-                    "SELECT MAX(StaffID) FROM Staff")){
-            pre.executeUpdate();
-            }
-
-         catch(SQLException throwables){
+            try (PreparedStatement pre = conn.getStatement("SELECT MAX(StaffID) as lastStaffID FROM Staff")) {
+                ResultSet rs = pre.executeQuery();
+                rs.next();
+                accountID = rs.getLong("lastStaffID");
+                rs.close();
+            } catch(SQLException throwables){
                 throw new CheckedException(throwables);
             }
         }
@@ -237,18 +213,9 @@ public class Account extends DatabaseEntityBase {
             currency = rs.getString("CurrencyName");
             role = StaffRole.getStaffRoleFromValue(rs.getInt("StaffRole"));
             commission = new Decimal(rs.getDouble("CommissionRate"), 2);
-            info.setFirstName(rs.getString("Firstname"));
-            info.setLastName(rs.getString("Surname"));
-            info.setPhoneNumber(rs.getString("PhoneNumber"));
-            info.setEmailAddress(rs.getString("EmailAddress"));
-            info.setDateOfBirth(rs.getDate("DateOfBirth"));
-            info.setPostcode(rs.getString("Postcode"));
-            info.setHouseNumber(rs.getString("HouseNumber"));
-            info.setStreetName(rs.getString("StreetName"));
-
+            info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"),
+                   Time.fromSQLDate(rs.getDate("DateOfBirth")), rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
             password = new PasswordString(rs.getBytes("HashedPassword"), rs.getBytes("PasswordSalt"));
-
-
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
