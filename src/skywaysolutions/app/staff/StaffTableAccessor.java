@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class StaffTableAccessor extends DatabaseTableBase<Account> {
-    ArrayList<Long> staffIDs;
 
     /**
      * Constructs a new DatabaseTableBase with the specified connection.
