@@ -37,27 +37,28 @@ public final class DatabaseBackupTable {
         if (!conn.getTableList(true).contains(tableName)) throw new CheckedException("Table does not exist");
         //Load the result set
         try(PreparedStatement sta = conn.getStatement("SELECT * FROM "+tableName)) {
-            ResultSet rs = sta.executeQuery();
-            //Load column information from the result set
-            ResultSetMetaData rsm = rs.getMetaData();
-            for (int i = 1; i <= rsm.getColumnCount(); ++i) {
-                columnNames.add(rsm.getColumnName(i));
-                columnTypes.add(rsm.getColumnType(i));
-            }
-            //Load row information from the result set
-            while (rs.next()) {
-                Object[] row = new Object[columnTypes.size()];
-                for (int i = 0; i < columnTypes.size(); ++i) {
-                    row[i] = switch (columnTypes.get(i)) {
-                        case Types.BOOLEAN -> rs.getBoolean(i+1);
-                        case Types.TINYINT -> rs.getByte(i+1) != 0;
-                        case Types.INTEGER -> rs.getInt(i+1);
-                        case Types.BIGINT -> rs.getLong(i+1);
-                        case Types.CHAR, Types.VARCHAR -> rs.getString(i+1);
-                        case Types.BINARY, Types.VARBINARY -> rs.getBytes(i+1);
-                    };
+            try (ResultSet rs = sta.executeQuery()) {
+                //Load column information from the result set
+                ResultSetMetaData rsm = rs.getMetaData();
+                for (int i = 1; i <= rsm.getColumnCount(); ++i) {
+                    columnNames.add(rsm.getColumnName(i));
+                    columnTypes.add(rsm.getColumnType(i));
                 }
-                rows.add(row);
+                //Load row information from the result set
+                while (rs.next()) {
+                    Object[] row = new Object[columnTypes.size()];
+                    for (int i = 0; i < columnTypes.size(); ++i) {
+                        row[i] = switch (columnTypes.get(i)) {
+                            case Types.BOOLEAN -> rs.getBoolean(i + 1);
+                            case Types.TINYINT -> rs.getByte(i + 1) != 0;
+                            case Types.INTEGER -> rs.getInt(i + 1);
+                            case Types.BIGINT -> rs.getLong(i + 1);
+                            case Types.CHAR, Types.VARCHAR -> rs.getString(i + 1);
+                            case Types.BINARY, Types.VARBINARY -> rs.getBytes(i + 1);
+                        };
+                    }
+                    rows.add(row);
+                }
             }
         } catch (SQLException e) {
             throw new CheckedException(e);
@@ -188,34 +189,36 @@ public final class DatabaseBackupTable {
             Stream.writeBytes(os, tableName.getBytes(StandardCharsets.UTF_8));
             //Load the result set
             try(PreparedStatement sta = conn.getStatement("SELECT * FROM "+tableName)) {
-                ResultSet rs = sta.executeQuery();
-                //Load column information from the result set
-                ResultSetMetaData rsm = rs.getMetaData();
-                List<Integer> columnTypes = new ArrayList<>();
-                //Write column information to the stream
-                Stream.writeInteger(os, rsm.getColumnCount());
-                for (int i = 1; i <= rsm.getColumnCount(); ++i) {
-                    Stream.writeInteger(os, rsm.getColumnType(i));
-                    columnTypes.add(rsm.getColumnType(i));
-                    Stream.writeBytes(os, rsm.getColumnName(i).getBytes(StandardCharsets.UTF_8));
-                }
-                //Load the row count
-                try (PreparedStatement stac = conn.getStatement("SELECT COUNT(*) as rowCount FROM " + tableName)) {
-                    ResultSet rsc = stac.executeQuery();
-                    //Write the row count
-                    Stream.writeInteger(os, rsc.getInt("rowCount"));
-                }
-                //Load row information from the result set
-                //And, Write row information to the stream
-                while (rs.next()) {
-                    for (int i = 0; i < rsm.getColumnCount(); ++i) {
-                        switch (columnTypes.get(i)) {
-                            case Types.BOOLEAN -> os.write((rs.getBoolean(i + 1)) ? 1 : 0);
-                            case Types.TINYINT -> os.write((rs.getByte(i + 1) != 0) ? 1 : 0);
-                            case Types.INTEGER -> Stream.writeInteger(os, rs.getInt(i + 1));
-                            case Types.BIGINT -> Stream.writeLong(os, rs.getLong(i + 1));
-                            case Types.CHAR, Types.VARCHAR -> Stream.writeBytes(os, rs.getString(i + 1).getBytes(StandardCharsets.UTF_8));
-                            case Types.BINARY, Types.VARBINARY -> Stream.writeBytes(os, rs.getBytes(i + 1));
+                try (ResultSet rs = sta.executeQuery()) {
+                    //Load column information from the result set
+                    ResultSetMetaData rsm = rs.getMetaData();
+                    List<Integer> columnTypes = new ArrayList<>();
+                    //Write column information to the stream
+                    Stream.writeInteger(os, rsm.getColumnCount());
+                    for (int i = 1; i <= rsm.getColumnCount(); ++i) {
+                        Stream.writeInteger(os, rsm.getColumnType(i));
+                        columnTypes.add(rsm.getColumnType(i));
+                        Stream.writeBytes(os, rsm.getColumnName(i).getBytes(StandardCharsets.UTF_8));
+                    }
+                    //Load the row count
+                    try (PreparedStatement stac = conn.getStatement("SELECT COUNT(*) as rowCount FROM " + tableName)) {
+                        try (ResultSet rsc = stac.executeQuery()) {
+                            //Write the row count
+                            Stream.writeInteger(os, rsc.getInt("rowCount"));
+                        }
+                    }
+                    //Load row information from the result set
+                    //And, Write row information to the stream
+                    while (rs.next()) {
+                        for (int i = 0; i < rsm.getColumnCount(); ++i) {
+                            switch (columnTypes.get(i)) {
+                                case Types.BOOLEAN -> os.write((rs.getBoolean(i + 1)) ? 1 : 0);
+                                case Types.TINYINT -> os.write((rs.getByte(i + 1) != 0) ? 1 : 0);
+                                case Types.INTEGER -> Stream.writeInteger(os, rs.getInt(i + 1));
+                                case Types.BIGINT -> Stream.writeLong(os, rs.getLong(i + 1));
+                                case Types.CHAR, Types.VARCHAR -> Stream.writeBytes(os, rs.getString(i + 1).getBytes(StandardCharsets.UTF_8));
+                                case Types.BINARY, Types.VARBINARY -> Stream.writeBytes(os, rs.getBytes(i + 1));
+                            }
                         }
                     }
                 }

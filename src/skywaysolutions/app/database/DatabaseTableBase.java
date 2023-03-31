@@ -55,8 +55,24 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
      *
      * @param rs The result set to use for loading.
      * @return An instance of {@link T}.
+     * @throws CheckedException An error has occurred.
      */
-    protected abstract T loadOneFrom(ResultSet rs);
+    protected abstract T loadOneFrom(ResultSet rs) throws CheckedException;
+
+    /**
+     * This creates one instance of {@link T} using the ID from the current result set without loading.
+     * DO NOT call {@link ResultSet#next()}.
+     * <p>
+     * This means that the class extending {@link DatabaseEntityBase} should have a
+     * constructor that takes a {@link IDB_Connector} and {@link java.sql.ResultSet}
+     * to allow for a direct load to occur.
+     * </p>
+     *
+     * @param rs The result set to use for loading.
+     * @return An instance of {@link T}.
+     * @throws CheckedException An error has occurred.
+     */
+    protected abstract T noLoadOneFrom(ResultSet rs) throws CheckedException;
 
     /**
      * Gets the table schema (The bit that's located between the brackets).
@@ -143,13 +159,15 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
      */
     public final List<T> loadMany(IFilterStatementCreator filter, MultiLoadSyncMode syncMode) throws CheckedException {
         assureTableSchema();
-        if (syncMode != MultiLoadSyncMode.NoLockBeforeLoad) lockAll();
+        if (syncMode != MultiLoadSyncMode.NoLockBeforeLoad && syncMode != MultiLoadSyncMode.NoLoad) lockAll();
         List<T> toReturn = new ArrayList<>();
         synchronized (slock) {
-            if (!_lock) throw new CheckedException("Lock not applied");
+            if ((!_lock) && (syncMode == MultiLoadSyncMode.UnlockAfterLoad || syncMode == MultiLoadSyncMode.KeepLockedAfterLoad)) throw new CheckedException("Lock not applied");
             try(PreparedStatement sta = filter.createFilteredStatementFor(conn, "SELECT * FROM "+getTableName()+" WHERE ")) {
-                ResultSet rs = sta.executeQuery();
-                while (rs.next()) toReturn.add(loadOneFrom(rs));
+                try (ResultSet rs = sta.executeQuery()) {
+                    while (rs.next())
+                        toReturn.add((syncMode == MultiLoadSyncMode.NoLoad) ? noLoadOneFrom(rs) : loadOneFrom(rs));
+                }
             } catch (SQLException e) {
                 throw new CheckedException(e);
             }
@@ -170,15 +188,17 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             if (_lock) return;
             int rc = 0; //Get the number of rows in the table
             try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM "+getTableName())) {
-                ResultSet rs = sta.executeQuery();
-                rc = rs.getInt("rowCount");
+                try (ResultSet rs = sta.executeQuery()) {
+                    rc = rs.getInt("rowCount");
+                }
             } catch (SQLException e) {
                 throw new CheckedException(e);
             }
             int rca = 0; //Get the number of rows in the aux table
             try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM "+getAuxTableName())) {
-                ResultSet rs = sta.executeQuery();
-                rca = rs.getInt("rowCount");
+                try (ResultSet rs = sta.executeQuery()) {
+                    rca = rs.getInt("rowCount");
+                }
             } catch (SQLException e) {
                 throw new CheckedException(e);
             }
@@ -198,7 +218,8 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
      * Select all the IDs from the main table to get what to insert.
      * Use {@link IDB_Connector#getStatement(String)} to get a {@link java.sql.PreparedStatement}.
      * ^ Don't forget to use the try([resource]) {}
-     * Use {@link #getTableName()} to get the table name.
+     * Use {@link #getTableName()} to get the table name for selection.
+     * Use {@link #getAuxTableName()} to get the table name for insertion.
      * DO NOT use any public functions provided by {@link DatabaseTableBase} in here otherwise a deadlock could occur.
      *
      * @throws CheckedException An error has occurred.
