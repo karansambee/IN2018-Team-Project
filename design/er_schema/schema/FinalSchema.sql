@@ -87,7 +87,7 @@ CREATE TABLE Sale (
   PreDiscountCost numeric(8, 2), 
   PRIMARY KEY (BlankNumber), 
   FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID), 
-  FOREIGN KEY (BlankNumber) REFERENCES Blank(BlankNumber))
+  FOREIGN KEY (BlankNumber) REFERENCES Blank(BlankNumber), 
   FOREIGN KEY (CurrencyName) REFERENCES ExchangeRate(CurrencyName));
 
 CREATE TABLE Transcation (
