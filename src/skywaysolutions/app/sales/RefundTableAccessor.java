@@ -20,7 +20,7 @@ public class RefundTableAccessor extends DatabaseTableBase<Refund> {
      *
      * @param conn The connection to use.
      */
-    public RefundTableAccessor(IDB_Connector conn) {
+    RefundTableAccessor(IDB_Connector conn) {
         super(conn);
     }
 

@@ -32,7 +32,7 @@ public class Transaction extends DatabaseEntityBase {
      * @param conn The database connection.
      * @param transactionID The ID of the transaction.
      */
-    public Transaction(IDB_Connector conn, long transactionID) {
+    Transaction(IDB_Connector conn, long transactionID) {
         super(conn);
         this.transactionID = transactionID;
     }
@@ -47,7 +47,7 @@ public class Transaction extends DatabaseEntityBase {
      * @param amountUSD The payment in USD.
      * @param transactionDate The date of transaction.
      */
-    public Transaction(IDB_Connector conn, long saleID, String currency, Payment payment, Decimal amountUSD, Date transactionDate) {
+    Transaction(IDB_Connector conn, long saleID, String currency, Payment payment, Decimal amountUSD, Date transactionDate) {
         super(conn);
         this.saleID = saleID;
         this.currency = currency;

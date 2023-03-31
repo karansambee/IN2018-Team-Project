@@ -21,7 +21,7 @@ public class TransactionTableAccessor extends DatabaseTableBase<Transaction> {
      *
      * @param conn The connection to use.
      */
-    public TransactionTableAccessor(IDB_Connector conn) {
+    TransactionTableAccessor(IDB_Connector conn) {
         super(conn);
     }
     @Override

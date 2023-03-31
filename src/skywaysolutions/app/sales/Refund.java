@@ -29,7 +29,7 @@ public class Refund extends DatabaseEntityBase {
      * @param conn The database connection.
      * @param refundID The ID of the refund.
      */
-    public Refund(IDB_Connector conn, long refundID) {
+    Refund(IDB_Connector conn, long refundID) {
         super(conn);
         this.refundID = refundID;
     }
@@ -42,7 +42,7 @@ public class Refund extends DatabaseEntityBase {
      * @param date The date of the refund.
      * @param amount The amount refunded.
      */
-    public Refund(IDB_Connector conn, long transactionID, Date date, Decimal amount) {
+    Refund(IDB_Connector conn, long transactionID, Date date, Decimal amount) {
         super(conn);
         refundID = null;
         this.transactionID = transactionID;
