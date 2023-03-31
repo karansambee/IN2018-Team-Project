@@ -333,5 +333,17 @@ public class Customer extends DatabaseEntityBase {
     public void setCustomerType(CustomerType customerType) {
         this.customerType = customerType;
     }
+
+    public void setCustomerID(long customerID) {
+        this.customerID = customerID;
+    }
+
+    public Decimal getAccountDiscountCredit() {
+        return accountDiscountCredit;
+    }
+
+    public void setAccountDiscountCredit(Decimal accountDiscountCredit) {
+        this.accountDiscountCredit = accountDiscountCredit;
+    }
 }
 

@@ -12,6 +12,7 @@ import java.sql.SQLException;
 public class FlexibleDiscountEntry extends DatabaseEntityBase {
 
     private long id;
+    private long discountPlanID;
     private FlexiblePlanRange range;
     private Decimal percentage;
 
@@ -29,6 +30,15 @@ public class FlexibleDiscountEntry extends DatabaseEntityBase {
         super(conn);
         this.range = range;
         this.percentage = percentage;
+    }
+
+    public FlexibleDiscountEntry(IDB_Connector conn, ResultSet rs) throws SQLException {
+        super(conn);
+        id = rs.getLong("EntryID");
+        discountPlanID = rs.getLong("DiscountPlanID");
+        range = new FlexiblePlanRange(new Decimal(rs.getDouble("AmountLowerBound"),10),
+                new Decimal(rs.getDouble("AmountUpperBound"), 10));
+        percentage = new Decimal(rs.getDouble("DiscountPercentage"), 2);
     }
 
     /**
@@ -94,11 +104,15 @@ public class FlexibleDiscountEntry extends DatabaseEntityBase {
     @Override
     protected void createRow() throws CheckedException {
         try (PreparedStatement sta = conn.getStatement("INSERT INTO " + getTableName() + " VALUES (?,?,?,?,?)")) {
-
+            sta.setLong(1, id);
+            sta.setLong(2, discountPlanID);
+            sta.setDouble(3, range.getLower().getValue());
+            sta.setDouble(4, range.getUpper().getValue());
+            sta.setDouble(5, percentage.getValue());
+            sta.executeUpdate();
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
-
     }
 
     /**
@@ -112,7 +126,17 @@ public class FlexibleDiscountEntry extends DatabaseEntityBase {
      */
     @Override
     protected void updateRow() throws CheckedException {
-
+        try (PreparedStatement sta = conn.getStatement("UPDATE " + getTableName() + " SET DiscountPlanID = ?, " +
+                "AmountLowerBound = ?, AmountUpperBound = ?, DiscountPercentage = ?  WHERE EntryID = ?")) {
+            sta.setLong(1, discountPlanID);
+            sta.setLong(2, discountPlanID);
+            sta.setDouble(3, range.getLower().getValue());
+            sta.setDouble(4, range.getUpper().getValue());
+            sta.setDouble(5, percentage.getValue());
+            sta.executeUpdate();
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
     }
 
     /**
@@ -126,7 +150,21 @@ public class FlexibleDiscountEntry extends DatabaseEntityBase {
      */
     @Override
     protected void loadRow() throws CheckedException {
+        try (PreparedStatement sta = conn.getStatement("SELECT DiscountPlanID," +
+                "AmountLowerBound, AmountUpperBound, DiscountPercentage FROM" + getTableName() + "WHERE EntryID = ?")) {
+            sta.setLong(1, id);
+            ResultSet rs = sta.executeQuery();
+            rs.next();
 
+            id = rs.getLong("EntryID");
+            discountPlanID = rs.getLong("DiscountPlanID");
+            range = new FlexiblePlanRange(new Decimal(rs.getDouble("AmountLowerBound"), 10),
+                    new Decimal(rs.getDouble("AmountUpperBound"), 10));
+            percentage = new Decimal(rs.getDouble("Percentage"), 2);
+
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
     }
 
     /**
@@ -140,7 +178,12 @@ public class FlexibleDiscountEntry extends DatabaseEntityBase {
      */
     @Override
     protected void deleteRow() throws CheckedException {
-
+        try(PreparedStatement pre = conn.getStatement("DELETE FROM" + getTableName() + "WHERE EntryID = ?")){
+            pre.setLong(1, id);
+            pre.executeUpdate();
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
     }
 
     /**

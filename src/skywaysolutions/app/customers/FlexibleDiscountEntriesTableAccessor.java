@@ -44,7 +44,11 @@ public class FlexibleDiscountEntriesTableAccessor extends DatabaseTableBase<Flex
      */
     @Override
     protected FlexibleDiscountEntry loadOneFrom(ResultSet rs) {
-        return null;
+        try {
+            return new FlexibleDiscountEntry(conn, rs);
+        } catch (SQLException e) {
+            return null;
+        }
     }
 
     /**
