@@ -45,6 +45,13 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
     }
 
     /**
+     * This should return the name of the ID column.
+     *
+     * @return The name of the ID column.
+     */
+    protected abstract String getIDColumnName();
+
+    /**
      * This loads one instance of {@link T} from the current result set.
      * DO NOT call {@link ResultSet#next()}.
      * <p>
@@ -164,7 +171,8 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
         List<T> toReturn = new ArrayList<>();
         synchronized (slock) {
             if ((!_lock) && (syncMode == MultiLoadSyncMode.UnlockAfterLoad || syncMode == MultiLoadSyncMode.KeepLockedAfterLoad)) throw new CheckedException("Lock not applied");
-            try(PreparedStatement sta = filter.createFilteredStatementFor(conn, "SELECT * FROM "+getTableName()+" WHERE ")) {
+            try(PreparedStatement sta = filter.createFilteredStatementFor(conn, "SELECT "+
+                    ((syncMode == MultiLoadSyncMode.NoLoad) ? getIDColumnName() : "*")+" FROM "+getTableName()+" WHERE ")) {
                 try (ResultSet rs = sta.executeQuery()) {
                     while (rs.next())
                         toReturn.add((syncMode == MultiLoadSyncMode.NoLoad) ? noLoadOneFrom(rs) : loadOneFrom(rs, _lock));
@@ -228,16 +236,15 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
     protected abstract void createAllAuxRows() throws CheckedException;
 
     /**
-     * Inserts all the aux rows of a specified column name that are ints.
+     * Inserts all the aux rows using ints as a primary key.
      *
-     * @param columnName The name of the ID column.
      * @throws CheckedException An error has occurred.
      */
-    protected void createAllAuxRowsIntID(String columnName) throws CheckedException {
+    protected final void createAllAuxRowsIntID() throws CheckedException {
         ArrayList<Integer> IDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT "+columnName+" FROM " + getTableName())) {
+        try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getTableName())) {
             try (ResultSet rs = sta.executeQuery()) {
-                while (rs.next()) IDs.add(rs.getInt(columnName));
+                while (rs.next()) IDs.add(rs.getInt(getIDColumnName()));
             }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
@@ -254,16 +261,15 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
     }
 
     /**
-     * Inserts all the aux rows of a specified column name that are longs.
+     * Inserts all the aux rows using longs as a primary key.
      *
-     * @param columnName The name of the ID column.
      * @throws CheckedException An error has occurred.
      */
-    protected void createAllAuxRowsLongID(String columnName) throws CheckedException {
+    protected final void createAllAuxRowsLongID() throws CheckedException {
         ArrayList<Long> IDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT "+columnName+" FROM " + getTableName())) {
+        try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getTableName())) {
             try (ResultSet rs = sta.executeQuery()) {
-                while (rs.next()) IDs.add(rs.getLong(columnName));
+                while (rs.next()) IDs.add(rs.getLong(getIDColumnName()));
             }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
@@ -280,16 +286,15 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
     }
 
     /**
-     * Inserts all the aux rows of a specified column name that are strings.
+     * Inserts all the aux rows using strings as a primary key.
      *
-     * @param columnName The name of the ID column.
      * @throws CheckedException An error has occurred.
      */
-    protected void createAllAuxRowsStringID(String columnName) throws CheckedException {
+    protected final void createAllAuxRowsStringID() throws CheckedException {
         ArrayList<String> IDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT "+columnName+" FROM " + getTableName())) {
+        try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getTableName())) {
             try (ResultSet rs = sta.executeQuery()) {
-                while (rs.next()) IDs.add(rs.getString(columnName));
+                while (rs.next()) IDs.add(rs.getString(getIDColumnName()));
             }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
