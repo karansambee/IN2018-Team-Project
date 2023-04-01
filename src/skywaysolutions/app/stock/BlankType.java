@@ -1,6 +1,5 @@
 package skywaysolutions.app.stock;
 
-import com.sun.source.tree.BreakTree;
 import skywaysolutions.app.database.DatabaseEntityBase;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
@@ -28,8 +27,9 @@ public class BlankType extends DatabaseEntityBase {
         blankTypeID = id;
         this.description = description;
     }
-    public BlankType(IDB_Connector conn, ResultSet rs) throws SQLException {
-        super(conn);
+    public BlankType(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+        super(conn, locked);
+        setLoadedAndExists();
         blankTypeID = rs.getInt("TypeNumber");
         description = rs.getString("TypeDescription");
     }
@@ -86,13 +86,13 @@ public class BlankType extends DatabaseEntityBase {
 
     @Override
     protected void loadRow() throws CheckedException {
-        try(PreparedStatement sta = conn.getStatement("SELECT TypeNumber, TypeDescription FROM " +getTableName()+" WHERE TypeNumber = ?"  )){
+        try(PreparedStatement sta = conn.getStatement("SELECT TypeNumber, TypeDescription FROM " +getTableName()+" WHERE TypeNumber = ?")){
             sta.setInt(1, blankTypeID);
-            ResultSet rs = sta.executeQuery();
-            rs.next();
-            blankTypeID = rs.getInt("TypeNumber");
-            description = rs.getString("TypeDescription");
-            rs.close();
+            try (ResultSet rs = sta.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                blankTypeID = rs.getInt("TypeNumber");
+                description = rs.getString("TypeDescription");
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
@@ -100,7 +100,7 @@ public class BlankType extends DatabaseEntityBase {
 
     @Override
     protected void deleteRow() throws CheckedException {
-        try(PreparedStatement sta = conn.getStatement("DELETE FROM " +getTableName()+" WHERE TypeNumber = ?"  )){
+        try(PreparedStatement sta = conn.getStatement("DELETE FROM " +getTableName()+" WHERE TypeNumber = ?")){
             sta.setInt(1, blankTypeID);
             sta.executeUpdate();
         } catch (SQLException throwables) {
@@ -111,13 +111,12 @@ public class BlankType extends DatabaseEntityBase {
 
     @Override
     protected boolean checkRowExistence() throws CheckedException {
-        try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM " +getTableName()+" WHERE TypeNumber = ?"  )){
+        try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM " +getTableName()+" WHERE TypeNumber = ?")){
             sta.setInt(1, blankTypeID);
-            ResultSet rs = sta.executeQuery();
-            rs.next();
-            int rc = rs.getInt("rowCount");
-            rs.close();
-            if (rc > 0) return true; else return false;
+            try (ResultSet rs = sta.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                return rs.getInt("rowCount") > 0;
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }

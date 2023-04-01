@@ -8,7 +8,6 @@ import skywaysolutions.app.utils.CheckedException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class BlankTypeTableAccessor extends DatabaseTableBase<BlankType> {
     /**
@@ -30,6 +29,11 @@ public class BlankTypeTableAccessor extends DatabaseTableBase<BlankType> {
         return "BlankType";
     }
 
+    @Override
+    protected String getIDColumnName() {
+        return "TypeNumber";
+    }
+
     /**
      * This loads one instance of {@link BlankType} from the current result set.
      * DO NOT call {@link ResultSet#next()}.
@@ -43,11 +47,20 @@ public class BlankTypeTableAccessor extends DatabaseTableBase<BlankType> {
      * @return An instance of {@link BlankType}.
      */
     @Override
-    protected BlankType loadOneFrom(ResultSet rs) {
+    protected BlankType loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
-            return new BlankType(conn, rs);
+            return new BlankType(conn, rs, locked);
         } catch (SQLException e) {
-            return null;
+            throw new CheckedException(e);
+        }
+    }
+
+    @Override
+    protected BlankType noLoadOneFrom(ResultSet rs) throws CheckedException {
+        try {
+            return new BlankType(conn, rs.getInt(getIDColumnName()));
+        } catch (SQLException e) {
+            throw new CheckedException(e);
         }
     }
 
@@ -61,7 +74,7 @@ public class BlankTypeTableAccessor extends DatabaseTableBase<BlankType> {
     @Override
     protected String getTableSchema() {
         return "TypeNumber      INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT," +
-                "  TypeDescription varchar(255) NOT NULL);";
+                " TypeDescription varchar(255) NOT NULL";
     }
 
     /**
@@ -75,7 +88,7 @@ public class BlankTypeTableAccessor extends DatabaseTableBase<BlankType> {
      */
     @Override
     protected String getAuxTableSchema() {
-        return "  TypeNumber      INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT";
+        return "TypeNumber      INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT";
     }
 
     /**
@@ -90,23 +103,6 @@ public class BlankTypeTableAccessor extends DatabaseTableBase<BlankType> {
      */
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        ArrayList<Integer> blankTypeIDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT TypeNumber FROM " + getTableName())) {
-            ResultSet rs = sta.executeQuery();
-            while (rs.next()) blankTypeIDs.add(rs.getInt("TypeNumber"));
-            rs.close();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
-            for (long c : blankTypeIDs) {
-                sta.setInt(1, (int) c);
-                sta.addBatch();
-            }
-            sta.executeBatch();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-
+        createAllAuxRowsIntID();
     }
 }

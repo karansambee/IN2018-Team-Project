@@ -14,16 +14,15 @@ import java.util.Date;
 import java.util.List;
 
 public class BlankController implements IStockAccessor {
-    private IDB_Connector conn;
+    private final IDB_Connector conn;
     private final Object slock = new Object();
 
     //for blanks
-    private IDFinder blankFinder = new IDFinder();
-    private BlankTableAccessor blankTableAccessor;
-
+    private final BlankAssignmentFilter blankAssignmentFilter = new BlankAssignmentFilter();
+    private final BlankTableAccessor blankTableAccessor;
     //for blank types
-    private TypeFinder blankTypeFinder = new TypeFinder();
-    private BlankTypeTableAccessor blankTypeTableAccessor;
+    private final AllFilter allFilter = new AllFilter();
+    private final BlankTypeTableAccessor blankTypeTableAccessor;
 
 
     public BlankController(IDB_Connector conn) {
@@ -31,52 +30,6 @@ public class BlankController implements IStockAccessor {
         this.blankTableAccessor = new BlankTableAccessor(conn);
         this.blankTypeTableAccessor = new BlankTypeTableAccessor(conn);
     }
-
-    //for blanks
-    private class IDFinder implements IFilterStatementCreator {
-        public long blankID;
-        @Override
-        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) {
-            try {
-                PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "BlankNumber = ?");
-                sta.setLong(1, blankID);
-                return sta;
-            } catch (SQLException | CheckedException e) {
-                return null;
-            }
-        }
-    }
-
-    private Blank getBlankFromID(long id, MultiLoadSyncMode mode) throws CheckedException {
-        blankFinder.blankID = id;
-        List<Blank> blanks = blankTableAccessor.loadMany(blankFinder, mode);
-        if (blanks.size() > 0) return blanks.get(0); else throw new CheckedException("Blank Does Not Exist");
-    }
-
-
-    //for blank types
-    private class TypeFinder implements IFilterStatementCreator {
-        public long blankTypeID;
-        @Override
-        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) {
-            try {
-                PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "TypeNumber = ?");
-                sta.setLong(1, blankTypeID);
-                return sta;
-            } catch (SQLException | CheckedException e) {
-                return null;
-            }
-        }
-    }
-
-    private BlankType getBlankTypeFromID(long id, MultiLoadSyncMode mode) throws CheckedException {
-        blankTypeFinder.blankTypeID = id;
-        List<BlankType> blankTypes = blankTypeTableAccessor.loadMany(blankTypeFinder, mode);
-        if (blankTypes.size() > 0) return blankTypes.get(0); else throw new CheckedException("BlankType Does Not Exist");
-    }
-
-
-
 
     /**
      * Creates a blank with the specified ID,
@@ -91,6 +44,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public void createBlank(long id, long assignedID, String description, Date creationDate, Date assignmentDate) throws CheckedException {
         synchronized (slock) {
+            if (assignedID < -1) assignedID = -1;
             Blank newBlank = new Blank(conn, id, assignedID, description, creationDate, assignmentDate);
             if (newBlank.exists(true)){
                 throw new CheckedException("Blank already exists");
@@ -109,7 +63,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void returnBlank(long id, Date returnedDate) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
             blank.setReturned(returnedDate);
             blank.store();
             blank.unlock();
@@ -125,7 +81,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void blacklistBlank(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
             blank.setBlackListed(true);
             blank.store();
             blank.unlock();
@@ -141,7 +99,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void voidBlank(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
             blank.setVoided(true);
             blank.store();
             blank.unlock();
@@ -158,45 +118,29 @@ public class BlankController implements IStockAccessor {
     @Override
     public int getBlankType(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
-            return Integer.parseInt(String.valueOf(blank.getBlankID()).substring(0,3));
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
+            blank.unlock();
+            return blank.getBlankType();
         }
     }
 
     /**
      * Gets a list of blanks that may be filtered by a provided staff member ID.
      *
-     * @param assignedID The staff ID to filter by or -1 for no filtering.
+     * @param assignedID The staff ID to filter by, -1 for no filtering or -2 for un-assigned.
      * @return The list of blank IDs.
      * @throws CheckedException The blanks could not be retrieved.
      */
     @Override
     public long[] getBlanks(long assignedID) throws CheckedException {
         synchronized (slock) {
-            if (assignedID == -1) {
-                try(PreparedStatement pre = conn.getStatement(
-                        "SELECT BlankNumber FROM Blank")){
-                    ResultSet rs = pre.executeQuery();
-                    ArrayList<Integer> blankNumbers = new ArrayList<>();
-                    while (rs.next()) blankNumbers.add(rs.getInt("BlankNumber"));
-                    rs.close();
-                    return blankNumbers.stream().mapToLong(Integer::longValue).toArray();
-                } catch (SQLException | CheckedException throwables){
-                    throw new CheckedException(throwables);
-                }
-            } else {
-                try(PreparedStatement pre = conn.getStatement(
-                        "SELECT BlankNumber FROM Blank WHERE StaffID = ?")){
-                    pre.setLong(1, assignedID);
-                    ResultSet rs = pre.executeQuery();
-                    ArrayList<Integer> blankNumbers = new ArrayList<>();
-                    while (rs.next()) blankNumbers.add(rs.getInt("BlankNumber"));
-                    rs.close();
-                    return blankNumbers.stream().mapToLong(Integer::longValue).toArray();
-                } catch (SQLException | CheckedException throwables){
-                    throw new CheckedException(throwables);
-                }
-            }
+            blankAssignmentFilter.staffID = assignedID;
+            List<Blank> blanks = blankTableAccessor.loadMany(blankAssignmentFilter, MultiLoadSyncMode.NoLoad);
+            long[] ids = new long[blanks.size()];
+            for (int i = 0; i < ids.length; i++) ids[i] = blanks.get(i).getBlankID();
+            return ids;
         }
     }
 
@@ -210,7 +154,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public boolean isBlankReturned(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
+            blank.unlock();
             return blank.isReturned() != null;
         }
     }
@@ -225,7 +172,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public Date getBlankReturnedDate(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
+            blank.unlock();
             return blank.isReturned();
         }
     }
@@ -240,7 +190,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public boolean isBlankBlacklisted(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
+            blank.unlock();
             return blank.isBlackListed();
         }
     }
@@ -255,7 +208,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public boolean isBlankVoided(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
+            blank.unlock();
             return blank.isVoided();
         }
     }
@@ -289,7 +245,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public String getBlankTypeDescription(int typeCode) throws CheckedException {
         synchronized (slock) {
-            BlankType blankType = getBlankTypeFromID(typeCode, MultiLoadSyncMode.KeepLockedAfterLoad);
+            BlankType blankType = new BlankType(conn, typeCode);
+            blankType.lock();
+            blankType.load();
+            blankType.unlock();
             return blankType.getDescription();
         }
     }
@@ -304,7 +263,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void setBlankTypeDescription(int typeCode, String description) throws CheckedException {
         synchronized (slock) {
-            BlankType blankType = getBlankTypeFromID(typeCode, MultiLoadSyncMode.KeepLockedAfterLoad);
+            BlankType blankType = new BlankType(conn, typeCode);
+            blankType.lock();
+            blankType.load();
             blankType.setDescription(description);
             blankType.store();
             blankType.unlock();
@@ -320,7 +281,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void deleteBlankType(int typeCode) throws CheckedException {
         synchronized (slock) {
-            getBlankTypeFromID(typeCode, MultiLoadSyncMode.KeepLockedAfterLoad).delete();
+            BlankType blankType = new BlankType(conn, typeCode);
+            blankType.lock();
+            blankType.delete();
         }
     }
 
@@ -333,16 +296,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public int[] listBlankTypes() throws CheckedException {
         synchronized (slock) {
-            try(PreparedStatement pre = conn.getStatement(
-                    "SELECT TypeNumber FROM BlankType")){
-                ResultSet rs = pre.executeQuery();
-                ArrayList<Integer> typeNumbers = new ArrayList<>();
-                while (rs.next()) typeNumbers.add(rs.getInt("BlankType"));
-                rs.close();
-                return typeNumbers.stream().mapToInt(Integer::intValue).toArray();
-            } catch (SQLException | CheckedException throwables){
-                throw new CheckedException(throwables);
-            }
+            List<BlankType> blankTypes = blankTypeTableAccessor.loadMany(allFilter, MultiLoadSyncMode.NoLoad);
+            int[] ids = new int[blankTypes.size()];
+            for (int i = 0; i < ids.length; i++) ids[i] = blankTypes.get(i).getBlankTypeID();
+            return ids;
         }
     }
 
@@ -356,7 +313,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public String getBlankDescription(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
+            blank.unlock();
             return blank.getDescription();
         }
     }
@@ -371,7 +331,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void setBlankDescription(long id, String description) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
             blank.setDescription(description);
             blank.store();
             blank.unlock();
@@ -389,7 +351,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public void reAssignBlank(long id, long assignedID, Date assignmentDate) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            if (assignedID < -1) assignedID = -1;
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
             blank.setAssignedStaffID(assignedID, assignmentDate);
             blank.store();
             blank.unlock();
@@ -399,7 +364,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public Date getBlankCreationDate(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
+            blank.unlock();
             return blank.getAssignmentDate();
         }
     }
@@ -414,7 +382,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void setBlankCreationDate(long id, Date date) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
             blank.setCreationDate(date);
             blank.store();
             blank.unlock();
@@ -425,7 +395,10 @@ public class BlankController implements IStockAccessor {
     @Override
     public Date getBlankAssignmentDate(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = getBlankFromID(id, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Blank blank = new Blank(conn, id);
+            blank.lock();
+            blank.load();
+            blank.unlock();
             return blank.getAssignmentDate();
         }
     }
@@ -449,9 +422,28 @@ public class BlankController implements IStockAccessor {
     @Override
     public void forceFullUnlock(String tableName) throws CheckedException {
         synchronized (slock) {
-            if (tableName.equals("Blank")) blankTableAccessor.unlockAll();
-            else if (tableName.equals("BlankType")) blankTypeTableAccessor.unlockAll();
+            if (tableName.equals("Blank")) blankTableAccessor.unlockAll(true);
+            else if (tableName.equals("BlankType")) blankTypeTableAccessor.unlockAll(true);
         }
     }
 
+    private static class BlankAssignmentFilter implements IFilterStatementCreator {
+        public long staffID;
+
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
+            PreparedStatement sta = conn.getStatement((staffID == -1) ?
+                    startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7) :
+                    startOfSQLTemplate + "StaffID = ?");
+            if (staffID != -1) sta.setLong(1, (staffID == -2) ? -1 : staffID);
+            return sta;
+        }
+    }
+
+    private static class AllFilter implements IFilterStatementCreator {
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
+            return conn.getStatement(startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7));
+        }
+    }
 }

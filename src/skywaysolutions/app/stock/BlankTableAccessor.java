@@ -8,7 +8,6 @@ import skywaysolutions.app.utils.CheckedException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class BlankTableAccessor extends DatabaseTableBase<Blank> {
 
@@ -31,6 +30,11 @@ public class BlankTableAccessor extends DatabaseTableBase<Blank> {
         return "Blank";
     }
 
+    @Override
+    protected String getIDColumnName() {
+        return "BlankNumber";
+    }
+
     /**
      * This loads one instance of {@link Blank} from the current result set.
      * DO NOT call {@link ResultSet#next()}.
@@ -44,11 +48,20 @@ public class BlankTableAccessor extends DatabaseTableBase<Blank> {
      * @return An instance of {@link Blank}.
      */
     @Override
-    protected Blank loadOneFrom(ResultSet rs) {
+    protected Blank loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
-            return new Blank(conn, rs);
+            return new Blank(conn, rs, locked);
         } catch (SQLException e) {
-            return null;
+            throw new CheckedException(e);
+        }
+    }
+
+    @Override
+    protected Blank noLoadOneFrom(ResultSet rs) throws CheckedException {
+        try {
+            return new Blank(conn, rs.getLong(getIDColumnName()));
+        } catch (SQLException e) {
+            throw new CheckedException(e);
         }
     }
 
@@ -100,22 +113,6 @@ public class BlankTableAccessor extends DatabaseTableBase<Blank> {
      */
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        ArrayList<Long> blankIDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT BlankNumber FROM " + getTableName())) {
-            ResultSet rs = sta.executeQuery();
-            while (rs.next()) blankIDs.add(rs.getLong("BlankNumber"));
-            rs.close();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
-            for (long c : blankIDs) {
-                sta.setLong(1, c);
-                sta.addBatch();
-            }
-            sta.executeBatch();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
+        createAllAuxRowsLongID();
     }
 }

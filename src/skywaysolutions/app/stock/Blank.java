@@ -3,16 +3,19 @@ package skywaysolutions.app.stock;
 import skywaysolutions.app.database.DatabaseEntityBase;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
+import skywaysolutions.app.utils.ResultSetNullableReturners;
 import skywaysolutions.app.utils.Time;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Date;
 
 public class Blank extends DatabaseEntityBase {
     private long blankID;
     private long assignedStaffID;
+    private int typeID;
     private String description;
     private Date returned;
     private boolean blackListed;
@@ -28,27 +31,31 @@ public class Blank extends DatabaseEntityBase {
     public Blank(IDB_Connector conn, long id) {
         super(conn);
         blankID = id;
+        typeID = Integer.parseInt(Long.toString(blankID).substring(0,3));
     }
 
     public Blank(IDB_Connector conn, long id, long assigned, String description, Date creation, Date assignment) {
         super(conn);
         blankID = id;
+        typeID = Integer.parseInt(Long.toString(blankID).substring(0,3));
         assignedStaffID = assigned;
         this.description = description;
         creationDate = creation;
         assignmentDate = assignment;
     }
 
-    public Blank(IDB_Connector conn, ResultSet rs) throws SQLException {
-        super(conn);
+    public Blank(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+        super(conn, locked);
+        setLoadedAndExists();
         blankID = rs.getInt("BlankNumber");
         assignedStaffID = rs.getLong("StaffID");
+        typeID = rs.getInt("TypeNumber");
         description = rs.getString("BlankDescription");
         blackListed = rs.getBoolean("BlackListed");
         voided = rs.getBoolean("Void");
         creationDate = rs.getDate("ReceivedDate");
-        assignmentDate = rs.getDate("AssignedDate");
-        returned = rs.getDate("ReturnedDate");
+        assignmentDate = ResultSetNullableReturners.getDateValue(rs, "AssignedDate");
+        returned = ResultSetNullableReturners.getDateValue(rs, "ReturnedDate");
     }
 
     @Override
@@ -83,18 +90,17 @@ public class Blank extends DatabaseEntityBase {
         try (PreparedStatement sta = conn.getStatement("INSERT INTO " +getTableName()+" VALUES (?,?,?,?,?,?,?,?,?)")) {
             sta.setLong(1, blankID);
             sta.setLong(2, assignedStaffID);
-            sta.setInt(3, Integer.parseInt(Long.toString(blankID).substring(0, 3)));
+            sta.setInt(3, typeID);
             sta.setString(4,description);
             sta.setBoolean(5,blackListed);
             sta.setBoolean(6,voided);
             sta.setDate(7, Time.toSQLDate(creationDate));
-            sta.setDate(8, (assignmentDate == null) ? null : Time.toSQLDate(assignmentDate));
-            sta.setDate(9, (returned == null) ? null : Time.toSQLDate(returned));
+            if (assignmentDate == null) sta.setNull(8, Types.DATE); else sta.setDate(8, Time.toSQLDate(assignmentDate));
+            if (returned == null) sta.setNull(9, Types.DATE); else sta.setDate(9, Time.toSQLDate(returned));
             sta.executeUpdate();
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
-
     }
 
     @Override
@@ -102,35 +108,35 @@ public class Blank extends DatabaseEntityBase {
         try(PreparedStatement sta = conn.getStatement("UPDATE " +getTableName()+" SET BlankDescription = ?, StaffId = ?, TypeNumber = ?, Blacklisted = ?, Void = ?, ReceivedDate = ?, AssignedDate = ?, ReturnedDate = ? WHERE BlankNumber = ?")){
             sta.setString(1, description);
             sta.setLong(2, assignedStaffID);
-            sta.setInt(3, Integer.parseInt(Long.toString(blankID).substring(0, 3)));
+            sta.setInt(3, typeID);
             sta.setBoolean(4,blackListed);
             sta.setBoolean(5,voided);
             sta.setDate(6, Time.toSQLDate(creationDate));
-            sta.setDate(7, (assignmentDate == null) ? null : Time.toSQLDate(assignmentDate));
-            sta.setDate(8, (returned == null) ? null : Time.toSQLDate(returned));
+            if (assignmentDate == null) sta.setNull(7, Types.DATE); else sta.setDate(7, Time.toSQLDate(assignmentDate));
+            if (returned == null) sta.setNull(8, Types.DATE); else sta.setDate(8, Time.toSQLDate(returned));
             sta.setLong(9, blankID);
             sta.executeUpdate();
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
-
     }
 
     @Override
     protected void loadRow() throws CheckedException {
-        try(PreparedStatement sta = conn.getStatement("SELECT BlankNumber, StaffID, BlankDescription, Blacklisted, Void, ReceivedDate, AssignedDate, ReturnedDate FROM " +getTableName()+" WHERE BlankNumber = ?"  )){
+        try(PreparedStatement sta = conn.getStatement("SELECT BlankNumber, StaffID, TypeNumber, BlankDescription, Blacklisted, Void, ReceivedDate, AssignedDate, ReturnedDate FROM " +getTableName()+" WHERE BlankNumber = ?")){
             sta.setLong(1, blankID);
-            ResultSet rs = sta.executeQuery();
-            rs.next();
-            blankID = rs.getInt("BlankNumber");
-            assignedStaffID = rs.getLong("StaffID");
-            description = rs.getString("BlankDescription");
-            blackListed = rs.getBoolean("BlackListed");
-            voided = rs.getBoolean("Void");
-            creationDate = rs.getDate("ReceivedDate");
-            assignmentDate = rs.getDate("AssignedDate");
-            returned = rs.getDate("ReturnedDate");
-            rs.close();
+            try (ResultSet rs = sta.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                blankID = rs.getInt("BlankNumber");
+                assignedStaffID = rs.getLong("StaffID");
+                typeID = rs.getInt("TypeNumber");
+                description = rs.getString("BlankDescription");
+                blackListed = rs.getBoolean("BlackListed");
+                voided = rs.getBoolean("Void");
+                creationDate = rs.getDate("ReceivedDate");
+                assignmentDate = ResultSetNullableReturners.getDateValue(rs, "AssignedDate");
+                returned = ResultSetNullableReturners.getDateValue(rs, "ReturnedDate");
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
@@ -138,24 +144,22 @@ public class Blank extends DatabaseEntityBase {
 
     @Override
     protected void deleteRow() throws CheckedException {
-        try(PreparedStatement sta = conn.getStatement("DELETE FROM " +getTableName()+" WHERE BlankNumber = ?"  )){
+        try(PreparedStatement sta = conn.getStatement("DELETE FROM " +getTableName()+" WHERE BlankNumber = ?")){
             sta.setLong(1, blankID);
             sta.executeUpdate();
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
-
     }
 
     @Override
     protected boolean checkRowExistence() throws CheckedException {
-        try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM " +getTableName()+" WHERE BlankNumber = ?"  )){
+        try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM " +getTableName()+" WHERE BlankNumber = ?")){
             sta.setLong(1, blankID);
-            ResultSet rs = sta.executeQuery();
-            rs.next();
-            int rc = rs.getInt("rowCount");
-            rs.close();
-            if (rc > 0) return true; else return false;
+            try (ResultSet rs = sta.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                return rs.getInt("rowCount") > 0;
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
@@ -213,7 +217,10 @@ public class Blank extends DatabaseEntityBase {
     }
 
     public Date getAssignmentDate() {
-    return assignmentDate;
+        return assignmentDate;
     }
 
+    public int getBlankType() {
+        return typeID;
+    }
 }
