@@ -7,7 +7,9 @@ import java.sql.ResultSet;
 /**
  * This class provides a base class that is used by all database stored entities.
  * Any extending classes should also have a constructor that takes a {@link IDB_Connector} and
- * {@link java.sql.ResultSet} as this should be used by the corresponding extender of {@link DatabaseTableBase#loadOneFrom(ResultSet)}.
+ * {@link java.sql.ResultSet} as this should be used by the corresponding extender of {@link DatabaseTableBase#loadOneFrom(ResultSet)} and
+ * {@link DatabaseTableBase#noLoadOneFrom(ResultSet)}. This constructor should also contain a {@link #setLoadedAndExists()} call and use the
+ * {@link #DatabaseEntityBase(IDB_Connector, boolean)} should be used for the super constructor.
  *
  * @author Alfred Manville
  */
@@ -25,6 +27,26 @@ public abstract class DatabaseEntityBase {
      */
     public DatabaseEntityBase(IDB_Connector conn) {
         this.conn = conn;
+    }
+
+    /**
+     * Constructs a new DatabaseEntityBase with the specified connection and if it is already locked.
+     *
+     * @param conn The connection to use.
+     * @param locked If the object is already locked.
+     */
+    public DatabaseEntityBase(IDB_Connector conn, boolean locked) {
+        this(conn);
+        _lock = locked;
+    }
+
+    /**
+     * Sets _loaded and _exists to true.
+     * To be used in the case of the constructor with {@link IDB_Connector} and {@link ResultSet}.
+     */
+    protected void setLoadedAndExists() {
+        _loaded = true;
+        _exists = true;
     }
 
     /**
@@ -118,6 +140,8 @@ public abstract class DatabaseEntityBase {
      */
     public final void lock() throws CheckedException {
         synchronized (slock) {
+            //Allow for lock to be used on existing rows without using exists(true) before a lock
+            if (!_exists) _exists = checkRowExistence();
             //Skip locking of the object does not exist
             if (_lock || !_exists) return;
             if (deleteAuxRow()) _lock = true; else throw new CheckedException("Lock could not be obtained");
