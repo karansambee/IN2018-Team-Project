@@ -1,5 +1,7 @@
 package skywaysolutions.app.database;
 
+import skywaysolutions.app.utils.CheckedException;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -20,6 +22,7 @@ public interface IFilterStatementCreator {
      * @param startOfSQLTemplate The start of the SQL Template to use for the statement.
      * @return The prepared statement with the filters and their parameters applied.
      * @throws SQLException An SQL error occurred.
+     * @throws CheckedException An error occurred.
      */
-    PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException;
+    PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException;
 }
