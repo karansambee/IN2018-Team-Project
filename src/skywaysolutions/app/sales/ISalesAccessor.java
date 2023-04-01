@@ -68,10 +68,11 @@ public interface ISalesAccessor extends IRepairable {
      * Refunds or gets the refunds of a sale.
      *
      * @param saleID The sale ID.
+     * @param date The date of any new refunds.
      * @return The IDs of the refunds.
      * @throws CheckedException The refund operation / obtaining the refund IDs has failed.
      */
-    long[] refund(long saleID) throws CheckedException;
+    long[] refund(long saleID, Date date) throws CheckedException;
 
     /**
      * Gets the sales given the period, type of payment and the currency.
