@@ -31,19 +31,19 @@ public interface IReportGenerator {
     /**
      * Generates a report based on the current period.
      *
-     * @return The generated report table.
+     * @return The generated report tables.
      * @throws CheckedException A report generation error has occurred.
      */
-    TableCell[][] generateTables() throws CheckedException;
+    TableCell[][][] generateTables() throws CheckedException;
 
     /**
      * Generates a report based on the current period and the passed subject ID.
      *
      * @param subject The ID.
-     * @return The generated report table.
+     * @return The generated report tables.
      * @throws CheckedException A report generation error has occurred.
      */
-    TableCell[][] generateTablesFor(long subject) throws CheckedException;
+    TableCell[][][] generateTablesFor(long subject) throws CheckedException;
 
     /**
      * Sets the report period month.
