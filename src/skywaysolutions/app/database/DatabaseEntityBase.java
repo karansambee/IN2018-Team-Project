@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 /**
  * This class provides a base class that is used by all database stored entities.
  * Any extending classes should also have a constructor that takes a {@link IDB_Connector} and
- * {@link java.sql.ResultSet} as this should be used by the corresponding extender of {@link DatabaseTableBase#loadOneFrom(ResultSet)} and
+ * {@link java.sql.ResultSet} as this should be used by the corresponding extender of {@link DatabaseTableBase#loadOneFrom(ResultSet, boolean)} and
  * {@link DatabaseTableBase#noLoadOneFrom(ResultSet)}. This constructor should also contain a {@link #setLoadedAndExists()} call and use the
  * {@link #DatabaseEntityBase(IDB_Connector, boolean)} should be used for the super constructor.
  *

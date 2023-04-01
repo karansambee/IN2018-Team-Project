@@ -54,10 +54,11 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
      * </p>
      *
      * @param rs The result set to use for loading.
+     * @param locked If the object is currently locked.
      * @return An instance of {@link T}.
      * @throws CheckedException An error has occurred.
      */
-    protected abstract T loadOneFrom(ResultSet rs) throws CheckedException;
+    protected abstract T loadOneFrom(ResultSet rs, boolean locked) throws CheckedException;
 
     /**
      * This creates one instance of {@link T} using the ID from the current result set without loading.
@@ -166,19 +167,19 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             try(PreparedStatement sta = filter.createFilteredStatementFor(conn, "SELECT * FROM "+getTableName()+" WHERE ")) {
                 try (ResultSet rs = sta.executeQuery()) {
                     while (rs.next())
-                        toReturn.add((syncMode == MultiLoadSyncMode.NoLoad) ? noLoadOneFrom(rs) : loadOneFrom(rs));
+                        toReturn.add((syncMode == MultiLoadSyncMode.NoLoad) ? noLoadOneFrom(rs) : loadOneFrom(rs, _lock));
                 }
             } catch (SQLException e) {
                 throw new CheckedException(e);
             }
         }
-        if (syncMode == MultiLoadSyncMode.UnlockAfterLoad) unlockAll();
+        if (syncMode == MultiLoadSyncMode.UnlockAfterLoad) unlockAll(false);
         return toReturn;
     }
 
     /**
      * Locks all the rows.
-     * DO NOT forget to {@link #unlockAll()} once finished.
+     * DO NOT forget to {@link #unlockAll(boolean)} once finished.
      *
      * @throws CheckedException An error occurs.
      */
@@ -227,15 +228,68 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
     protected abstract void createAllAuxRows() throws CheckedException;
 
     /**
+     * Inserts all the aux rows of a specified column name that are longs.
+     *
+     * @param columnName The name of the ID column.
+     * @throws CheckedException An error has occurred.
+     */
+    protected void createAllAuxRowsLongID(String columnName) throws CheckedException {
+        ArrayList<Long> IDs = new ArrayList<>();
+        try(PreparedStatement sta = conn.getStatement("SELECT "+columnName+" FROM " + getTableName())) {
+            try (ResultSet rs = sta.executeQuery()) {
+                while (rs.next()) IDs.add(rs.getLong(columnName));
+            }
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
+            for (long c : IDs) {
+                sta.setLong(1, c);
+                sta.addBatch();
+            }
+            sta.executeBatch();
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+    }
+
+    /**
+     * Inserts all the aux rows of a specified column name that are strings.
+     *
+     * @param columnName The name of the ID column.
+     * @throws CheckedException An error has occurred.
+     */
+    protected void createAllAuxRowsStringID(String columnName) throws CheckedException {
+        ArrayList<String> IDs = new ArrayList<>();
+        try(PreparedStatement sta = conn.getStatement("SELECT "+columnName+" FROM " + getTableName())) {
+            try (ResultSet rs = sta.executeQuery()) {
+                while (rs.next()) IDs.add(rs.getString(columnName));
+            }
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
+            for (String c : IDs) {
+                sta.setString(1, c);
+                sta.addBatch();
+            }
+            sta.executeBatch();
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+    }
+
+    /**
      * Unlocks all the rows allowing them to be used by other connections.
      * See: {@link #lockAll()}
      *
+     * @param force Force the unlock.
      * @throws CheckedException An error occurs.
      */
-    public final void unlockAll() throws CheckedException {
+    public final void unlockAll(boolean force) throws CheckedException {
         assureTableSchema();
         synchronized (slock) {
-            if (!_lock) throw new CheckedException("Lock not applied");
+            if (!_lock && !force) throw new CheckedException("Lock not applied");
             try {
                 createAllAuxRows();
             } catch (CheckedException e) {

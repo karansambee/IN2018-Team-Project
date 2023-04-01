@@ -55,6 +55,7 @@ public final class DatabaseBackupTable {
                             case Types.BIGINT -> rs.getLong(i + 1);
                             case Types.CHAR, Types.VARCHAR -> rs.getString(i + 1);
                             case Types.BINARY, Types.VARBINARY -> rs.getBytes(i + 1);
+                            default -> 0;
                         };
                     }
                     rows.add(row);
@@ -92,6 +93,7 @@ public final class DatabaseBackupTable {
                         case Types.BIGINT -> Stream.readLong(is);
                         case Types.CHAR, Types.VARCHAR -> new String(Stream.readBytes(is), StandardCharsets.UTF_8);
                         case Types.BINARY, Types.VARBINARY -> Stream.readBytes(is);
+                        default -> 0;
                     };
                 }
                 rows.add(row);
