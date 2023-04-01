@@ -1,6 +1,7 @@
 package skywaysolutions.app.database;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * This interface provides the ability for {@link DatabaseTableBase#loadMany(IFilterStatementCreator, MultiLoadSyncMode)} to have custom filters.
@@ -18,6 +19,7 @@ public interface IFilterStatementCreator {
      * @param conn The database connection.
      * @param startOfSQLTemplate The start of the SQL Template to use for the statement.
      * @return The prepared statement with the filters and their parameters applied.
+     * @throws SQLException An SQL error occurred.
      */
-    PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate);
+    PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException;
 }
