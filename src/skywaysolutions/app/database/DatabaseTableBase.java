@@ -228,6 +228,32 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
     protected abstract void createAllAuxRows() throws CheckedException;
 
     /**
+     * Inserts all the aux rows of a specified column name that are ints.
+     *
+     * @param columnName The name of the ID column.
+     * @throws CheckedException An error has occurred.
+     */
+    protected void createAllAuxRowsIntID(String columnName) throws CheckedException {
+        ArrayList<Integer> IDs = new ArrayList<>();
+        try(PreparedStatement sta = conn.getStatement("SELECT "+columnName+" FROM " + getTableName())) {
+            try (ResultSet rs = sta.executeQuery()) {
+                while (rs.next()) IDs.add(rs.getInt(columnName));
+            }
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
+            for (int c : IDs) {
+                sta.setInt(1, c);
+                sta.addBatch();
+            }
+            sta.executeBatch();
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+    }
+
+    /**
      * Inserts all the aux rows of a specified column name that are longs.
      *
      * @param columnName The name of the ID column.
