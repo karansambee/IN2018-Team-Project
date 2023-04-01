@@ -28,6 +28,11 @@ public class TransactionTableAccessor extends DatabaseTableBase<Transaction> {
     }
 
     @Override
+    protected String getIDColumnName() {
+        return "TranscationID";
+    }
+
+    @Override
     protected Transaction loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
             return new Transaction(conn, rs, locked);
@@ -39,7 +44,7 @@ public class TransactionTableAccessor extends DatabaseTableBase<Transaction> {
     @Override
     protected Transaction noLoadOneFrom(ResultSet rs) throws CheckedException {
         try {
-            return new Transaction(conn, rs.getLong("TranscationID"));
+            return new Transaction(conn, rs.getLong(getIDColumnName()));
         } catch (SQLException e) {
             throw new CheckedException(e);
         }
@@ -67,6 +72,6 @@ public class TransactionTableAccessor extends DatabaseTableBase<Transaction> {
 
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        createAllAuxRowsLongID("TranscationID");
+        createAllAuxRowsLongID();
     }
 }

@@ -4,10 +4,8 @@ import skywaysolutions.app.database.DatabaseTableBase;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 /**
  * This class provides the table accessor for sales.
@@ -31,6 +29,11 @@ public class SaleTableAccessor extends DatabaseTableBase<Sale> {
     }
 
     @Override
+    protected String getIDColumnName() {
+        return "BlankNumber";
+    }
+
+    @Override
     protected Sale loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
             return new Sale(conn, rs, locked);
@@ -42,7 +45,7 @@ public class SaleTableAccessor extends DatabaseTableBase<Sale> {
     @Override
     protected Sale noLoadOneFrom(ResultSet rs) throws CheckedException {
         try {
-            return new Sale(conn, rs.getLong("BlankNumber"));
+            return new Sale(conn, rs.getLong(getIDColumnName()));
         } catch (SQLException e) {
             throw new CheckedException(e);
         }
@@ -75,6 +78,6 @@ public class SaleTableAccessor extends DatabaseTableBase<Sale> {
 
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        createAllAuxRowsLongID("BlankNumber");
+        createAllAuxRowsLongID();
     }
 }

@@ -28,6 +28,11 @@ public class RefundTableAccessor extends DatabaseTableBase<Refund> {
     }
 
     @Override
+    protected String getIDColumnName() {
+        return "RefundID";
+    }
+
+    @Override
     protected Refund loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
             return new Refund(conn, rs, locked);
@@ -39,7 +44,7 @@ public class RefundTableAccessor extends DatabaseTableBase<Refund> {
     @Override
     protected Refund noLoadOneFrom(ResultSet rs) throws CheckedException {
         try {
-            return new Refund(conn, rs.getLong("RefundID"));
+            return new Refund(conn, rs.getLong(getIDColumnName()));
         } catch (SQLException e) {
             throw new CheckedException(e);
         }
@@ -61,6 +66,6 @@ public class RefundTableAccessor extends DatabaseTableBase<Refund> {
 
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        createAllAuxRowsLongID("RefundID");
+        createAllAuxRowsLongID();
     }
 }
