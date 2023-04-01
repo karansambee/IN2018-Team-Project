@@ -7,7 +7,6 @@ import skywaysolutions.app.utils.CheckedException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class StaffTableAccessor extends DatabaseTableBase<Account> {
 
@@ -30,6 +29,11 @@ public class StaffTableAccessor extends DatabaseTableBase<Account> {
         return "Staff";
     }
 
+    @Override
+    protected String getIDColumnName() {
+        return "StaffID";
+    }
+
     /**
      * This loads one instance of {@link T} from the current result set.
      * DO NOT call {@link ResultSet#next()}.
@@ -43,11 +47,20 @@ public class StaffTableAccessor extends DatabaseTableBase<Account> {
      * @return An instance of {@link T}.
      */
     @Override
-    protected Account loadOneFrom(ResultSet rs) {
+    protected Account loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
-            return new Account(conn, rs);
+            return new Account(conn, rs, locked);
         } catch (SQLException e) {
-            return null;
+            throw new CheckedException(e);
+        }
+    }
+
+    @Override
+    protected Account noLoadOneFrom(ResultSet rs) throws CheckedException {
+        try {
+            return new Account(conn, rs.getLong(getIDColumnName()));
+        } catch (SQLException e) {
+            throw new CheckedException(e);
         }
     }
 
@@ -103,23 +116,7 @@ public class StaffTableAccessor extends DatabaseTableBase<Account> {
      */
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        ArrayList<Long> staffIDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT StaffID FROM " + getTableName())) {
-            ResultSet rs = sta.executeQuery();
-            while (rs.next()) staffIDs.add(rs.getLong("StaffID"));
-            rs.close();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
-            for (long c : staffIDs) {
-                sta.setLong(1, c);
-                sta.addBatch();
-            }
-            sta.executeBatch();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
+        createAllAuxRowsLongID();
     }
 }
 

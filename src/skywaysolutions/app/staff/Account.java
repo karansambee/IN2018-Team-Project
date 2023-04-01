@@ -3,9 +3,7 @@ package skywaysolutions.app.staff;
 import skywaysolutions.app.database.DB_Connector;
 import skywaysolutions.app.database.DatabaseEntityBase;
 import skywaysolutions.app.database.IDB_Connector;
-import skywaysolutions.app.utils.CheckedException;
-import skywaysolutions.app.utils.Decimal;
-import skywaysolutions.app.utils.PersonalInformation;
+import skywaysolutions.app.utils.*;
 import skywaysolutions.app.utils.Time;
 
 import java.sql.*;
@@ -29,12 +27,14 @@ public class Account extends DatabaseEntityBase {
         accountID = id;
     }
 
-    public Account(IDB_Connector conn, ResultSet rs) throws SQLException {
-        super(conn);
+    public Account(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException, CheckedException {
+        super(conn, locked);
+        setLoadedAndExists();
         accountID = rs.getLong("StaffID");
-        currency = rs.getString("CurrencyName");
+        currency = ResultSetNullableReturners.getStringValue(rs, "CurrencyName");
         role = StaffRole.getStaffRoleFromValue(rs.getInt("StaffRole"));
-        commission = new Decimal(rs.getDouble("CommissionRate"), 2);
+        Double cr = ResultSetNullableReturners.getDoubleValue(rs, "ComissionRate");
+        commission = (cr == null) ? null : new Decimal(cr, 6);
         info.setFirstName(rs.getString("Firstname"));
         info.setLastName(rs.getString("Surname"));
         info.setPhoneNumber(rs.getString("PhoneNumber"));
@@ -43,7 +43,7 @@ public class Account extends DatabaseEntityBase {
         info.setPostcode(rs.getString("Postcode"));
         info.setHouseNumber(rs.getString("HouseNumber"));
         info.setStreetName(rs.getString("StreetName"));
-
+        password = new PasswordString(rs.getBytes("HashedPassword"), rs.getBytes("PasswordSalt"));
     }
 
     public Account(IDB_Connector conn, PersonalInformation info, StaffRole role, Decimal commission, String currency, PasswordString password, Long id) {
@@ -79,7 +79,7 @@ public class Account extends DatabaseEntityBase {
     @Override
     protected boolean deleteAuxRow() throws CheckedException {
         try(PreparedStatement pre = conn.getStatement(
-                "DELETE FROM" + getAuxTableName() + "WHERE StaffID = ?")) {
+                "DELETE FROM " + getAuxTableName() + " WHERE StaffID = ?")) {
             pre.setLong(1, accountID);
             if (pre.executeUpdate()>0)
                 return true;
@@ -101,7 +101,7 @@ public class Account extends DatabaseEntityBase {
     @Override
     protected void createAuxRow() throws CheckedException {
         try(PreparedStatement pre = conn.getStatement(
-                "INSERT INTO" + getAuxTableName() + "VALUES(?)")) {
+                "INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
             pre.setLong(1, accountID);
             pre.executeUpdate();
         } catch (SQLException throwables) {
@@ -123,11 +123,11 @@ public class Account extends DatabaseEntityBase {
         DB_Connector conn = new DB_Connector();
 
         try(PreparedStatement pre = conn.getStatement(
-                "INSERT INTO" + getTableName() + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                "INSERT INTO " + getTableName() + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             if (accountID == null) pre.setNull(1, Types.BIGINT); else pre.setLong(1, accountID);
-            pre.setString(2, currency);
+            if (currency == null) pre.setNull(2, Types.VARCHAR); else pre.setString(2, currency);
             pre.setInt(3, role.getValue());
-            pre.setDouble(4, commission.getValue());
+            if (commission == null) pre.setNull(4, Types.NUMERIC); else pre.setDouble(4, commission.getValue());
             pre.setString(5, info.getFirstName());
             pre.setString(6, info.getLastName());
             pre.setString(7, info.getPhoneNumber());
@@ -144,11 +144,11 @@ public class Account extends DatabaseEntityBase {
         }
 
         if (accountID == null) {
-            try (PreparedStatement pre = conn.getStatement("SELECT MAX(StaffID) as lastStaffID FROM Staff")) {
-                ResultSet rs = pre.executeQuery();
-                rs.next();
-                accountID = rs.getLong("lastStaffID");
-                rs.close();
+            try (PreparedStatement pre = conn.getStatement("SELECT MAX(StaffID) as lastStaffID FROM "+getTableName())) {
+                try (ResultSet rs = pre.executeQuery()) {
+                    if (!rs.next()) throw new CheckedException("No Insert Occurred!");
+                    accountID = rs.getLong("lastStaffID");
+                }
             } catch(SQLException throwables){
                 throw new CheckedException(throwables);
             }
@@ -167,13 +167,13 @@ public class Account extends DatabaseEntityBase {
     @Override
     protected void updateRow() throws CheckedException {
         try(PreparedStatement pre = conn.getStatement(
-                "UPDATE" + getTableName() + "SET CurrencyName = ?, StaffRole = ?, CommissionRate = ?, " +
+                "UPDATE " + getTableName() + " SET CurrencyName = ?, StaffRole = ?, ComissionRate = ?, " +
                         "Firstname = ?, Surname = ?, PhoneNumber = ?, EmailAddress = ?, DateOfBirth = ?, Postcode = ?, " +
                         "HouseNumber = ?, StreetName = ?, HashedPassword = ?, PasswordSalt = ?" +
-                        "WHERE StaffID = ?")) {
-            pre.setString(1, currency);
+                        " WHERE StaffID = ?")) {
+            if (currency == null) pre.setNull(1, Types.VARCHAR); else pre.setString(1, currency);
             pre.setInt(2, role.getValue());
-            pre.setDouble(3, commission.getValue());
+            if (commission == null) pre.setNull(3, Types.NUMERIC); else pre.setDouble(3, commission.getValue());
             pre.setString(4, info.getFirstName());
             pre.setString(5, info.getLastName());
             pre.setString(6, info.getPhoneNumber());
@@ -186,7 +186,6 @@ public class Account extends DatabaseEntityBase {
             pre.setBytes(13, password.getSalt());
             pre.setLong(14, accountID);
             pre.executeUpdate();
-
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
@@ -204,18 +203,20 @@ public class Account extends DatabaseEntityBase {
     @Override
     protected void loadRow() throws CheckedException {
         try(PreparedStatement pre = conn.getStatement("SELECT StaffID, CurrencyName, StaffRole, " +
-                "CommissionRate, Firstname, Surname, PhoneNumber, EmailAddress, DateOfBirth, Postcode, " +
-                "HouseNumber, StreetName, HashedPassword, PasswordSalt FROM" + getTableName() + "WHERE StaffID = ?")){
+                "ComissionRate, Firstname, Surname, PhoneNumber, EmailAddress, DateOfBirth, Postcode, " +
+                "HouseNumber, StreetName, HashedPassword, PasswordSalt FROM " + getTableName() + " WHERE StaffID = ?")){
             pre.setLong(1, accountID);
-            ResultSet rs = pre.executeQuery();
-            rs.next();
-            accountID = rs.getLong("StaffID");
-            currency = rs.getString("CurrencyName");
-            role = StaffRole.getStaffRoleFromValue(rs.getInt("StaffRole"));
-            commission = new Decimal(rs.getDouble("CommissionRate"), 2);
-            info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"),
-                   Time.fromSQLDate(rs.getDate("DateOfBirth")), rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
-            password = new PasswordString(rs.getBytes("HashedPassword"), rs.getBytes("PasswordSalt"));
+            try (ResultSet rs = pre.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                accountID = rs.getLong("StaffID");
+                currency = ResultSetNullableReturners.getStringValue(rs, "CurrencyName");
+                role = StaffRole.getStaffRoleFromValue(rs.getInt("StaffRole"));
+                Double cr = ResultSetNullableReturners.getDoubleValue(rs, "ComissionRate");
+                commission = (cr == null) ? null : new Decimal(cr, 6);
+                info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"),
+                        Time.fromSQLDate(rs.getDate("DateOfBirth")), rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
+                password = new PasswordString(rs.getBytes("HashedPassword"), rs.getBytes("PasswordSalt"));
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
@@ -232,7 +233,7 @@ public class Account extends DatabaseEntityBase {
      */
     @Override
     protected void deleteRow() throws CheckedException {
-        try(PreparedStatement pre = conn.getStatement("DELETE FROM" + getTableName() + "WHERE StaffID = ?")){
+        try(PreparedStatement pre = conn.getStatement("DELETE FROM " + getTableName() + " WHERE StaffID = ?")){
             pre.setLong(1, accountID);
             pre.executeUpdate();
         } catch (SQLException throwables) {
@@ -252,22 +253,17 @@ public class Account extends DatabaseEntityBase {
      */
     @Override
     protected boolean checkRowExistence() throws CheckedException {
-        try(PreparedStatement pre = conn.getStatement("SELECT COUNT(*) AS rowCount FROM" + getTableName() +
-                "WHERE StaffID = ?")){
+        try(PreparedStatement pre = conn.getStatement("SELECT COUNT(*) AS rowCount FROM " + getTableName() +
+                " WHERE StaffID = ?")){
             pre.setLong(1, accountID);
-            ResultSet rs = pre.executeQuery();
-            rs.next();
-            int rc = rs.getInt("rowCount");
-            rs.close();
-            if (rc>0)
-                return true;
-            else
-                return false;
+            try (ResultSet rs = pre.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                return rs.getInt("rowCount") > 0;
+            }
         } catch (SQLException throwables){
             throw new CheckedException(throwables);
         }
     }
-
 
     public Long getAccountID() {
         return accountID;
