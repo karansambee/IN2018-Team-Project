@@ -114,7 +114,7 @@ public class AccountController implements IStaffAccessor {
                Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
                account.setPassword(new PasswordString(password, PasswordString.getRandomSalt()));
                account.store();
-               account.unlock();
+               accessor.unlockAll(false);
             } else {
                 throw new CheckedException("Cannot change the password of another account unless you are System Administrator");
             }
@@ -165,7 +165,7 @@ public class AccountController implements IStaffAccessor {
                 Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
                 account.setInfo(info);
                 account.store();
-                account.unlock();
+                accessor.unlockAll(false);
             } else {
                 throw new CheckedException("Cannot change the info of another account unless you are System Administrator");
             }
@@ -234,7 +234,7 @@ public class AccountController implements IStaffAccessor {
                     Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
                     account.setRole(role);
                     account.store();
-                    account.unlock();
+                    accessor.unlockAll(false);
                 }
             } else {
                 throw new CheckedException("Cannot change the role of an account unless you are System Administrator");
@@ -278,6 +278,7 @@ public class AccountController implements IStaffAccessor {
         synchronized (slock) {
             if (currentAccount.getRole() == StaffRole.Administrator) {
                 getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad).delete();
+                accessor.unlockAll(false);
             } else {
                 throw new CheckedException("Cannot delete an account unless you are System Administrator");
             }
@@ -320,7 +321,7 @@ public class AccountController implements IStaffAccessor {
                 Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
                 account.setCommission(commission);
                 account.store();
-                account.unlock();
+                accessor.unlockAll(false);
             } else {
                 throw new CheckedException("Cannot change commission rate unless you are System Administrator or Manager");
             }
@@ -364,7 +365,7 @@ public class AccountController implements IStaffAccessor {
                     Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
                     account.setCurrency(currency);
                     account.store();
-                    account.unlock();
+                    accessor.unlockAll(false);
                 }
             } else {
                 throw new CheckedException("Cannot change currency unless you are System Administrator or Manager");

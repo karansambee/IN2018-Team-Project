@@ -40,12 +40,16 @@ public class SaleController implements ISalesAccessor {
      * @param conn The database connection to use.
      * @param rateAccessor The rate accessor to use.
      * @param stockAccessor The stock accessor to use.
+     * @throws CheckedException Assuring the table schema has errored.
      */
-    public SaleController(IDB_Connector conn, IRateAccessor rateAccessor, IStockAccessor stockAccessor) {
+    public SaleController(IDB_Connector conn, IRateAccessor rateAccessor, IStockAccessor stockAccessor) throws CheckedException {
         this.conn = conn;
         saleTableAccessor = new SaleTableAccessor(conn);
+        saleTableAccessor.assureTableSchema();
         transactionTableAccessor = new TransactionTableAccessor(conn);
+        transactionTableAccessor.assureTableSchema();
         refundTableAccessor = new RefundTableAccessor(conn);
+        refundTableAccessor.assureTableSchema();
         this.rateAccessor = rateAccessor;
         this.stockAccessor = stockAccessor;
     }

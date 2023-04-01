@@ -25,10 +25,12 @@ public class BlankController implements IStockAccessor {
     private final BlankTypeTableAccessor blankTypeTableAccessor;
 
 
-    public BlankController(IDB_Connector conn) {
+    public BlankController(IDB_Connector conn) throws CheckedException {
         this.conn = conn;
         this.blankTableAccessor = new BlankTableAccessor(conn);
+        blankTableAccessor.assureTableSchema();
         this.blankTypeTableAccessor = new BlankTypeTableAccessor(conn);
+        blankTypeTableAccessor.assureTableSchema();
     }
 
     /**
