@@ -55,10 +55,12 @@ public class Refund extends DatabaseEntityBase {
      *
      * @param conn The database connection.
      * @param rs The result set to load from.
+     * @param locked If the object is already locked.
      * @throws SQLException An error has occurred.
      */
-    Refund(IDB_Connector conn, ResultSet rs) throws SQLException {
-        super(conn);
+    Refund(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+        super(conn, locked);
+        setLoadedAndExists();
         refundID = rs.getLong("RefundID");
         transactionID = rs.getLong("TranscationID");
         refundDate = Time.fromSQLDate(rs.getDate("RefundDate"));

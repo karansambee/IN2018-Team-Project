@@ -4,10 +4,8 @@ import skywaysolutions.app.database.DatabaseTableBase;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 /**
  * This class provides the table accessor for transactions.
@@ -30,11 +28,20 @@ public class TransactionTableAccessor extends DatabaseTableBase<Transaction> {
     }
 
     @Override
-    protected Transaction loadOneFrom(ResultSet rs) {
+    protected Transaction loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
-            return new Transaction(conn, rs);
+            return new Transaction(conn, rs, locked);
         } catch (SQLException e) {
-            return null;
+            throw new CheckedException(e);
+        }
+    }
+
+    @Override
+    protected Transaction noLoadOneFrom(ResultSet rs) throws CheckedException {
+        try {
+            return new Transaction(conn, rs.getLong("TranscationID"));
+        } catch (SQLException e) {
+            throw new CheckedException(e);
         }
     }
 
@@ -60,22 +67,6 @@ public class TransactionTableAccessor extends DatabaseTableBase<Transaction> {
 
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        ArrayList<Long> transactionIDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT TranscationID FROM " + getTableName())) {
-            try (ResultSet rs = sta.executeQuery()) {
-                while (rs.next()) transactionIDs.add(rs.getLong("TranscationID"));
-            }
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
-            for (long c : transactionIDs) {
-                sta.setLong(1, c);
-                sta.addBatch();
-            }
-            sta.executeBatch();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
+        createAllAuxRowsLongID("TranscationID");
     }
 }

@@ -31,11 +31,20 @@ public class SaleTableAccessor extends DatabaseTableBase<Sale> {
     }
 
     @Override
-    protected Sale loadOneFrom(ResultSet rs) {
+    protected Sale loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
-            return new Sale(conn, rs);
+            return new Sale(conn, rs, locked);
         } catch (SQLException e) {
-            return null;
+            throw new CheckedException(e);
+        }
+    }
+
+    @Override
+    protected Sale noLoadOneFrom(ResultSet rs) throws CheckedException {
+        try {
+            return new Sale(conn, rs.getLong("BlankNumber"));
+        } catch (SQLException e) {
+            throw new CheckedException(e);
         }
     }
 
@@ -66,22 +75,6 @@ public class SaleTableAccessor extends DatabaseTableBase<Sale> {
 
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        ArrayList<Long> saleIDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT BlankNumber FROM " + getTableName())) {
-            try (ResultSet rs = sta.executeQuery()) {
-                while (rs.next()) saleIDs.add(rs.getLong("BlankNumber"));
-            }
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
-            for (long c : saleIDs) {
-                sta.setLong(1, c);
-                sta.addBatch();
-            }
-            sta.executeBatch();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
+        createAllAuxRowsLongID("BlankNumber");
     }
 }

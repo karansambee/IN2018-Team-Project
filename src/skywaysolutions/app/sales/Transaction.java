@@ -61,10 +61,12 @@ public class Transaction extends DatabaseEntityBase {
      *
      * @param conn The database connection.
      * @param rs The result set to load from.
+     * @param locked If the object is already locked.
      * @throws SQLException An error has occurred.
      */
-    Transaction(IDB_Connector conn, ResultSet rs) throws SQLException {
-        super(conn);
+    Transaction(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+        super(conn, locked);
+        setLoadedAndExists();
         transactionID = rs.getLong("TranscationID");
         saleID = rs.getLong("BlankNumber");
         currency = rs.getString("CurrencyName");

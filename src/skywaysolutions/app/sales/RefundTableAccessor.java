@@ -4,10 +4,8 @@ import skywaysolutions.app.database.DatabaseTableBase;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 /**
  * This class provides the table accessor for refunds.
@@ -30,11 +28,20 @@ public class RefundTableAccessor extends DatabaseTableBase<Refund> {
     }
 
     @Override
-    protected Refund loadOneFrom(ResultSet rs) {
+    protected Refund loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
-            return new Refund(conn, rs);
+            return new Refund(conn, rs, locked);
         } catch (SQLException e) {
-            return null;
+            throw new CheckedException(e);
+        }
+    }
+
+    @Override
+    protected Refund noLoadOneFrom(ResultSet rs) throws CheckedException {
+        try {
+            return new Refund(conn, rs.getLong("RefundID"));
+        } catch (SQLException e) {
+            throw new CheckedException(e);
         }
     }
 
@@ -54,22 +61,6 @@ public class RefundTableAccessor extends DatabaseTableBase<Refund> {
 
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        ArrayList<Long> refundIDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT RefundID FROM " + getTableName())) {
-            try (ResultSet rs = sta.executeQuery()) {
-                while (rs.next()) refundIDs.add(rs.getLong("RefundID"));
-            }
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
-            for (long c : refundIDs) {
-                sta.setLong(1, c);
-                sta.addBatch();
-            }
-            sta.executeBatch();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
+        createAllAuxRowsLongID("RefundID");
     }
 }

@@ -76,8 +76,9 @@ public class Sale extends DatabaseEntityBase {
         this.preDiscountCost = preDiscountCost;
     }
 
-    Sale(IDB_Connector conn, ResultSet rs) throws SQLException {
-        super(conn);
+    Sale(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+        super(conn, locked);
+        setLoadedAndExists();
         blankNumber = rs.getLong("BlankNumber");
         customerID = rs.getLong("CustomerID");
         currency = rs.getString("CurrencyName");
