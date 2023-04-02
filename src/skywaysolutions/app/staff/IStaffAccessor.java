@@ -11,6 +11,14 @@ import skywaysolutions.app.utils.PersonalInformation;
  * @author Alfred Manville
  */
 public interface IStaffAccessor extends IRepairable {
+
+    /**
+     * Assures the default administrator account of ID 0 exists.
+     *
+     * @throws CheckedException An assurance error has occurred.
+     */
+    void assureDefaultAdministratorAccount() throws CheckedException;
+
     /**
      * Creates an account with the specified personal information, role, commission rate,
      * local currency and password. An ID can also be specified for creation.

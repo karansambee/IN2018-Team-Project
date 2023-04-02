@@ -412,7 +412,7 @@ public class BlankController implements IStockAccessor {
      */
     @Override
     public String[] getTables() {
-        return new String[] {"Blank", "BlankType"};
+        return new String[] {"BlankType", "Blank"};
     }
 
     /**

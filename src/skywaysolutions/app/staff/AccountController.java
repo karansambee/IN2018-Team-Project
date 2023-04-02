@@ -6,6 +6,7 @@ import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.PersonalInformation;
+import skywaysolutions.app.utils.Time;
 
 import java.net.Authenticator;
 import java.sql.PreparedStatement;
@@ -31,6 +32,29 @@ public class AccountController implements IStaffAccessor {
         finder.email = emailAddress;
         List<Account> accounts = accessor.loadMany(finder, mode);
         if (accounts.size() > 0) return accounts.get(0); else throw new CheckedException("Account Does Not Exist");
+    }
+
+    /**
+     * Assures the default administrator account of ID 0 exists.
+     *
+     * @throws CheckedException An assurance error has occurred.
+     */
+    @Override
+    public void assureDefaultAdministratorAccount() throws CheckedException {
+        synchronized (slock) {
+            Account dAdmin = new Account(conn, 0L);
+            if (dAdmin.exists(true)) {
+                dAdmin.lock();
+                dAdmin.load();
+                dAdmin.setRole(StaffRole.Administrator);
+                dAdmin.store();
+                dAdmin.unlock();
+            } else {
+                dAdmin = new Account(conn, new PersonalInformation("Administrator", "Administrator", "", "admin@localhost", Time.now(), "", "", ""),
+                        StaffRole.Administrator, null, "USD", new PasswordString("Administrator", PasswordString.getRandomSalt()), 0L);
+                dAdmin.store();
+            }
+        }
     }
 
     /**
