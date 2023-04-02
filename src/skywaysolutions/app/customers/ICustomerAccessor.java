@@ -17,22 +17,23 @@ public interface ICustomerAccessor extends IRepairable {
      * Allows for an account to be created.
      *
      * @param info The personal information of the account.
-     * @param plan The plan ID the account should use (Set to -1 for no plan).
+     * @param planID The plan ID the account should use (Set to -1 for no plan).
      * @param alias The alias of the account.
      * @param type The type of the customer.
      * @return The ID of the created account.
      * @throws CheckedException Account creation fails.
      */
-    long createAccount(PersonalInformation info, long plan, String alias, CustomerType type) throws CheckedException;
+    long createAccount(PersonalInformation info, Long planID, boolean customerDiscountCredited,
+                       String currency, String alias, CustomerType type) throws CheckedException;
 
     /**
      * Gets the personal information of the account.
      *
-     * @param customer The customer ID of the account.
+     * @param customerID The customer ID of the account.
      * @return The customer's personal information.
      * @throws CheckedException Retrieving personal information fails.
      */
-    PersonalInformation getPersonalInformation(long customer) throws CheckedException;
+    PersonalInformation getPersonalInformation(long customerID) throws CheckedException;
 
     /**
      * Sets the personal information of the account.

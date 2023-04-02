@@ -1,39 +1,75 @@
 package skywaysolutions.app.customers;
 
+import skywaysolutions.app.database.IDB_Connector;
+import skywaysolutions.app.database.IFilterStatementCreator;
+import skywaysolutions.app.database.MultiLoadSyncMode;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.PersonalInformation;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class CustomerController implements ICustomerAccessor {
+    private IDB_Connector conn;
+    private final Object slock = new Object();
+    private CustomerTableAccessor accessor;
+    private CustomerFinder finder = new CustomerFinder();
+
+    public CustomerController(IDB_Connector conn){
+        this.conn = conn;
+        this.accessor = new CustomerTableAccessor(conn);
+    }
+
+    private Customer getCustomerFromCustomerID(long customerID, MultiLoadSyncMode mode) throws CheckedException {
+        finder.customerID = customerID;
+        List<Customer> accounts = accessor.loadMany(finder, mode);
+        if (accounts.size() > 0) return accounts.get(0); else throw new CheckedException("Account Does Not Exist");
+    }
 
     /**
      * Allows for an account to be created.
      *
      * @param info  The personal information of the account.
-     * @param plan  The plan ID the account should use (Set to -1 for no plan).
+     * @param planID  The plan ID the account should use (Set to -1 for no plan).
      * @param alias The alias of the account.
      * @param type  The type of the customer.
      * @return The ID of the created account.
      * @throws CheckedException Account creation fails.
      */
     @Override
-    public long createAccount(PersonalInformation info, long plan, String alias, CustomerType type) throws CheckedException {
-        return 0;
+    public long createAccount(PersonalInformation info, Long planID, boolean customerDiscountCredited,
+                              String currency, String alias, CustomerType type) throws CheckedException {
+        synchronized (slock) {
+            Customer newAccount = new Customer(this.conn, info, planID, customerDiscountCredited, currency, alias, type);
+            if (newAccount.exists(true)){
+                throw new CheckedException("Account already exists");
+            } else {
+                newAccount.store();
+                return newAccount.getPlanID();
+            }
+        }
     }
 
     /**
      * Gets the personal information of the account.
      *
-     * @param customer The customer ID of the account.
+     * @param customerID The customer ID of the account.
      * @return The customer's personal information.
      * @throws CheckedException Retrieving personal information fails.
      */
     @Override
-    public PersonalInformation getPersonalInformation(long customer) throws CheckedException {
-        return null;
+    public PersonalInformation getPersonalInformation(long customerID) throws CheckedException {
+        synchronized (slock) {
+            return getCustomerFromCustomerID(customerID, MultiLoadSyncMode.UnlockAfterLoad).getInfo();
+        }
     }
+
+
 
     /**
      * Sets the personal information of the account.
@@ -44,7 +80,12 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void setPersonalInformation(long customer, PersonalInformation info) throws CheckedException {
-
+        synchronized (slock) {
+            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            account.setInfo(info);
+            account.store();
+            account.unlock();
+        }
     }
 
     /**
@@ -56,7 +97,9 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public String getAccountAlias(long customer) throws CheckedException {
-        return null;
+        synchronized (slock) {
+            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.UnlockAfterLoad).getAlias();
+        }
     }
 
     /**
@@ -68,7 +111,12 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void setAccountAlias(long customer, String alias) throws CheckedException {
-
+        synchronized (slock) {
+            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            account.setAlias(alias);
+            account.store();
+            account.unlock();
+        }
     }
 
     /**
@@ -92,7 +140,9 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public long getAccountPlan(long customer) throws CheckedException {
-        return 0;
+        synchronized (slock) {
+            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.UnlockAfterLoad).getPlanID();
+        }
     }
 
     /**
@@ -104,7 +154,12 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void setAccountPlan(long customer, long plan) throws CheckedException {
-
+        synchronized (slock) {
+            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            account.setPlanID(plan);
+            account.store();
+            account.unlock();
+        }
     }
 
     /**
@@ -115,7 +170,9 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void deleteAccount(long customer) throws CheckedException {
-
+        synchronized (slock) {
+            getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad).delete();
+        }
     }
 
     /**
@@ -126,7 +183,18 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public long[] listAccounts() throws CheckedException {
-        return new long[0];
+        synchronized (slock) {
+            try(PreparedStatement pre = conn.getStatement(
+                    "SELECT CustomerID FROM Customer")){
+                try (ResultSet rs = pre.executeQuery()) {
+                    ArrayList<Long> customerIDs = new ArrayList<>();
+                    while (rs.next()) customerIDs.add(rs.getLong("CustomerID"));
+                    return customerIDs.stream().mapToLong(Long::longValue).toArray();
+                }
+            } catch (SQLException | CheckedException throwables){
+                throw new CheckedException(throwables);
+            }
+        }
     }
 
     /**
@@ -142,7 +210,9 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public boolean isCustomerDiscountCredited(long customer) throws CheckedException {
-        return false;
+        synchronized (slock) {
+            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.UnlockAfterLoad).isCustomerDiscountCredited();
+        }
     }
 
     /**
@@ -158,7 +228,12 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void setIfCustomerIsDiscountCredited(long customer, boolean isDiscountCredited) throws CheckedException {
-
+        synchronized (slock) {
+            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            account.setCustomerDiscountCredited(true);
+            account.store();
+            account.unlock();
+        }
     }
 
     /**
@@ -171,7 +246,9 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public Decimal getCustomerDiscountCredit(long customer, boolean take) throws CheckedException {
-        return null;
+        synchronized (slock) {
+            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad).getAccountDiscountCredit();
+        }
     }
 
     /**
@@ -183,7 +260,13 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void addCustomerDiscountCredit(long customer, Decimal amount) throws CheckedException {
-
+        synchronized (slock) {
+            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Decimal newAmount = account.getAccountDiscountCredit().add(amount);
+            account.setAccountDiscountCredit(newAmount);
+            account.store();
+            account.unlock();
+        }
     }
 
     /**
@@ -198,7 +281,9 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public Decimal getMonthlyPurchaseAccumulation(long customer, Date date) throws CheckedException {
-        return null;
+        synchronized (slock) {
+
+        }
     }
 
     /**
@@ -227,7 +312,16 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public long createPlan(PlanType type, Decimal percentage) throws CheckedException {
-        return 0;
+        synchronized (slock) {
+            Discount newPlan = new Discount(this.conn, type, percentage);
+            if (newPlan.exists(true)){
+                throw new CheckedException("Discount Plan already exists");
+            } else {
+                newPlan.store();
+                return newPlan.getPlanID();
+            }
+        }
+
     }
 
     /**
@@ -349,7 +443,9 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public CustomerType getCustomerType(long customer) throws CheckedException {
-        return null;
+        synchronized (slock) {
+            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad).getCustomerType();
+        }
     }
 
     /**
@@ -361,7 +457,12 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void setCustomerType(long customer, CustomerType type) throws CheckedException {
-
+        synchronized (slock) {
+            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            account.setCustomerType(type);
+            account.store();
+            account.unlock();
+        }
     }
 
     /**
@@ -371,7 +472,7 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public String[] getTables() {
-        return new String[0];
+        return new String[] {"Customer"};
     }
 
     /**
@@ -382,6 +483,29 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void forceFullUnlock(String tableName) throws CheckedException {
+        synchronized (slock) {
+            if (tableName.equals("Customer")) accessor.unlockAll();
+        }
+    }
 
+    private class CustomerFinder implements IFilterStatementCreator {
+        public long customerID;
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) {
+            try {
+                PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "CustomerID = ?");
+                sta.setLong(1, customerID);
+                return sta;
+            } catch (SQLException | CheckedException e) {
+                return null;
+            }
+        }
     }
 }
+
+
+
+
+
+
+

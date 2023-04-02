@@ -13,9 +13,9 @@ import java.sql.SQLException;
 import java.util.Date;
 
 public class Customer extends DatabaseEntityBase {
-    private long customerID;
+    private Long customerID;
     private PersonalInformation info;
-    private long planID;
+    private Long planID;
     private Decimal accountDiscountCredit;
     private Decimal purchaseAccumulation;
     private boolean customerDiscountCredited;
@@ -36,12 +36,12 @@ public class Customer extends DatabaseEntityBase {
     }
 
     public Customer(IDB_Connector conn, PersonalInformation info,
-                    Long planID, boolean _customerDiscountCredited,
+                    Long planID, boolean customerDiscountCredited,
                     String currency, String alias, CustomerType type) {
         super(conn);
         this.info = info;
         this.planID = planID;
-        customerDiscountCredited = false;
+        this.customerDiscountCredited = customerDiscountCredited;
         this.currency = currency;
         this.alias = alias;
         customerType = type;
@@ -282,7 +282,7 @@ public class Customer extends DatabaseEntityBase {
         return planID;
     }
 
-    public void setPlanID(long planID) {
+    public void setPlanID(Long planID) {
         this.planID = planID;
     }
 
@@ -334,7 +334,7 @@ public class Customer extends DatabaseEntityBase {
         this.customerType = customerType;
     }
 
-    public void setCustomerID(long customerID) {
+    public void setCustomerID(Long customerID) {
         this.customerID = customerID;
     }
 
@@ -345,5 +345,6 @@ public class Customer extends DatabaseEntityBase {
     public void setAccountDiscountCredit(Decimal accountDiscountCredit) {
         this.accountDiscountCredit = accountDiscountCredit;
     }
+
 }
 
