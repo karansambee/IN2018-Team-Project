@@ -13,7 +13,7 @@ import java.util.List;
  */
 public final class DB_Connector implements IDB_Connector {
     private Connection conn;
-    private final ArrayList<String> tables = new ArrayList<>();
+    private ArrayList<String> tables = null;
     private String dbName;
 
     /**
@@ -82,6 +82,7 @@ public final class DB_Connector implements IDB_Connector {
     public List<String> getTableList(boolean update) throws CheckedException {
         if (dbName == null) throw new CheckedException("Not Connected");
         if (update) {
+            if (tables == null) tables = new ArrayList<>();
             try {
                 //Obtain a list of tables through the metadata of the connection object.
                 try (ResultSet rs = conn.getMetaData().getTables(conn.getCatalog(), "", null, new String[]{"TABLE"})) {
@@ -89,10 +90,11 @@ public final class DB_Connector implements IDB_Connector {
                     while (rs.next()) tables.add(rs.getString("TABLE_NAME"));
                 }
             } catch (SQLException e) {
+                tables = null;
                 throw new CheckedException(e);
             }
         }
-        if (tables.size() == 0) throw new CheckedException("Tables not Obtained");
+        if (tables == null) throw new CheckedException("Tables not Obtained");
         return tables;
     }
 
