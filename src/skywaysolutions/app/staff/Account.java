@@ -10,7 +10,6 @@ import java.sql.*;
 
 public class Account extends DatabaseEntityBase {
     private Long accountID;
-    private String email;
     private PasswordString password;
     private StaffRole role;
     private Decimal commission;
@@ -35,14 +34,8 @@ public class Account extends DatabaseEntityBase {
         role = StaffRole.getStaffRoleFromValue(rs.getInt("StaffRole"));
         Double cr = ResultSetNullableReturners.getDoubleValue(rs, "ComissionRate");
         commission = (cr == null) ? null : new Decimal(cr, 6);
-        info.setFirstName(rs.getString("Firstname"));
-        info.setLastName(rs.getString("Surname"));
-        info.setPhoneNumber(rs.getString("PhoneNumber"));
-        info.setEmailAddress(rs.getString("EmailAddress"));
-        info.setDateOfBirth(rs.getDate("DateOfBirth"));
-        info.setPostcode(rs.getString("Postcode"));
-        info.setHouseNumber(rs.getString("HouseNumber"));
-        info.setStreetName(rs.getString("StreetName"));
+        info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"), rs.getDate("DateOfBirth"),
+                rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
         password = new PasswordString(rs.getBytes("HashedPassword"), rs.getBytes("PasswordSalt"));
     }
 
@@ -120,8 +113,6 @@ public class Account extends DatabaseEntityBase {
      */
     @Override
     protected void createRow() throws CheckedException {
-        DB_Connector conn = new DB_Connector();
-
         try(PreparedStatement pre = conn.getStatement(
                 "INSERT INTO " + getTableName() + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             if (accountID == null) pre.setNull(1, Types.BIGINT); else pre.setLong(1, accountID);
@@ -270,7 +261,7 @@ public class Account extends DatabaseEntityBase {
     }
 
     public String getEmail() {
-        return email;
+        return info.getEmailAddress();
     }
 
     public PasswordString getPassword() {
@@ -294,7 +285,7 @@ public class Account extends DatabaseEntityBase {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        info.setEmailAddress(email);
     }
 
     public void setPassword(PasswordString password) {

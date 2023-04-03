@@ -42,7 +42,7 @@ public class AccountController implements IStaffAccessor {
     @Override
     public void assureDefaultAdministratorAccount() throws CheckedException {
         synchronized (slock) {
-            Account dAdmin = new Account(conn, 0L);
+            Account dAdmin = new Account(conn, 1L);
             if (dAdmin.exists(true)) {
                 dAdmin.lock();
                 dAdmin.load();
@@ -51,7 +51,7 @@ public class AccountController implements IStaffAccessor {
                 dAdmin.unlock();
             } else {
                 dAdmin = new Account(conn, new PersonalInformation("Administrator", "Administrator", "", "admin@localhost", Time.now(), "", "", ""),
-                        StaffRole.Administrator, null, "USD", new PasswordString("Administrator", PasswordString.getRandomSalt()), 0L);
+                        StaffRole.Administrator, null, "USD", new PasswordString("Administrator", PasswordString.getRandomSalt()), 1L);
                 dAdmin.store();
             }
         }
