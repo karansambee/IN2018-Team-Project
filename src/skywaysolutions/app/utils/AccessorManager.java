@@ -29,7 +29,7 @@ public final class AccessorManager {
     public final ICustomerAccessor customerAccessor;
     public final ISalesAccessor salesAccessor;
     public final IReportAccessor reportAccessor;
-    private final String[] tables;
+    public final String[] tables;
 
     /**
      * Constructs a new AccessorManager with the specified database connection.

@@ -58,6 +58,27 @@ public class AccountController implements IStaffAccessor {
     }
 
     /**
+     * Gets the logged in account ID, null if no account logged in.
+     *
+     * @return The logged in account ID or null.
+     */
+    @Override
+    public Long getLoggedInAccountID() {
+        return (currentAccount == null) ? null : currentAccount.getAccountID();
+    }
+
+    /**
+     * Gets the logged in account email, null if no account is logged in.
+     *
+     * @return The logged in account email or null.
+     */
+    @Override
+    public String getLoggedInAccountEmail() {
+        return (currentAccount == null) ? null : currentAccount.getEmail();
+    }
+
+
+    /**
      * Creates an account with the specified personal information, role, commission rate,
      * local currency and password. An ID can also be specified for creation.
      *

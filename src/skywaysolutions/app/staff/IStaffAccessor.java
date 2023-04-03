@@ -20,6 +20,20 @@ public interface IStaffAccessor extends IRepairable {
     void assureDefaultAdministratorAccount() throws CheckedException;
 
     /**
+     * Gets the logged in account ID, null if no account logged in.
+     *
+     * @return The logged in account ID or null.
+     */
+    Long getLoggedInAccountID();
+
+    /**
+     * Gets the logged in account email, null if no account is logged in.
+     *
+     * @return The logged in account email or null.
+     */
+    String getLoggedInAccountEmail();
+
+    /**
      * Creates an account with the specified personal information, role, commission rate,
      * local currency and password. An ID can also be specified for creation.
      *
