@@ -27,9 +27,8 @@ public class Discount extends DatabaseEntityBase {
         planID = id;
     }
 
-    public Discount(IDB_Connector conn, Long id, PlanType planType, Decimal percentage) {
+    public Discount(IDB_Connector conn, PlanType planType, Decimal percentage) {
         super(conn);
-        planID = id;
         this.planType = planType;
         this.percentage = percentage;
     }

@@ -1,10 +1,9 @@
 package skywaysolutions.app.customers;
 
 import skywaysolutions.app.database.IDB_Connector;
-import skywaysolutions.app.database.IFilterStatementCreator;
-import skywaysolutions.app.database.MultiLoadSyncMode;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
+import skywaysolutions.app.utils.MonthPeriod;
 import skywaysolutions.app.utils.PersonalInformation;
 
 import java.sql.PreparedStatement;
@@ -12,24 +11,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class CustomerController implements ICustomerAccessor {
     private IDB_Connector conn;
     private final Object slock = new Object();
-    private CustomerTableAccessor accessor;
-    private CustomerFinder finder = new CustomerFinder();
 
     public CustomerController(IDB_Connector conn){
         this.conn = conn;
-        this.accessor = new CustomerTableAccessor(conn);
     }
 
-    private Customer getCustomerFromCustomerID(long customerID, MultiLoadSyncMode mode) throws CheckedException {
-        finder.customerID = customerID;
-        List<Customer> accounts = accessor.loadMany(finder, mode);
-        if (accounts.size() > 0) return accounts.get(0); else throw new CheckedException("Account Does Not Exist");
-    }
 
     /**
      * Allows for an account to be created.
@@ -50,6 +40,7 @@ public class CustomerController implements ICustomerAccessor {
                 throw new CheckedException("Account already exists");
             } else {
                 newAccount.store();
+                newAccount.unlock();
                 return newAccount.getPlanID();
             }
         }
@@ -58,14 +49,18 @@ public class CustomerController implements ICustomerAccessor {
     /**
      * Gets the personal information of the account.
      *
-     * @param customerID The customer ID of the account.
+     * @param customer The customer ID of the account.
      * @return The customer's personal information.
      * @throws CheckedException Retrieving personal information fails.
      */
     @Override
-    public PersonalInformation getPersonalInformation(long customerID) throws CheckedException {
+    public PersonalInformation getPersonalInformation(long customer) throws CheckedException {
         synchronized (slock) {
-            return getCustomerFromCustomerID(customerID, MultiLoadSyncMode.UnlockAfterLoad).getInfo();
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
+            account.unlock();
+            return account.getInfo();
         }
     }
 
@@ -81,7 +76,9 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void setPersonalInformation(long customer, PersonalInformation info) throws CheckedException {
         synchronized (slock) {
-            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Customer account = new Customer(this.conn, customer);
+            account.load();
+            account.load();
             account.setInfo(info);
             account.store();
             account.unlock();
@@ -98,7 +95,11 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public String getAccountAlias(long customer) throws CheckedException {
         synchronized (slock) {
-            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.UnlockAfterLoad).getAlias();
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
+            account.unlock();
+            return account.getAlias();
         }
     }
 
@@ -112,7 +113,9 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void setAccountAlias(long customer, String alias) throws CheckedException {
         synchronized (slock) {
-            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
             account.setAlias(alias);
             account.store();
             account.unlock();
@@ -128,7 +131,7 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public long getAccountIDGivenAlias(String alias) throws CheckedException {
-        return 0;
+        //
     }
 
     /**
@@ -141,7 +144,11 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public long getAccountPlan(long customer) throws CheckedException {
         synchronized (slock) {
-            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.UnlockAfterLoad).getPlanID();
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
+            account.unlock();
+            return account.getPlanID();
         }
     }
 
@@ -155,7 +162,9 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void setAccountPlan(long customer, long plan) throws CheckedException {
         synchronized (slock) {
-            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
             account.setPlanID(plan);
             account.store();
             account.unlock();
@@ -171,7 +180,9 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void deleteAccount(long customer) throws CheckedException {
         synchronized (slock) {
-            getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad).delete();
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.delete();
         }
     }
 
@@ -211,7 +222,11 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public boolean isCustomerDiscountCredited(long customer) throws CheckedException {
         synchronized (slock) {
-            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.UnlockAfterLoad).isCustomerDiscountCredited();
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
+            account.unlock();
+            return account.isCustomerDiscountCredited();
         }
     }
 
@@ -229,8 +244,10 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void setIfCustomerIsDiscountCredited(long customer, boolean isDiscountCredited) throws CheckedException {
         synchronized (slock) {
-            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
-            account.setCustomerDiscountCredited(true);
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
+            account.setCustomerDiscountCredited(isDiscountCredited);
             account.store();
             account.unlock();
         }
@@ -247,7 +264,11 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public Decimal getCustomerDiscountCredit(long customer, boolean take) throws CheckedException {
         synchronized (slock) {
-            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad).getAccountDiscountCredit();
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
+            account.unlock();
+            return account.getAccountDiscountCredit();
         }
     }
 
@@ -261,7 +282,9 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void addCustomerDiscountCredit(long customer, Decimal amount) throws CheckedException {
         synchronized (slock) {
-            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
             Decimal newAmount = account.getAccountDiscountCredit().add(amount);
             account.setAccountDiscountCredit(newAmount);
             account.store();
@@ -282,9 +305,18 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public Decimal getMonthlyPurchaseAccumulation(long customer, Date date) throws CheckedException {
         synchronized (slock) {
-
+            Customer account = new Customer(this.conn, customer);
+            account.load();
+            if (date.getMonth() != account.getPurchaseMonthStart().getMonth()) {
+                account.setPurchaseAccumulation(new Decimal(0));
+                account.setPurchaseMonthStart(new Date());
+                account.store();
+                account.unlock();
+            }
+            return account.getPurchaseAccumulation();
         }
     }
+
 
     /**
      * Adds a purchase to the monthly purchase accumulation.
@@ -318,6 +350,10 @@ public class CustomerController implements ICustomerAccessor {
                 throw new CheckedException("Discount Plan already exists");
             } else {
                 newPlan.store();
+
+                newPlan.lock();
+                newPlan.load();
+                newPlan.unlock();
                 return newPlan.getPlanID();
             }
         }
@@ -333,7 +369,13 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public PlanType getPlanType(long plan) throws CheckedException {
-        return null;
+        synchronized (slock) {
+            Discount discount = new Discount(this.conn, plan);
+            discount.lock();
+            discount.load();
+            discount.unlock();
+            return discount.getPlanType();
+        }
     }
 
     /**
@@ -345,7 +387,13 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public Decimal getPlanPercentage(long plan) throws CheckedException {
-        return null;
+        synchronized (slock) {
+            Discount discount = new Discount(this.conn, plan);
+            discount.lock();
+            discount.load();
+            discount.unlock();
+            return discount.getPercentage();
+        }
     }
 
     /**
@@ -357,7 +405,14 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void setPlanPercentage(long plan, Decimal percentage) throws CheckedException {
-
+        synchronized (slock) {
+            Discount discount = new Discount(this.conn, plan);
+            discount.lock();
+            discount.load();
+            discount.setPercentage(percentage);
+            discount.store();
+            discount.unlock();
+        }
     }
 
     /**
@@ -370,7 +425,13 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public Decimal usePlan(long plan, Decimal amount) throws CheckedException {
-        return null;
+        synchronized (slock) {
+            Discount discount = new Discount(this.conn, plan);
+            discount.lock();
+            discount.load();
+            discount.unlock();
+            return discount.getPercentage().mul(amount);
+        }
     }
 
     /**
@@ -381,7 +442,11 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void removePlan(long plan) throws CheckedException {
-
+        synchronized (slock) {
+            Discount discount = new Discount(this.conn, plan);
+            discount.lock();
+            discount.delete();
+        }
     }
 
     /**
@@ -444,7 +509,13 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public CustomerType getCustomerType(long customer) throws CheckedException {
         synchronized (slock) {
-            return getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad).getCustomerType();
+            synchronized (slock) {
+                Customer account = new Customer(this.conn, customer);
+                account.lock();
+                account.load();
+                account.unlock();
+                return account.getCustomerType();
+            }
         }
     }
 
@@ -458,7 +529,9 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void setCustomerType(long customer, CustomerType type) throws CheckedException {
         synchronized (slock) {
-            Customer account = getCustomerFromCustomerID(customer, MultiLoadSyncMode.KeepLockedAfterLoad);
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
             account.setCustomerType(type);
             account.store();
             account.unlock();
@@ -472,7 +545,7 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public String[] getTables() {
-        return new String[] {"Customer"};
+        return new String[] {"Customer", "DiscountPlan", "FlexibleDiscountEntries"};
     }
 
     /**
@@ -485,22 +558,16 @@ public class CustomerController implements ICustomerAccessor {
     public void forceFullUnlock(String tableName) throws CheckedException {
         synchronized (slock) {
             if (tableName.equals("Customer")) accessor.unlockAll();
+            else if (tableName.equals("DiscountPlan")) accessor.unlockAll();
+            else if (tableName.equals("FlexibleDiscountEntries")) accessor.unlockAll();
         }
     }
 
-    private class CustomerFinder implements IFilterStatementCreator {
-        public long customerID;
-        @Override
-        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) {
-            try {
-                PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "CustomerID = ?");
-                sta.setLong(1, customerID);
-                return sta;
-            } catch (SQLException | CheckedException e) {
-                return null;
-            }
-        }
-    }
+
+
+
+
+
 }
 
 
