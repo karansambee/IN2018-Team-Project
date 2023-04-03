@@ -198,6 +198,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             int rc = 0; //Get the number of rows in the table
             try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM "+getTableName())) {
                 try (ResultSet rs = sta.executeQuery()) {
+                    rs.next();
                     rc = rs.getInt("rowCount");
                 }
             } catch (SQLException e) {
@@ -206,6 +207,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             int rca = 0; //Get the number of rows in the aux table
             try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM "+getAuxTableName())) {
                 try (ResultSet rs = sta.executeQuery()) {
+                    rs.next();
                     rca = rs.getInt("rowCount");
                 }
             } catch (SQLException e) {

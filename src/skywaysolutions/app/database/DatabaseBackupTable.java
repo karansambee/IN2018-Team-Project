@@ -205,6 +205,7 @@ public final class DatabaseBackupTable {
                     //Load the row count
                     try (PreparedStatement stac = conn.getStatement("SELECT COUNT(*) as rowCount FROM " + tableName)) {
                         try (ResultSet rsc = stac.executeQuery()) {
+                            rsc.next();
                             //Write the row count
                             Stream.writeInteger(os, rsc.getInt("rowCount"));
                         }

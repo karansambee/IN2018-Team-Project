@@ -229,6 +229,7 @@ public abstract class DatabaseEntityBase {
             if (!_loaded && _exists) throw new CheckedException("Entity not loaded");
             if (_exists) updateRow(); else {
                 createRow();
+                createAuxRow();
                 _exists = true;
             }
         }
