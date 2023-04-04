@@ -1,6 +1,8 @@
 package skywaysolutions.app.customers;
 
 import skywaysolutions.app.database.IDB_Connector;
+import skywaysolutions.app.database.IFilterStatementCreator;
+import skywaysolutions.app.database.MultiLoadSyncMode;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.MonthPeriod;
@@ -11,23 +13,34 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class CustomerController implements ICustomerAccessor {
     private IDB_Connector conn;
     private final Object slock = new Object();
 
-    public CustomerController(IDB_Connector conn){
+    private final AliasFinder finder = new AliasFinder();
+
+    private final CustomerTableAccessor customerTableAccessor;
+    private final DiscountTableAccessor discountTableAccessor;
+    private final FlexibleDiscountEntriesTableAccessor flexibleDiscountEntriesTableAccessor;
+
+
+    public CustomerController(IDB_Connector conn) {
         this.conn = conn;
+        this.customerTableAccessor = new CustomerTableAccessor(conn);
+        this.discountTableAccessor = new DiscountTableAccessor(conn);
+        this.flexibleDiscountEntriesTableAccessor = new FlexibleDiscountEntriesTableAccessor(conn);
     }
 
 
     /**
      * Allows for an account to be created.
      *
-     * @param info  The personal information of the account.
-     * @param planID  The plan ID the account should use (Set to -1 for no plan).
-     * @param alias The alias of the account.
-     * @param type  The type of the customer.
+     * @param info   The personal information of the account.
+     * @param planID The plan ID the account should use (Set to -1 for no plan).
+     * @param alias  The alias of the account.
+     * @param type   The type of the customer.
      * @return The ID of the created account.
      * @throws CheckedException Account creation fails.
      */
@@ -36,7 +49,7 @@ public class CustomerController implements ICustomerAccessor {
                               String currency, String alias, CustomerType type) throws CheckedException {
         synchronized (slock) {
             Customer newAccount = new Customer(this.conn, info, planID, customerDiscountCredited, currency, alias, type);
-            if (newAccount.exists(true)){
+            if (newAccount.exists(true)) {
                 throw new CheckedException("Account already exists");
             } else {
                 newAccount.store();
@@ -63,7 +76,6 @@ public class CustomerController implements ICustomerAccessor {
             return account.getInfo();
         }
     }
-
 
 
     /**
@@ -123,6 +135,34 @@ public class CustomerController implements ICustomerAccessor {
     }
 
     /**
+     * Returns Customer object from given alias
+     *
+     * @param alias
+     * @param mode
+     * @return
+     * @throws CheckedException Account does not exist with given alias
+     */
+    private Customer getCustomerFromEmailAddress(String alias, MultiLoadSyncMode mode) throws CheckedException {
+        finder.alias = alias;
+        List<Customer> accounts = customerTableAccessor.loadMany(finder, mode);
+        if (accounts.size() > 0) return accounts.get(0); else throw new CheckedException("Account Does Not Exist");
+    }
+
+    /**
+     * Creates a filtered statement to search for alias in Customer table
+     */
+    private static class AliasFinder implements IFilterStatementCreator {
+        public String alias;
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws CheckedException {
+            PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "Alias = ?");
+            sta.setString(1, alias);
+
+            return sta;
+        }
+    }
+
+    /**
      * Gets the account ID give the alias.
      *
      * @param alias The alias of the account.
@@ -131,7 +171,7 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public long getAccountIDGivenAlias(String alias) throws CheckedException {
-        //
+        return getCustomerFromEmailAddress(alias, MultiLoadSyncMode.UnlockAfterLoad).getCustomerID();
     }
 
     /**
@@ -307,7 +347,7 @@ public class CustomerController implements ICustomerAccessor {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
             account.load();
-            if (date.getMonth() != account.getPurchaseMonthStart().getMonth()) {
+            if (date.getMonth() != account.getPurchaseMonthStart().getMonth() || date.getYear() != account.getPurchaseMonthStart().getYear()) {
                 account.setPurchaseAccumulation(new Decimal(0));
                 account.setPurchaseMonthStart(new Date());
                 account.store();
@@ -331,7 +371,21 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void addPurchase(long customer, Date date, Decimal amount) throws CheckedException {
+        synchronized (slock) {
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
 
+            if (date.getMonth() != account.getPurchaseMonthStart().getMonth() || date.getYear() != account.getPurchaseMonthStart().getYear()) {
+                account.setPurchaseAccumulation(amount);
+                account.setPurchaseMonthStart(new Date());
+            } else {
+                account.setPurchaseAccumulation(account.getPurchaseAccumulation().add(amount));
+            }
+
+            account.store();
+            account.unlock();
+        }
     }
 
     /**
@@ -458,7 +512,7 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public FlexiblePlanRange[] getFlexiblePlanRanges(long plan) throws CheckedException {
-        return new FlexiblePlanRange[0];
+
     }
 
     /**
@@ -557,15 +611,11 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void forceFullUnlock(String tableName) throws CheckedException {
         synchronized (slock) {
-            if (tableName.equals("Customer")) accessor.unlockAll();
-            else if (tableName.equals("DiscountPlan")) accessor.unlockAll();
-            else if (tableName.equals("FlexibleDiscountEntries")) accessor.unlockAll();
+            if (tableName.equals("Customer")) customerTableAccessor.unlockAll();
+            else if (tableName.equals("DiscountPlan")) discountTableAccessor.unlockAll();
+            else if (tableName.equals("FlexibleDiscountEntries")) flexibleDiscountEntriesTableAccessor.unlockAll();
         }
     }
-
-
-
-
 
 
 }
