@@ -4,13 +4,16 @@ import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.MonthPeriod;
 
 import java.awt.*;
+import java.util.Date;
 
 /**
  * Class for generating a Ticket Stock Turnover report
  *
  * @author Karan Sambee
  */
-public class TicketStockTurnover implements IReportGenerator {
+public class TicketStockTurnoverReport implements IReportGenerator {
+    MonthPeriod period;
+    TableCell[][][] periodReport;
 
     /**
      * Generates a report based on the current period.
@@ -44,7 +47,43 @@ public class TicketStockTurnover implements IReportGenerator {
     @Override
     public TableCell[][][] generateTables() throws CheckedException {
 
-        return new TableCell[0][][];
+        setPeriod(new MonthPeriod(new Date().getMonth(), new Date().getYear()));
+
+        periodReport = new TableCell[0][][];
+
+        //Top left table
+        periodReport[0][0][0] = new TableCell("AGENT: ");
+        periodReport[0][1][0] = new TableCell("Number: ");
+        periodReport[0][2][0] = new TableCell("Sales Office Place: ");
+        periodReport[0][3][0] = new TableCell("Report period: ");
+
+        periodReport[0][0][1] = new TableCell("AIR LINK");
+        periodReport[0][1][1] = new TableCell("/");
+        periodReport[0][2][1] = new TableCell("");
+        periodReport[0][3][1] = new TableCell(this.period.getMonth() + "/" + this.period.getYear());
+
+
+        //Top right table
+        periodReport[1][0][0] = new TableCell("Batch NBR");
+        periodReport[1][1][0] = new TableCell("Port of SALE");
+        periodReport[1][2][0] = new TableCell("Period");
+        periodReport[1][3][0] = new TableCell("Operator's Code");
+        periodReport[1][4][0] = new TableCell("Report NBR");
+
+        periodReport[1][0][1] = new TableCell("Curr. of Sale");
+        periodReport[1][1][1] = new TableCell("Curr. conv. RATE");
+        periodReport[1][2][1] = new TableCell("S. AGENT'S Code");
+        periodReport[1][3][1] = new TableCell("");
+        periodReport[1][4][1] = new TableCell("Supervisor's code");
+
+        //Central table
+        periodReport[2][0][0] = new TableCell("AGENT'S STOCK STATUS REPORT");
+        periodReport[2][1][0] = new TableCell("NN", 3);
+
+
+        //Bottom table
+
+        return periodReport;
     }
 
     /**
@@ -67,7 +106,7 @@ public class TicketStockTurnover implements IReportGenerator {
      */
     @Override
     public void setPeriod(MonthPeriod period) throws CheckedException {
-        //
+        this.period = period;
     }
 
     /**
@@ -77,7 +116,7 @@ public class TicketStockTurnover implements IReportGenerator {
      */
     @Override
     public MonthPeriod getPeriod() {
-        return null;
+       return this.period;
     }
 
     /**
