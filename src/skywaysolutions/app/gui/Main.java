@@ -1,74 +1,86 @@
 package skywaysolutions.app.gui;
 
 import skywaysolutions.app.database.IDB_Connector;
+import skywaysolutions.app.gui.control.StatusBar;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.concurrent.CountDownLatch;
 
+/**
+ * This class provides the main form.
+ *
+ * @author Alfred Manville
+ */
 public class Main extends JFrame {
     private JPanel Root;
-    private JPanel StatusPanel;
     private JPanel HeaderPanel;
     private JPanel TabContainerPanel;
     private JPanel FooterPanel;
-    private JLabel statusLabel;
-    private JButton helpButton;
     private JButton aboutButton;
     private JPanel titlePanel;
     private JButton logoutButton;
     private JButton exitButton;
     private JTabbedPane tabbedPaneMain;
-    private AccessorManager manager;
+    private StatusBar statusBar;
+    private final AccessorManager manager;
     private final Prompt prompt;
     private final Login login;
+    private final CountDownLatch shutDownLatch;
 
-    public Main(String title, IDB_Connector conn) {
+    public Main(String title, IDB_Connector conn, CountDownLatch shutdownLatch) throws CheckedException {
         super(title);
+        //Initialize form
         setContentPane(Root);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        //Store shutdown latch for decrementing when form terminates.
+        this.shutDownLatch = shutdownLatch;
+
         prompt = new Prompt(this, "", "", null, 0, true);
+        //Add window listener
         addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                newLogin();
+            }
             @Override
             public void windowClosing(WindowEvent e) {
                 if(manager != null) manager.staffAccessor.logoutAccount();
+                hideFrame();
             }
         });
-        exitButton.addActionListener(e -> {
-            setVisible(false);
-            System.exit(0);
-        });
+        //Add button events
+        exitButton.addActionListener(e -> hideFrame());
         logoutButton.addActionListener(e -> newLogin());
+        //Define the manager that holds the accessor
+        manager = new AccessorManager(conn);
+        manager.staffAccessor.assureDefaultAdministratorAccount();
         pack();
-        setVisible(true);
-        try {
-            manager = new AccessorManager(conn);
-            manager.staffAccessor.assureDefaultAdministratorAccount();
-        } catch (CheckedException e) {
-            prompt.setContents(e.getClass().getName() + ":\n\n"+e.getMessage());
-            prompt.setButtons(new String[] {"Exit"}, 0);
-            prompt.setTitle("Exception!");
-            prompt.setVisible(true);
-            System.exit(-1);
-        }
+        //Create the login form
         login = new Login(this, true, manager);
-        newLogin();
+        setVisible(true);
+        statusBar.createPrompt(this);
     }
 
     private void newLogin() {
         tabbedPaneMain.removeAll();
         manager.staffAccessor.logoutAccount();
-        login.setVisible(true);
-        if (manager.staffAccessor.getLoggedInAccountEmail() == null) {
-            setVisible(false);
-            System.exit(0);
-        } else {
+        login.showDialog();
+        if (manager.staffAccessor.getLoggedInAccountEmail() == null) hideFrame();
+        else {
             prompt.setContents("Welcome " + manager.staffAccessor.getLoggedInAccountEmail());
             prompt.setButtons(new String[] {"Ok"}, 0);
             prompt.setTitle("Welcome");
-            prompt.setVisible(true);
+            prompt.showDialog();
         }
+    }
+
+    private void hideFrame() {
+        setVisible(false);
+        dispose();
+        shutDownLatch.countDown();
     }
 }

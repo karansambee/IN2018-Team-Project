@@ -1,5 +1,6 @@
 package skywaysolutions.app.gui;
 
+import skywaysolutions.app.gui.control.StatusBar;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 
@@ -8,11 +9,13 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class Login extends JDialog {
+/**
+ * This class provides the login interface.
+ *
+ * @author Alfred Manville
+ */
+public class Login extends JDialogx {
     private JPanel Root;
-    private JPanel StatusPanel;
-    private JLabel statusLabel;
-    private JButton helpButton;
     private JPanel contentPanel;
     private JPanel headerPanel;
     private JTextField loginTextField;
@@ -21,60 +24,58 @@ public class Login extends JDialog {
     private JPasswordField passwordPasswordField;
     private JButton buttonExit;
     private JButton buttonLogin;
-    private final boolean reusable;
-    private final Object shslock = new Object();
-    private Thread statusHider;
+    private StatusBar statusBar;
 
+    /**
+     * This constructs a new instance of the login dialog.
+     *
+     * @param owner The owner of the dialog or null for no owner.
+     * @param reusable If the dialog can be shown again after being hidden.
+     * @param manager The accessor manager containing all the interfaces.
+     */
     public Login(Frame owner, boolean reusable, AccessorManager manager) {
-        super(owner, "Login", true);
+        super(owner, "Login", reusable);
+        //Setup form contents
         setContentPane(Root);
-        setResizable(false);
         getRootPane().setDefaultButton(buttonLogin);
+        //Setup form closing events
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        this.reusable = reusable;
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (reusable) setVisible(false); else dispose();
+                hideDialog();
             }
         });
-        buttonExit.addActionListener(e -> nshow());
+        //Setup button events
+        buttonExit.addActionListener(e -> {
+            if (!statusBar.isInHelpMode()) hideDialog();
+        });
         buttonLogin.addActionListener(e -> {
-            try {
-                if (manager.staffAccessor.authenticateAccount(loginTextField.getText(), String.valueOf(passwordPasswordField.getPassword()))) nshow(); else {
-                    statusLabel.setText("Login Attempt Failed");
-                    executeStatusHider();
+            if (!statusBar.isInHelpMode()) {
+                try {
+                    if (manager.staffAccessor.authenticateAccount(loginTextField.getText(), String.valueOf(passwordPasswordField.getPassword())))
+                        hideDialog();
+                    else statusBar.setStatus("Login Attempt Failed", null, 2500);
+                    passwordPasswordField.setText("");
+                } catch (CheckedException ex) {
+                    statusBar.setStatus(ex, 2500);
                 }
-            } catch (CheckedException ex) {
-                statusLabel.setText("Exception: "+ex.getClass().getName());
-                executeStatusHider();
             }
         });
+        //Setup Help
+        statusBar.registerComponentForHelp(loginTextField, "Enter the email address of you user.");
+        statusBar.registerComponentForHelp(passwordPasswordField, "Enter the password of your user.\n" +
+                "If you've forgotten your password, please contact a system administrator to change it.");
+        statusBar.registerComponentForHelp(passwordLabel, "If you've forgotten your password, please contact a system administrator to change it.");
+        //Finalize form
         pack();
+        dsize = getSize();
+        statusBar.createPrompt(this);
     }
 
-    public void nshow() {
-        if (reusable) setVisible(false); else dispose();
-    }
-
-    private void executeStatusHider() {
-        synchronized (shslock) {
-            if (statusHider == null) {
-                statusHider = new Thread(new StatusHideRunner());
-                statusHider.setDaemon(true);
-                statusHider.start();
-            }
-        }
-    }
-
-    private class StatusHideRunner implements Runnable {
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-            }
-            SwingUtilities.invokeLater(() -> statusLabel.setText("..."));
-        }
+    public void hideDialog() {
+        loginTextField.setText("");
+        passwordPasswordField.setText("");
+        super.hideDialog();
     }
 }

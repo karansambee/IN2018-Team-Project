@@ -10,40 +10,6 @@
     </properties>
     <border type="none"/>
     <children>
-      <grid id="e036a" binding="StatusPanel" layout-manager="GridBagLayout">
-        <constraints>
-          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-          <gridbag weightx="1.0" weighty="0.0"/>
-        </constraints>
-        <properties>
-          <minimumSize width="52" height="32"/>
-          <preferredSize width="24" height="32"/>
-        </properties>
-        <border type="none"/>
-        <children>
-          <component id="ae0df" class="javax.swing.JLabel" binding="statusLabel">
-            <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="0.0" weighty="1.0"/>
-            </constraints>
-            <properties>
-              <text value=" ..."/>
-            </properties>
-          </component>
-          <component id="1ebc0" class="javax.swing.JButton" binding="helpButton">
-            <constraints>
-              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="1.0" weighty="1.0"/>
-            </constraints>
-            <properties>
-              <maximumSize width="30" height="30"/>
-              <minimumSize width="30" height="30"/>
-              <preferredSize width="30" height="30"/>
-              <text value="?"/>
-            </properties>
-          </component>
-        </children>
-      </grid>
       <grid id="f2640" binding="HeaderPanel" layout-manager="GridBagLayout">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -134,6 +100,12 @@
           </component>
         </children>
       </grid>
+      <nested-form id="1b431" form-file="skywaysolutions/app/gui/control/StatusBar.form" binding="statusBar">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+      </nested-form>
     </children>
   </grid>
 </form>

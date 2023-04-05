@@ -10,40 +10,6 @@
     </properties>
     <border type="none"/>
     <children>
-      <grid id="dc80e" binding="StatusPanel" layout-manager="GridBagLayout">
-        <constraints>
-          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-          <gridbag weightx="1.0" weighty="0.0"/>
-        </constraints>
-        <properties>
-          <minimumSize width="52" height="32"/>
-          <preferredSize width="24" height="32"/>
-        </properties>
-        <border type="none"/>
-        <children>
-          <component id="2fd33" class="javax.swing.JLabel" binding="statusLabel">
-            <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="0.0" weighty="1.0"/>
-            </constraints>
-            <properties>
-              <text value=" ..."/>
-            </properties>
-          </component>
-          <component id="693d0" class="javax.swing.JButton" binding="helpButton">
-            <constraints>
-              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="1.0" weighty="1.0"/>
-            </constraints>
-            <properties>
-              <maximumSize width="30" height="30"/>
-              <minimumSize width="30" height="30"/>
-              <preferredSize width="30" height="30"/>
-              <text value="?"/>
-            </properties>
-          </component>
-        </children>
-      </grid>
       <grid id="77c0b" binding="contentPanel" layout-manager="GridBagLayout">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -66,29 +32,32 @@
               <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>
               </grid>
-              <gridbag weightx="0.7" weighty="0.2"/>
+              <gridbag weightx="0.6" weighty="0.4"/>
             </constraints>
             <properties>
               <font size="16"/>
+              <preferredSize width="96" height="32"/>
             </properties>
           </component>
           <component id="9712a" class="javax.swing.JLabel" binding="loginLabel">
             <constraints>
               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="0.3" weighty="0.4"/>
+              <gridbag weightx="0.4" weighty="0.4"/>
             </constraints>
             <properties>
               <font size="16"/>
+              <preferredSize width="64" height="22"/>
               <text value="Email Address:"/>
             </properties>
           </component>
           <component id="ab8e6" class="javax.swing.JLabel" binding="passwordLabel">
             <constraints>
               <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="0.3" weighty="0.4"/>
+              <gridbag weightx="0.4" weighty="0.4"/>
             </constraints>
             <properties>
               <font size="16"/>
+              <preferredSize width="64" height="22"/>
               <text value="Password:"/>
             </properties>
           </component>
@@ -97,30 +66,39 @@
               <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>
               </grid>
-              <gridbag weightx="0.7" weighty="0.2"/>
+              <gridbag weightx="0.6" weighty="0.4"/>
             </constraints>
             <properties>
               <font size="16"/>
+              <preferredSize width="96" height="30"/>
             </properties>
           </component>
           <component id="4aef7" class="javax.swing.JButton" binding="buttonExit">
             <constraints>
               <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="0.3" weighty="0.0"/>
+              <gridbag weightx="0.4" weighty="0.0"/>
             </constraints>
             <properties>
+              <preferredSize width="64" height="30"/>
               <text value="Exit"/>
             </properties>
           </component>
           <component id="fa74c" class="javax.swing.JButton" binding="buttonLogin">
             <constraints>
               <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="0.7" weighty="0.0"/>
+              <gridbag weightx="0.6" weighty="0.0"/>
             </constraints>
             <properties>
+              <preferredSize width="96" height="30"/>
               <text value="Login"/>
             </properties>
           </component>
+          <nested-form id="c7e1a" form-file="skywaysolutions/app/gui/control/StatusBar.form" binding="statusBar">
+            <constraints>
+              <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="1.0" weighty="0.0"/>
+            </constraints>
+          </nested-form>
         </children>
       </grid>
     </children>

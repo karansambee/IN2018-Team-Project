@@ -1,5 +1,9 @@
 package skywaysolutions.app.utils;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * Provides a checked Exception in order to make sure errors are handled.
  * Check {@link #getCause()} for the underlying exception.
@@ -35,5 +39,21 @@ public class CheckedException extends Exception {
     public CheckedException(Throwable cause) {super(cause);}
     protected CheckedException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    /**
+     * Gets the stack trace as a string.
+     *
+     * @return The stack trace as a string.
+     */
+    public String getStackTraceAsString() {
+        try (StringWriter sw = new StringWriter()) {
+            try (PrintWriter pw = new PrintWriter(sw, true)) {
+                printStackTrace(pw);
+                return sw.toString();
+            }
+        } catch (IOException e) {
+            return "Exception: " + e.getClass().getName() + "\n" + e.getMessage();
+        }
     }
 }
