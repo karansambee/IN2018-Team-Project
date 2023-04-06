@@ -17,5 +17,9 @@ public enum MultiLoadSyncMode {
     /**
      * Keeps records locked after load.
      */
-    KeepLockedAfterLoad
+    KeepLockedAfterLoad,
+    /**
+     * Does not load the records (Only loads the IDs).
+     */
+    NoLoad
 }

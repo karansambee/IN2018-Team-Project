@@ -45,6 +45,13 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
     }
 
     /**
+     * This should return the name of the ID column.
+     *
+     * @return The name of the ID column.
+     */
+    protected abstract String getIDColumnName();
+
+    /**
      * This loads one instance of {@link T} from the current result set.
      * DO NOT call {@link ResultSet#next()}.
      * <p>
@@ -54,9 +61,26 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
      * </p>
      *
      * @param rs The result set to use for loading.
+     * @param locked If the object is currently locked.
      * @return An instance of {@link T}.
+     * @throws CheckedException An error has occurred.
      */
-    protected abstract T loadOneFrom(ResultSet rs);
+    protected abstract T loadOneFrom(ResultSet rs, boolean locked) throws CheckedException;
+
+    /**
+     * This creates one instance of {@link T} using the ID from the current result set without loading.
+     * DO NOT call {@link ResultSet#next()}.
+     * <p>
+     * This means that the class extending {@link DatabaseEntityBase} should have a
+     * constructor that takes a {@link IDB_Connector} and {@link java.sql.ResultSet}
+     * to allow for a direct load to occur.
+     * </p>
+     *
+     * @param rs The result set to use for loading.
+     * @return An instance of {@link T}.
+     * @throws CheckedException An error has occurred.
+     */
+    protected abstract T noLoadOneFrom(ResultSet rs) throws CheckedException;
 
     /**
      * Gets the table schema (The bit that's located between the brackets).
@@ -143,24 +167,27 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
      */
     public final List<T> loadMany(IFilterStatementCreator filter, MultiLoadSyncMode syncMode) throws CheckedException {
         assureTableSchema();
-        if (syncMode != MultiLoadSyncMode.NoLockBeforeLoad) lockAll();
+        if (syncMode != MultiLoadSyncMode.NoLockBeforeLoad && syncMode != MultiLoadSyncMode.NoLoad) lockAll();
         List<T> toReturn = new ArrayList<>();
         synchronized (slock) {
-            if (!_lock) throw new CheckedException("Lock not applied");
-            try(PreparedStatement sta = filter.createFilteredStatementFor(conn, "SELECT * FROM "+getTableName()+" WHERE ")) {
-                ResultSet rs = sta.executeQuery();
-                while (rs.next()) toReturn.add(loadOneFrom(rs));
+            if ((!_lock) && (syncMode == MultiLoadSyncMode.UnlockAfterLoad || syncMode == MultiLoadSyncMode.KeepLockedAfterLoad)) throw new CheckedException("Lock not applied");
+            try(PreparedStatement sta = filter.createFilteredStatementFor(conn, "SELECT "+
+                    ((syncMode == MultiLoadSyncMode.NoLoad) ? getIDColumnName() : "*")+" FROM "+getTableName()+" WHERE ")) {
+                try (ResultSet rs = sta.executeQuery()) {
+                    while (rs.next())
+                        toReturn.add((syncMode == MultiLoadSyncMode.NoLoad) ? noLoadOneFrom(rs) : loadOneFrom(rs, _lock));
+                }
             } catch (SQLException e) {
                 throw new CheckedException(e);
             }
         }
-        if (syncMode == MultiLoadSyncMode.UnlockAfterLoad) unlockAll();
+        if (syncMode == MultiLoadSyncMode.UnlockAfterLoad) unlockAll(false);
         return toReturn;
     }
 
     /**
      * Locks all the rows.
-     * DO NOT forget to {@link #unlockAll()} once finished.
+     * DO NOT forget to {@link #unlockAll(boolean)} once finished.
      *
      * @throws CheckedException An error occurs.
      */
@@ -170,15 +197,17 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             if (_lock) return;
             int rc = 0; //Get the number of rows in the table
             try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM "+getTableName())) {
-                ResultSet rs = sta.executeQuery();
-                rc = rs.getInt("rowCount");
+                try (ResultSet rs = sta.executeQuery()) {
+                    rc = rs.getInt("rowCount");
+                }
             } catch (SQLException e) {
                 throw new CheckedException(e);
             }
             int rca = 0; //Get the number of rows in the aux table
             try(PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM "+getAuxTableName())) {
-                ResultSet rs = sta.executeQuery();
-                rca = rs.getInt("rowCount");
+                try (ResultSet rs = sta.executeQuery()) {
+                    rca = rs.getInt("rowCount");
+                }
             } catch (SQLException e) {
                 throw new CheckedException(e);
             }
@@ -198,7 +227,8 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
      * Select all the IDs from the main table to get what to insert.
      * Use {@link IDB_Connector#getStatement(String)} to get a {@link java.sql.PreparedStatement}.
      * ^ Don't forget to use the try([resource]) {}
-     * Use {@link #getTableName()} to get the table name.
+     * Use {@link #getTableName()} to get the table name for selection.
+     * Use {@link #getAuxTableName()} to get the table name for insertion.
      * DO NOT use any public functions provided by {@link DatabaseTableBase} in here otherwise a deadlock could occur.
      *
      * @throws CheckedException An error has occurred.
@@ -206,15 +236,91 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
     protected abstract void createAllAuxRows() throws CheckedException;
 
     /**
+     * Inserts all the aux rows using ints as a primary key.
+     *
+     * @throws CheckedException An error has occurred.
+     */
+    protected final void createAllAuxRowsIntID() throws CheckedException {
+        ArrayList<Integer> IDs = new ArrayList<>();
+        try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getTableName())) {
+            try (ResultSet rs = sta.executeQuery()) {
+                while (rs.next()) IDs.add(rs.getInt(getIDColumnName()));
+            }
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
+            for (int c : IDs) {
+                sta.setInt(1, c);
+                sta.addBatch();
+            }
+            sta.executeBatch();
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+    }
+
+    /**
+     * Inserts all the aux rows using longs as a primary key.
+     *
+     * @throws CheckedException An error has occurred.
+     */
+    protected final void createAllAuxRowsLongID() throws CheckedException {
+        ArrayList<Long> IDs = new ArrayList<>();
+        try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getTableName())) {
+            try (ResultSet rs = sta.executeQuery()) {
+                while (rs.next()) IDs.add(rs.getLong(getIDColumnName()));
+            }
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
+            for (long c : IDs) {
+                sta.setLong(1, c);
+                sta.addBatch();
+            }
+            sta.executeBatch();
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+    }
+
+    /**
+     * Inserts all the aux rows using strings as a primary key.
+     *
+     * @throws CheckedException An error has occurred.
+     */
+    protected final void createAllAuxRowsStringID() throws CheckedException {
+        ArrayList<String> IDs = new ArrayList<>();
+        try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getTableName())) {
+            try (ResultSet rs = sta.executeQuery()) {
+                while (rs.next()) IDs.add(rs.getString(getIDColumnName()));
+            }
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
+            for (String c : IDs) {
+                sta.setString(1, c);
+                sta.addBatch();
+            }
+            sta.executeBatch();
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+    }
+
+    /**
      * Unlocks all the rows allowing them to be used by other connections.
      * See: {@link #lockAll()}
      *
+     * @param force Force the unlock.
      * @throws CheckedException An error occurs.
      */
-    public final void unlockAll() throws CheckedException {
+    public final void unlockAll(boolean force) throws CheckedException {
         assureTableSchema();
         synchronized (slock) {
-            if (!_lock) throw new CheckedException("Lock not applied");
+            if (!_lock && !force) throw new CheckedException("Lock not applied");
             try {
                 createAllAuxRows();
             } catch (CheckedException e) {

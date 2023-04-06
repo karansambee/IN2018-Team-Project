@@ -3,6 +3,8 @@ package skywaysolutions.app.stock;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.IRepairable;
 
+import java.util.Date;
+
 /**
  * Provides the stock management system for blanks and tickets.
  *
@@ -11,23 +13,27 @@ import skywaysolutions.app.utils.IRepairable;
 public interface IStockAccessor extends IRepairable {
     /**
      * Creates a blank with the specified ID,
-     * an ID of a staff member it's assigned to (Not assigned if -1)
-     * and a description of the blanks contents.
+     * an ID of a staff member it's assigned to (Not assigned if -1),
+     * a description of the blanks contents, the date of the creation
+     * and the optional date of assignment (If assigned).
      *
      * @param id The ID of the blank.
      * @param assignedID The staff member ID it is assigned to or -1 if not assigned.
      * @param description The description of the blank's contents.
+     * @param creationDate The creation date of the blank.
+     * @param assignmentDate The assignment date of the blank (null of not assigned).
      * @throws CheckedException The blank creation operation has failed.
      */
-    void createBlank(long id, long assignedID, String description) throws CheckedException;
+    void createBlank(long id, long assignedID, String description, Date creationDate, Date assignmentDate) throws CheckedException;
 
     /**
-     * Returns a blank with the specified ID.
+     * Returns a blank with the specified ID on the specified date.
      *
      * @param id The ID of the blank.
+     * @param dateReturned The date returned.
      * @throws CheckedException The blank could not be marked as returned.
      */
-    void returnBlank(long id) throws CheckedException;
+    void returnBlank(long id, Date dateReturned) throws CheckedException;
 
     /**
      * Blacklists a blank with the specified ID.
@@ -47,13 +53,14 @@ public interface IStockAccessor extends IRepairable {
 
     /**
      * Re-assigns a blank with the specified ID to the
-     * staff member with the specified ID.
+     * staff member with the specified ID on the specified date.
      *
      * @param id The ID of the blank.
      * @param assignedID The ID of the staff member.
+     * @param assignmentDate The date of the re-assignment.
      * @throws CheckedException Blank re-assigning has failed.
      */
-    void reAssignBlank(long id, long assignedID) throws CheckedException;
+    void reAssignBlank(long id, long assignedID, Date assignmentDate) throws CheckedException;
 
     /**
      * Gets the blank type code for the specified blank ID.
@@ -66,7 +73,7 @@ public interface IStockAccessor extends IRepairable {
     /**
      * Gets a list of blanks that may be filtered by a provided staff member ID.
      *
-     * @param assignedID The staff ID to filter by or -1 for no filtering.
+     * @param assignedID The staff ID to filter by, -1 for no filtering or -2 for un-assigned.
      * @return The list of blank IDs.
      * @throws CheckedException The blanks could not be retrieved.
      */
@@ -80,6 +87,15 @@ public interface IStockAccessor extends IRepairable {
      * @throws CheckedException The blank could not be retrieved.
      */
     boolean isBlankReturned(long id) throws CheckedException;
+
+    /**
+     * Gets the blank return date or null if it has not been returned.
+     *
+     * @param id The blank ID.
+     * @return The blank return date or null.
+     * @throws CheckedException The blank could not be retrieved.
+     */
+    Date getBlankReturnedDate(long id) throws CheckedException;
 
     /**
      * Gets if a blank has been blacklisted.
@@ -98,6 +114,33 @@ public interface IStockAccessor extends IRepairable {
      * @throws CheckedException The blank could not be retrieved.
      */
     boolean isBlankVoided(long id) throws CheckedException;
+
+    /**
+     * Gets the blank creation date.
+     *
+     * @param id The blank ID.
+     * @return The creation date.
+     * @throws CheckedException The blank could not be retrieved.
+     */
+    Date getBlankCreationDate(long id) throws CheckedException;
+
+    /**
+     * Sets the blank creation date.
+     *
+     * @param id The blank ID.
+     * @param date The creation date.
+     * @throws CheckedException The blank could not be retrieved.
+     */
+    void setBlankCreationDate(long id, Date date) throws CheckedException;
+
+    /**
+     * Gets the blank assignment date or null if it has not been assigned.
+     *
+     * @param id The blank ID.
+     * @return The assignment date or null.
+     * @throws CheckedException The blank could not be retrieved.
+     */
+    Date getBlankAssignmentDate(long id) throws CheckedException;
 
     /**
      * Creates a new blank type with a description.

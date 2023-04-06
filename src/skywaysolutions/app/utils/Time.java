@@ -38,6 +38,7 @@ public final class Time {
      * @return The SQL Date.
      */
     public static java.sql.Date toSQLDate(Date date) {
+        if (date == null) return null;
         return java.sql.Date.valueOf(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
     }
 
@@ -48,6 +49,7 @@ public final class Time {
      * @return The date.
      */
     public static Date fromSQLDate(java.sql.Date date) {
+        if (date == null) return null;
         return Date.from(date.toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 }

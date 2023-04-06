@@ -31,7 +31,7 @@ public interface ISalesAccessor extends IRepairable {
      * @return The sale ID.
      * @throws CheckedException An error occurred during the sale.
      */
-    long sell(long blank, long customer, SaleType type, double commissionRate, Date dueDate, Date saleDate, Decimal cost, Decimal tax, Decimal secondaryTax, String currency, Decimal costPreDiscount) throws CheckedException;
+    long sell(long blank, long customer, SaleType type, Decimal commissionRate, Date dueDate, Date saleDate, Decimal cost, Decimal tax, Decimal secondaryTax, String currency, Decimal costPreDiscount) throws CheckedException;
 
     /**
      * Performs a transaction for the specified sale on a specified date with the type of currency being used and the payment being made.
@@ -68,10 +68,11 @@ public interface ISalesAccessor extends IRepairable {
      * Refunds or gets the refunds of a sale.
      *
      * @param saleID The sale ID.
+     * @param date The date of any new refunds.
      * @return The IDs of the refunds.
      * @throws CheckedException The refund operation / obtaining the refund IDs has failed.
      */
-    long[] refund(long saleID) throws CheckedException;
+    long[] refund(long saleID, Date date) throws CheckedException;
 
     /**
      * Gets the sales given the period, type of payment and the currency.
@@ -98,6 +99,7 @@ public interface ISalesAccessor extends IRepairable {
 
     /**
      * Gets the sales given the period, type of payment, the currency and the customer ID.
+     *
      * @param period The month of the sales (Null for any time).
      * @param type The type of payment.
      * @param currency The currency of the sale, if null, this filter is ignored.
@@ -105,7 +107,7 @@ public interface ISalesAccessor extends IRepairable {
      * @return An array of sale IDs.
      * @throws CheckedException Retrieving the sales has failed.
      */
-    long[] getSalesByCustomers(MonthPeriod period, PaymentType type, String currency, long customerID) throws CheckedException;
+    long[] getSalesByCustomer(MonthPeriod period, PaymentType type, String currency, long customerID) throws CheckedException;
 
     /**
      * Gets the sale given the ID.
