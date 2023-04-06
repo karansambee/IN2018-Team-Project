@@ -26,7 +26,7 @@ public class StatusBar extends JPanel {
     private String currentStatus = "";
     private final Object slock = new Object();
     private final HelpActionHandler helpActionLsnr = new HelpActionHandler();
-    public HashMap<Object, String> helpMap = new HashMap<>();
+    private final HashMap<Object, String> helpMap = new HashMap<>();
 
     /**
      * Constructs a new status bar.
@@ -111,7 +111,7 @@ public class StatusBar extends JPanel {
      * @param statusTimeout The timeout of the status message (0 To Disable).
      */
     public void setStatus(CheckedException ex, int statusTimeout) {
-        setStatus("Exception: " + ex.getClass().getName(), "Exception: " + ex.getClass().getName() + "\n\n" + ex.getMessage() +
+        setStatus("Exception: " + ex.getMessage(), "Exception: " + ex.getClass().getName() + "\n\n" + ex.getMessage() +
                 "\n\nStack Trace:\n\n" + ex.getStackTraceAsString(), statusTimeout);
     }
 

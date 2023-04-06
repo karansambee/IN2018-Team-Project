@@ -18,8 +18,7 @@ public class Login extends JDialogx {
     private JPanel Root;
     private JPanel contentPanel;
     private JPanel headerPanel;
-    private JTextField loginTextField;
-    private JLabel loginLabel;
+    private skywaysolutions.app.gui.control.VTextField loginTextField;
     private JLabel passwordLabel;
     private JPasswordField passwordPasswordField;
     private JButton buttonExit;
@@ -46,6 +45,12 @@ public class Login extends JDialogx {
                 hideDialog();
             }
         });
+        //Setup login text field
+        try {
+            loginTextField.setup("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)*[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", statusBar, "Invalid email address!", false, true);
+        } catch (CheckedException e) {
+            statusBar.setStatus(e, 2500);
+        }
         //Setup button events
         buttonExit.addActionListener(e -> {
             if (!statusBar.isInHelpMode()) hideDialog();
@@ -55,7 +60,7 @@ public class Login extends JDialogx {
                 try {
                     if (manager.staffAccessor.authenticateAccount(loginTextField.getText(), String.valueOf(passwordPasswordField.getPassword())))
                         hideDialog();
-                    else statusBar.setStatus("Login Attempt Failed", null, 2500);
+                    else statusBar.setStatus("Password Incorrect", null, 2500);
                     passwordPasswordField.setText("");
                 } catch (CheckedException ex) {
                     statusBar.setStatus(ex, 2500);

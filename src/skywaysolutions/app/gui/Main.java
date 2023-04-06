@@ -31,7 +31,7 @@ public class Main extends JFrame {
     private final Login login;
     private final CountDownLatch shutDownLatch;
 
-    public Main(String title, IDB_Connector conn, CountDownLatch shutdownLatch) throws CheckedException {
+    public Main(String title, AccessorManager manager, CountDownLatch shutdownLatch) throws CheckedException {
         super(title);
         //Initialize form
         setContentPane(Root);
@@ -56,11 +56,11 @@ public class Main extends JFrame {
         exitButton.addActionListener(e -> hideFrame());
         logoutButton.addActionListener(e -> newLogin());
         //Define the manager that holds the accessor
-        manager = new AccessorManager(conn);
-        manager.staffAccessor.assureDefaultAdministratorAccount();
+        this.manager = manager;
+        this.manager.staffAccessor.assureDefaultAdministratorAccount();
         pack();
         //Create the login form
-        login = new Login(this, true, manager);
+        login = new Login(this, true, this.manager);
         setVisible(true);
         statusBar.createPrompt(this);
     }

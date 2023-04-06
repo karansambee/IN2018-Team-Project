@@ -27,7 +27,7 @@
             <border type="none"/>
             <children/>
           </grid>
-          <component id="ede2d" class="javax.swing.JTextField" binding="loginTextField">
+          <component id="5d2d7" class="skywaysolutions.app.gui.control.VTextField" binding="loginTextField">
             <constraints>
               <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>
@@ -36,10 +36,10 @@
             </constraints>
             <properties>
               <font size="16"/>
-              <preferredSize width="96" height="32"/>
+              <margin top="2" left="6" bottom="2" right="6"/>
             </properties>
           </component>
-          <component id="9712a" class="javax.swing.JLabel" binding="loginLabel">
+          <component id="9712a" class="javax.swing.JLabel">
             <constraints>
               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
               <gridbag weightx="0.4" weighty="0.4"/>
@@ -70,6 +70,7 @@
             </constraints>
             <properties>
               <font size="16"/>
+              <margin top="2" left="6" bottom="2" right="6"/>
               <preferredSize width="96" height="30"/>
             </properties>
           </component>
