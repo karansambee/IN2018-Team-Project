@@ -12,13 +12,6 @@ import skywaysolutions.app.utils.IRepairable;
  */
 public interface IRateAccessor extends IRepairable {
     /**
-     * Sets the database connector used for conversion.
-     *
-     * @param conn The DB connector.
-     */
-    void setDBConverter(IDB_Connector conn);
-
-    /**
      * Gets the conversion rate for the specified currency to USD.
      *
      * @param currency The currency code.
