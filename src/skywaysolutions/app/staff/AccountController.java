@@ -441,6 +441,19 @@ public class AccountController implements IStaffAccessor {
       }
     }
 
+    /**
+     * Forces a table to be deleted (Along with its auxiliary table).
+     *
+     * @param tableName The table to purge.
+     * @throws CheckedException The table could not be purged.
+     */
+    @Override
+    public void forceFullPurge(String tableName) throws CheckedException {
+        synchronized (slock) {
+            if (tableName.equals("Staff")) accessor.purgeTableSchema();
+        }
+    }
+
     private static class EmailFinder implements IFilterStatementCreator {
         public String email;
         @Override

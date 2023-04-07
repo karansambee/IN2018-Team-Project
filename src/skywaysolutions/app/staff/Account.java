@@ -34,7 +34,7 @@ public class Account extends DatabaseEntityBase {
         role = StaffRole.getStaffRoleFromValue(rs.getInt("StaffRole"));
         Double cr = ResultSetNullableReturners.getDoubleValue(rs, "ComissionRate");
         commission = (cr == null) ? null : new Decimal(cr, 6);
-        info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"), rs.getDate("DateOfBirth"),
+        info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"), Time.fromSQLDate(rs.getDate("DateOfBirth")),
                 rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
         password = new PasswordString(rs.getBytes("HashedPassword"), rs.getBytes("PasswordSalt"));
     }

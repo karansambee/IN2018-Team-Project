@@ -19,6 +19,13 @@ public final class PersonalInformation {
 
     /**
      * This constructs new personalInformation class.
+     */
+    public PersonalInformation() {
+        this("", "", "", "", new Date(0), "", "", "");
+    }
+
+    /**
+     * This constructs new personalInformation class.
      *
      * @param firstName This is the first name of the person.
      * @param lastName This is the last name of the person.
@@ -29,7 +36,6 @@ public final class PersonalInformation {
      * @param houseNumber This is the house number of the person.
      * @param streetName This is the street name of the person.
      */
-
     public PersonalInformation(String firstName, String lastName, String phoneNumber, String emailAddress, Date dateOfBirth, String postcode, String houseNumber, String streetName) {
         this.firstName = firstName;
         this.lastName = lastName;

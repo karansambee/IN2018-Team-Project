@@ -429,6 +429,20 @@ public class BlankController implements IStockAccessor {
         }
     }
 
+    /**
+     * Forces a table to be deleted (Along with its auxiliary table).
+     *
+     * @param tableName The table to purge.
+     * @throws CheckedException The table could not be purged.
+     */
+    @Override
+    public void forceFullPurge(String tableName) throws CheckedException {
+        synchronized (slock) {
+            if (tableName.equals("Blank")) blankTableAccessor.purgeTableSchema();
+            else if (tableName.equals("BlankType")) blankTypeTableAccessor.purgeTableSchema();
+        }
+    }
+
     private static class BlankAssignmentFilter implements IFilterStatementCreator {
         public long staffID;
 

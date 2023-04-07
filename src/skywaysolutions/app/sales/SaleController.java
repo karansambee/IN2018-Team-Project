@@ -351,10 +351,29 @@ public class SaleController implements ISalesAccessor {
      */
     @Override
     public void forceFullUnlock(String tableName) throws CheckedException {
-        switch (tableName) {
-            case "Sale" -> saleTableAccessor.unlockAll(true);
-            case "Transcation" -> transactionTableAccessor.unlockAll(true);
-            case "Refund" -> refundTableAccessor.unlockAll(true);
+        synchronized (slock) {
+            switch (tableName) {
+                case "Sale" -> saleTableAccessor.unlockAll(true);
+                case "Transcation" -> transactionTableAccessor.unlockAll(true);
+                case "Refund" -> refundTableAccessor.unlockAll(true);
+            }
+        }
+    }
+
+    /**
+     * Forces a table to be deleted (Along with its auxiliary table).
+     *
+     * @param tableName The table to purge.
+     * @throws CheckedException The table could not be purged.
+     */
+    @Override
+    public void forceFullPurge(String tableName) throws CheckedException {
+        synchronized (slock) {
+            switch (tableName) {
+                case "Sale" -> saleTableAccessor.purgeTableSchema();
+                case "Transcation" -> transactionTableAccessor.purgeTableSchema();
+                case "Refund" -> refundTableAccessor.purgeTableSchema();
+            }
         }
     }
 

@@ -52,4 +52,18 @@ public final class Time {
         if (date == null) return null;
         return Date.from(date.toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
+
+    /**
+     * Gets the date object of the given date information.
+     *
+     * @param year The year.
+     * @param month The month (1-12).
+     * @param dayOfMonth The day of the month (From 1).
+     * @return The date representing the passed information.
+     */
+    public static Date getDate(int year, int month, int dayOfMonth) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(year, month-1, dayOfMonth);
+        return cal.getTime();
+    }
 }

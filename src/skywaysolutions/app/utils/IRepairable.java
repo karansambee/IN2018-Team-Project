@@ -21,4 +21,12 @@ public interface IRepairable {
      * @throws CheckedException The table could not be unlocked.
      */
     void forceFullUnlock(String tableName) throws CheckedException;
+
+    /**
+     * Forces a table to be deleted (Along with its auxiliary table).
+     *
+     * @param tableName The table to purge.
+     * @throws CheckedException The table could not be purged.
+     */
+    void forceFullPurge(String tableName) throws CheckedException;
 }

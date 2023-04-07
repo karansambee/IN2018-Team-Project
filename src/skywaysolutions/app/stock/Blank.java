@@ -53,9 +53,9 @@ public class Blank extends DatabaseEntityBase {
         description = rs.getString("BlankDescription");
         blackListed = rs.getBoolean("BlackListed");
         voided = rs.getBoolean("Void");
-        creationDate = rs.getDate("ReceivedDate");
-        assignmentDate = ResultSetNullableReturners.getDateValue(rs, "AssignedDate");
-        returned = ResultSetNullableReturners.getDateValue(rs, "ReturnedDate");
+        creationDate = Time.fromSQLDate(rs.getDate("ReceivedDate"));
+        assignmentDate = Time.fromSQLDate(ResultSetNullableReturners.getDateValue(rs, "AssignedDate"));
+        returned = Time.fromSQLDate(ResultSetNullableReturners.getDateValue(rs, "ReturnedDate"));
     }
 
     @Override
@@ -133,9 +133,9 @@ public class Blank extends DatabaseEntityBase {
                 description = rs.getString("BlankDescription");
                 blackListed = rs.getBoolean("BlackListed");
                 voided = rs.getBoolean("Void");
-                creationDate = rs.getDate("ReceivedDate");
-                assignmentDate = ResultSetNullableReturners.getDateValue(rs, "AssignedDate");
-                returned = ResultSetNullableReturners.getDateValue(rs, "ReturnedDate");
+                creationDate = Time.fromSQLDate(rs.getDate("ReceivedDate"));
+                assignmentDate = Time.fromSQLDate(ResultSetNullableReturners.getDateValue(rs, "AssignedDate"));
+                returned = Time.fromSQLDate(ResultSetNullableReturners.getDateValue(rs, "ReturnedDate"));
             }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);

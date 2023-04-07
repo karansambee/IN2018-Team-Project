@@ -73,6 +73,18 @@ public final class AccessorManager {
         }
     }
 
+    public void forcePurge(String table) throws CheckedException {
+        if (table == null) {
+            //rateAccessor.forceFullPurge(table);
+            staffAccessor.forceFullPurge(table);
+            stockAccessor.forceFullPurge(table);
+            //customerAccessor.forceFullPurge(table);
+            salesAccessor.forceFullPurge(table);
+        } else {
+            for (String c : tables) forcePurge(c);
+        }
+    }
+
     /**
      * Backups the database contents to a file.
      *
@@ -96,6 +108,7 @@ public final class AccessorManager {
     public void restore(File file) throws CheckedException {
         try (FileInputStream is = new FileInputStream(file)) {
             for (String c : tables) DatabaseBackupTable.restore(conn, is);
+            forceUnlock(null);
         } catch (IOException e) {
             throw new CheckedException(e);
         }
