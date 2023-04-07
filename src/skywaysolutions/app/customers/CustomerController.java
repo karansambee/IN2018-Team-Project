@@ -16,6 +16,8 @@ public class CustomerController implements ICustomerAccessor {
     private final AliasFinder finder = new AliasFinder();
     private final AllFilter allFilter = new AllFilter();
     private final FlexiblePlanFilter flexiblePlanFilter = new FlexiblePlanFilter();
+    private final CustomerFilter customerFilter = new CustomerFilter();
+    private final DiscountFilter discountFilter = new DiscountFilter();
     private final CustomerTableAccessor customerTableAccessor;
     private final DiscountTableAccessor discountTableAccessor;
     private final FlexibleDiscountEntriesTableAccessor flexibleDiscountEntriesTableAccessor;
@@ -203,15 +205,17 @@ public class CustomerController implements ICustomerAccessor {
     }
 
     /**
-     * Lists all the customer account's IDs.
+     * Lists all the customer account's IDs of the specified type.
      *
+     * @param type Customer type.
      * @return An array of customer IDs.
      * @throws CheckedException The list of customers could not be retrieved.
      */
     @Override
-    public long[] listAccounts() throws CheckedException {
+    public long[] listAccounts(CustomerType type) throws CheckedException {
         synchronized (slock) {
-            List<Customer> customers = customerTableAccessor.loadMany(allFilter, MultiLoadSyncMode.NoLoad);
+            customerFilter.type = type;
+            List<Customer> customers = customerTableAccessor.loadMany(customerFilter, MultiLoadSyncMode.NoLoad);
             long[] ids = new long[customers.size()];
             for (int i = 0; i < ids.length; i++) ids[i] = customers.get(i).getCustomerID();
             return ids;
@@ -368,6 +372,24 @@ public class CustomerController implements ICustomerAccessor {
             }
             account.store();
             account.unlock();
+        }
+    }
+
+    /**
+     * Lists all the available discount plan IDs given the type of plan.
+     *
+     * @param type The type of plan.
+     * @return An array of plan IDs.
+     * @throws CheckedException The list of plans could not be retrieved.
+     */
+    @Override
+    public long[] listPlans(PlanType type) throws CheckedException {
+        synchronized (slock) {
+            discountFilter.type = type;
+            List<Discount> discounts = discountTableAccessor.loadMany(discountFilter, MultiLoadSyncMode.NoLoad);
+            long[] ids = new long[discounts.size()];
+            for (int i = 0; i < ids.length; i++) ids[i] = discounts.get(i).getPlanID();
+            return ids;
         }
     }
 
@@ -666,6 +688,38 @@ public class CustomerController implements ICustomerAccessor {
                 case "DiscountPlan" -> discountTableAccessor.purgeTableSchema();
                 case "FlexibleDiscountEntries" -> flexibleDiscountEntriesTableAccessor.purgeTableSchema();
             }
+        }
+    }
+
+    /**
+     * Creates a filtered statement to search for customers of a specified type.
+     *
+     * @author Alfred Manville
+     */
+    private static class CustomerFilter implements IFilterStatementCreator {
+        public CustomerType type;
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
+            PreparedStatement sta = conn.getStatement((type == CustomerType.Any) ? startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7) :
+                    startOfSQLTemplate+"CustomerType = ?");
+            if (type != CustomerType.Any) sta.setInt(1, type.getValue());
+            return sta;
+        }
+    }
+
+    /**
+     * Creates a filtered statement to search for discounts of a specified type.
+     *
+     * @author Alfred Manville
+     */
+    private static class DiscountFilter implements IFilterStatementCreator {
+        public PlanType type;
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
+            PreparedStatement sta = conn.getStatement((type == PlanType.Any) ? startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7) :
+                    startOfSQLTemplate+"DiscountType = ?");
+            if (type != PlanType.Any) sta.setInt(1, type.getValue());
+            return sta;
         }
     }
 

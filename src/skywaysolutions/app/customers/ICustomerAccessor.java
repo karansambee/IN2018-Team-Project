@@ -101,12 +101,13 @@ public interface ICustomerAccessor extends IRepairable {
     void deleteAccount(long customer) throws CheckedException;
 
     /**
-     * Lists all the customer account's IDs.
+     * Lists all the customer account's IDs of the specified type.
      *
+     * @param type Customer type.
      * @return An array of customer IDs.
      * @throws CheckedException The list of customers could not be retrieved.
      */
-    long[] listAccounts() throws CheckedException;
+    long[] listAccounts(CustomerType type) throws CheckedException;
 
     /**
      * This checks if the customer is accumulating discount credit.
@@ -177,6 +178,15 @@ public interface ICustomerAccessor extends IRepairable {
      * @throws CheckedException The customer information could not be updated.
      */
     void addPurchase(long customer, Date date, Decimal amount) throws CheckedException;
+
+    /**
+     * Lists all the available discount plan IDs given the type of plan.
+     *
+     * @param type The type of plan.
+     * @return An array of plan IDs.
+     * @throws CheckedException The list of plans could not be retrieved.
+     */
+    long[] listPlans(PlanType type) throws CheckedException;
 
     /**
      * Create a plan with a specific type and percentage.
