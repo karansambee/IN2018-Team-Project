@@ -1,9 +1,11 @@
 package skywaysolutions.app.utils;
 
+import skywaysolutions.app.customers.CustomerController;
 import skywaysolutions.app.customers.ICustomerAccessor;
 import skywaysolutions.app.database.DatabaseBackupTable;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.rates.IRateAccessor;
+import skywaysolutions.app.rates.RateController;
 import skywaysolutions.app.reports.IReportAccessor;
 import skywaysolutions.app.sales.ISalesAccessor;
 import skywaysolutions.app.sales.SaleController;
@@ -39,20 +41,19 @@ public final class AccessorManager {
      */
     public AccessorManager(IDB_Connector conn) throws CheckedException {
         this.conn = conn;
-        this.rateAccessor = null;
+        this.rateAccessor = new RateController(conn);
         this.staffAccessor = new AccountController(conn);
         this.stockAccessor = new BlankController(conn);
-        this.customerAccessor = null;
+        this.customerAccessor = new CustomerController(conn);
         this.salesAccessor = new SaleController(conn, rateAccessor, stockAccessor);
-        this.reportAccessor = null;
+        this.reportAccessor = null; //TODO: Add report accessor instantiation
         ArrayList<String> tables = new ArrayList<>();
-        //tables.addAll(List.of(rateAccessor.getTables()));
+        tables.addAll(List.of(rateAccessor.getTables()));
         tables.addAll(List.of(staffAccessor.getTables()));
         tables.addAll(List.of(stockAccessor.getTables()));
-        //tables.addAll(List.of(customerAccessor.getTables()));
+        tables.addAll(List.of(customerAccessor.getTables()));
         tables.addAll(List.of(salesAccessor.getTables()));
         this.tables = tables.toArray(new String[0]);
-        //TODO: Add the rest of the accessors, then uncomment their bits
     }
 
     /**
@@ -63,10 +64,10 @@ public final class AccessorManager {
      */
     public void forceUnlock(String table) throws CheckedException {
         if (table == null) {
-            //rateAccessor.forceFullUnlock(table);
+            rateAccessor.forceFullUnlock(table);
             staffAccessor.forceFullUnlock(table);
             stockAccessor.forceFullUnlock(table);
-            //customerAccessor.forceFullUnlock(table);
+            customerAccessor.forceFullUnlock(table);
             salesAccessor.forceFullUnlock(table);
         } else {
             for (String c : tables) forceUnlock(c);
@@ -75,10 +76,10 @@ public final class AccessorManager {
 
     public void forcePurge(String table) throws CheckedException {
         if (table == null) {
-            //rateAccessor.forceFullPurge(table);
+            rateAccessor.forceFullPurge(table);
             staffAccessor.forceFullPurge(table);
             stockAccessor.forceFullPurge(table);
-            //customerAccessor.forceFullPurge(table);
+            customerAccessor.forceFullPurge(table);
             salesAccessor.forceFullPurge(table);
         } else {
             for (String c : tables) forcePurge(c);
