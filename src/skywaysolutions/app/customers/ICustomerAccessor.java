@@ -13,26 +13,30 @@ import java.util.Date;
  * @author Alfred Manville
  */
 public interface ICustomerAccessor extends IRepairable {
+
     /**
      * Allows for an account to be created.
      *
      * @param info The personal information of the account.
-     * @param plan The plan ID the account should use (Set to -1 for no plan).
+     * @param planID The plan ID the account should use (Set to -1 for no plan).
+     * @param customerDiscountCredited If the customer is credited by storing the discount.
+     * @param currency The local currency of the customer.
      * @param alias The alias of the account.
      * @param type The type of the customer.
      * @return The ID of the created account.
      * @throws CheckedException Account creation fails.
      */
-    long createAccount(PersonalInformation info, long plan, String alias, CustomerType type) throws CheckedException;
+    long createAccount(PersonalInformation info, Long planID, boolean customerDiscountCredited,
+                       String currency, String alias, CustomerType type) throws CheckedException;
 
     /**
      * Gets the personal information of the account.
      *
-     * @param customer The customer ID of the account.
+     * @param customerID The customer ID of the account.
      * @return The customer's personal information.
      * @throws CheckedException Retrieving personal information fails.
      */
-    PersonalInformation getPersonalInformation(long customer) throws CheckedException;
+    PersonalInformation getPersonalInformation(long customerID) throws CheckedException;
 
     /**
      * Sets the personal information of the account.
@@ -97,12 +101,13 @@ public interface ICustomerAccessor extends IRepairable {
     void deleteAccount(long customer) throws CheckedException;
 
     /**
-     * Lists all the customer account's IDs.
+     * Lists all the customer account's IDs of the specified type.
      *
+     * @param type Customer type.
      * @return An array of customer IDs.
      * @throws CheckedException The list of customers could not be retrieved.
      */
-    long[] listAccounts() throws CheckedException;
+    long[] listAccounts(CustomerType type) throws CheckedException;
 
     /**
      * This checks if the customer is accumulating discount credit.
@@ -173,6 +178,15 @@ public interface ICustomerAccessor extends IRepairable {
      * @throws CheckedException The customer information could not be updated.
      */
     void addPurchase(long customer, Date date, Decimal amount) throws CheckedException;
+
+    /**
+     * Lists all the available discount plan IDs given the type of plan.
+     *
+     * @param type The type of plan.
+     * @return An array of plan IDs.
+     * @throws CheckedException The list of plans could not be retrieved.
+     */
+    long[] listPlans(PlanType type) throws CheckedException;
 
     /**
      * Create a plan with a specific type and percentage.

@@ -2,6 +2,8 @@ package skywaysolutions.app.customers;
 
 import skywaysolutions.app.utils.Decimal;
 
+import java.util.Objects;
+
 /**
  * This provides the exportable flexible plan range class.
  *
@@ -58,5 +60,18 @@ public final class FlexiblePlanRange {
     @Override
     public String toString() {
         return _lower.toString() + "-" + _upper.toString();
+    }
+
+    /**
+     * Checks if the provided FlexiblePlanRange is equivalent to this one.
+     *
+     * @param o The object to compare.
+     * @return If the objects are equivalent.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FlexiblePlanRange that)) return false;
+        return Objects.equals(_lower, that._lower) && Objects.equals(_upper, that._upper);
     }
 }
