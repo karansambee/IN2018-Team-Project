@@ -2,14 +2,12 @@ package skywaysolutions.app.customers;
 
 import skywaysolutions.app.database.DatabaseEntityBase;
 import skywaysolutions.app.database.IDB_Connector;
-import skywaysolutions.app.utils.CheckedException;
-import skywaysolutions.app.utils.Decimal;
-import skywaysolutions.app.utils.PersonalInformation;
-import skywaysolutions.app.utils.Time;
+import skywaysolutions.app.utils.*;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Date;
 
 public class Customer extends DatabaseEntityBase {
@@ -18,18 +16,11 @@ public class Customer extends DatabaseEntityBase {
     private Long planID;
     private Decimal accountDiscountCredit;
     private Decimal purchaseAccumulation;
-    private boolean customerDiscountCredited;
     private Date purchaseMonthStart;
     private String currency;
     private String alias;
     private CustomerType customerType;
 
-
-    /**
-     * Constructs a new DatabaseEntityBase with the specified connection.
-     *
-     * @param conn The connection to use.
-     */
     public Customer(IDB_Connector conn, Long id) {
         super(conn);
         customerID = id;
@@ -41,25 +32,28 @@ public class Customer extends DatabaseEntityBase {
         super(conn);
         this.info = info;
         this.planID = planID;
-        this.customerDiscountCredited = customerDiscountCredited;
+        this.accountDiscountCredit = (customerDiscountCredited) ? new Decimal() : null;
+        purchaseAccumulation = new Decimal();
+        purchaseMonthStart = new MonthPeriod(Time.now()).getThisMonth();
         this.currency = currency;
         this.alias = alias;
         customerType = type;
     }
 
-    public Customer(IDB_Connector conn, ResultSet rs) throws SQLException {
-        super(conn);
+    public Customer(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+        super(conn, locked);
+        setLoadedAndExists();
         customerID = rs.getLong("CustomerID");
-        planID = rs.getLong("DiscountPlanID");
+        planID = ResultSetNullableReturners.getLongValue(rs, "DiscountPlanID");
         currency = rs.getString("CurrencyName");
-        info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"), rs.getDate("DateOfBirth"), rs.getString("PostCode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
-        accountDiscountCredit = new Decimal(rs.getDouble("accountDiscountCredit"), 2);
+        info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), ResultSetNullableReturners.getStringValue(rs, "EmailAddress"),
+                Time.fromSQLDate(rs.getDate("DateOfBirth")), rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
+        Double adc = ResultSetNullableReturners.getDoubleValue(rs, "AccountDiscountCredit");
+        accountDiscountCredit = (adc == null) ? null : new Decimal(adc, 2);
         purchaseAccumulation = new Decimal(rs.getDouble("PurchaseAccumulation"), 2);
-        purchaseMonthStart = rs.getDate("PurchaseMonthBeginning");
+        purchaseMonthStart = Time.fromSQLDate(rs.getDate("PurchaseMonthBeginning"));
         alias = rs.getString("Alias");
         customerType = CustomerType.getCustomerTypeFromValue(rs.getInt("CustomerType"));
-        rs.close();
-
     }
 
     /**
@@ -93,7 +87,6 @@ public class Customer extends DatabaseEntityBase {
         return false;
     }
 
-
     /**
      * This should insert the auxiliary row corresponding to the current object.
      * Use {@link IDB_Connector#getStatement(String)} to get a {@link PreparedStatement}.
@@ -124,27 +117,34 @@ public class Customer extends DatabaseEntityBase {
     @Override
     protected void createRow() throws CheckedException {
         try (PreparedStatement sta = conn.getStatement("INSERT INTO " + getTableName() + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
-            sta.setLong(1, customerID);
-            sta.setLong(2, planID);
+            if (customerID == null) sta.setNull(1, Types.BIGINT); else sta.setLong(1, customerID);
+            if (planID == null) sta.setNull(2, Types.BIGINT); else sta.setLong(2, planID);
             sta.setString(3, currency);
             sta.setString(4, info.getFirstName());
             sta.setString(5, info.getLastName());
             sta.setString(6, info.getPhoneNumber());
-            sta.setString(7, info.getEmailAddress());
+            if (info.getEmailAddress() == null) sta.setNull(7, Types.VARCHAR); else sta.setString(7, info.getEmailAddress());
             sta.setDate(8, Time.toSQLDate(info.getDateOfBirth()));
             sta.setString(9, info.getPostcode());
             sta.setString(10, info.getHouseNumber());
             sta.setString(11, info.getStreetName());
-            sta.setDouble(12, accountDiscountCredit.getValue());
+            if (accountDiscountCredit == null)  sta.setNull(12 ,Types.NUMERIC); else sta.setDouble(12, accountDiscountCredit.getValue());
             sta.setDouble(13, purchaseAccumulation.getValue());
             sta.setDate(14, Time.toSQLDate(purchaseMonthStart));
             sta.setString(15, alias);
             sta.setInt(16, customerType.getValue());
             sta.executeUpdate();
+            if (customerID == null) {
+                try (PreparedStatement stac = conn.getStatement("SELECT MAX(CustomerID) as maxID FROM "+getTableName())) {
+                    try (ResultSet rs = stac.executeQuery()) {
+                        if (!rs.next()) throw new CheckedException("No Insert Occurred!");
+                        customerID = rs.getLong("maxID");
+                    }
+                }
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
-
     }
 
     /**
@@ -163,28 +163,27 @@ public class Customer extends DatabaseEntityBase {
                 " Postcode = ?, HouseNumber = ?, StreetName = ?," +
                 " AccountDiscountCredit = ?, PurchaseAccumulation = ?," +
                 " PurchaseMonthBeginning = ?, Alias = ?, CustomerType = ? WHERE CustomerID = ?")) {
-            sta.setLong(1, planID);
+            if (planID == null) sta.setNull(1, Types.BIGINT); else sta.setLong(1, planID);
             sta.setString(2, currency);
             sta.setString(3, info.getFirstName());
             sta.setString(4, info.getLastName());
-            sta.setString(5, info.getEmailAddress());
-            sta.setDate(6, Time.toSQLDate(info.getDateOfBirth()));
-            sta.setString(7, info.getPostcode());
-            sta.setString(8, info.getHouseNumber());
-            sta.setString(9, info.getStreetName());
-            sta.setDouble(10, accountDiscountCredit.getValue());
-            sta.setDouble(11, purchaseAccumulation.getValue());
-            sta.setDate(12, Time.toSQLDate(purchaseMonthStart));
-            sta.setString(13, alias);
-            sta.setInt(14, customerType.getValue());
-            sta.setLong(15, customerID);
-
+            sta.setString(5, info.getPhoneNumber());
+            if (info.getEmailAddress() == null) sta.setNull(6, Types.VARCHAR); else sta.setString(6, info.getEmailAddress());
+            sta.setDate(7, Time.toSQLDate(info.getDateOfBirth()));
+            sta.setString(8, info.getPostcode());
+            sta.setString(9, info.getHouseNumber());
+            sta.setString(10, info.getStreetName());
+            if (accountDiscountCredit == null)  sta.setNull(11 ,Types.NUMERIC); else sta.setDouble(11, accountDiscountCredit.getValue());
+            sta.setDouble(12, purchaseAccumulation.getValue());
+            sta.setDate(13, Time.toSQLDate(purchaseMonthStart));
+            sta.setString(14, alias);
+            sta.setInt(15, customerType.getValue());
+            sta.setLong(16, customerID);
+            sta.executeUpdate();
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
-
     }
-
 
     /**
      * This should select the row corresponding to the current object.
@@ -202,23 +201,24 @@ public class Customer extends DatabaseEntityBase {
                 " AccountDiscountCredit, PurchaseAccumulation, PurchaseMonthBeginning, Alias," +
                 " CustomerType FROM " + getTableName() + " WHERE CustomerID = ?")) {
             sta.setLong(1, customerID);
-            ResultSet rs = sta.executeQuery();
-            rs.next();
-            customerID = rs.getLong("CustomerID");
-            planID = rs.getLong("DiscountPlanID");
-            currency = rs.getString("CurrencyName");
-            info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"), rs.getDate("DateOfBirth"), rs.getString("PostCode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
-            accountDiscountCredit = new Decimal(rs.getDouble("accountDiscountCredit"), 2);
-            purchaseAccumulation = new Decimal(rs.getDouble("PurchaseAccumulation"), 2);
-            purchaseMonthStart = rs.getDate("PurchaseMonthBeginning");
-            alias = rs.getString("Alias");
-            customerType = CustomerType.getCustomerTypeFromValue(rs.getInt("CustomerType"));
-            rs.close();
+            try (ResultSet rs = sta.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                customerID = rs.getLong("CustomerID");
+                planID = ResultSetNullableReturners.getLongValue(rs, "DiscountPlanID");
+                currency = rs.getString("CurrencyName");
+                info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), ResultSetNullableReturners.getStringValue(rs, "EmailAddress"),
+                        Time.fromSQLDate(rs.getDate("DateOfBirth")), rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
+                Double adc = ResultSetNullableReturners.getDoubleValue(rs, "AccountDiscountCredit");
+                accountDiscountCredit = (adc == null) ? null : new Decimal(adc, 2);
+                purchaseAccumulation = new Decimal(rs.getDouble("PurchaseAccumulation"), 2);
+                purchaseMonthStart = Time.fromSQLDate(rs.getDate("PurchaseMonthBeginning"));
+                alias = rs.getString("Alias");
+                customerType = CustomerType.getCustomerTypeFromValue(rs.getInt("CustomerType"));
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
     }
-
 
     /**
      * This should delete the row corresponding to the current object.
@@ -254,12 +254,10 @@ public class Customer extends DatabaseEntityBase {
     protected boolean checkRowExistence() throws CheckedException {
         try (PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM " + getTableName() + " WHERE CustomerID = ?")) {
             sta.setLong(1, customerID);
-            ResultSet rs = sta.executeQuery();
-            rs.next();
-            int rc = rs.getInt("rowCount");
-            rs.close();
-            if (rc > 0) return true;
-            else return false;
+            try (ResultSet rs = sta.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                return rs.getInt("rowCount") > 0;
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
@@ -295,11 +293,12 @@ public class Customer extends DatabaseEntityBase {
     }
 
     public boolean isCustomerDiscountCredited() {
-        return customerDiscountCredited;
+        return accountDiscountCredit != null;
     }
 
     public void setCustomerDiscountCredited(boolean customerDiscountCredited) {
-        this.customerDiscountCredited = customerDiscountCredited;
+        if (customerDiscountCredited && accountDiscountCredit == null) accountDiscountCredit = new Decimal();
+        else if (!customerDiscountCredited) accountDiscountCredit = null;
     }
 
     public Date getPurchaseMonthStart() {

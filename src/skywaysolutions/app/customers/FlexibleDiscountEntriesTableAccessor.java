@@ -1,6 +1,5 @@
 package skywaysolutions.app.customers;
 
-import skywaysolutions.app.database.DatabaseEntityBase;
 import skywaysolutions.app.database.DatabaseTableBase;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
@@ -8,14 +7,9 @@ import skywaysolutions.app.utils.CheckedException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class FlexibleDiscountEntriesTableAccessor extends DatabaseTableBase<FlexibleDiscountEntry> {
-    /**
-     * Constructs a new DatabaseTableBase with the specified connection.
-     *
-     * @param conn The connection to use.
-     */
+
     public FlexibleDiscountEntriesTableAccessor(IDB_Connector conn) {
         super(conn);
     }
@@ -30,24 +24,26 @@ public class FlexibleDiscountEntriesTableAccessor extends DatabaseTableBase<Flex
         return "FlexibleDiscountEntries";
     }
 
-    /**
-     * This loads one instance of {@link FlexibleDiscountEntry} from the current result set.
-     * DO NOT call {@link ResultSet#next()}.
-     * <p>
-     * This means that the class extending {@link DatabaseEntityBase} should have a
-     * constructor that takes a {@link IDB_Connector} and {@link ResultSet}
-     * to allow for a direct load to occur.
-     * </p>
-     *
-     * @param rs The result set to use for loading.
-     * @return An instance of {@link FlexibleDiscountEntry}.
-     */
     @Override
-    protected FlexibleDiscountEntry loadOneFrom(ResultSet rs) {
+    protected String getIDColumnName() {
+        return "EntryID";
+    }
+
+    @Override
+    protected FlexibleDiscountEntry loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
-            return new FlexibleDiscountEntry(conn, rs);
+            return new FlexibleDiscountEntry(conn, rs, locked);
         } catch (SQLException e) {
-            return null;
+            throw new CheckedException(e);
+        }
+    }
+
+    @Override
+    protected FlexibleDiscountEntry noLoadOneFrom(ResultSet rs) throws CheckedException {
+        try {
+            return new FlexibleDiscountEntry(conn, rs.getLong(getIDColumnName()));
+        } catch (SQLException e) {
+            throw new CheckedException(e);
         }
     }
 
@@ -60,11 +56,12 @@ public class FlexibleDiscountEntriesTableAccessor extends DatabaseTableBase<Flex
      */
     @Override
     protected String getTableSchema() {
-        return "  EntryID            bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT," +
+        return "EntryID            bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT," +
                 "  DiscountPlanID     bigint(19) NOT NULL," +
                 "  AmountLowerBound   numeric(12, 2) NOT NULL," +
-                "  AmountUpperBound   numeric(12, 2) NOT NULL, " +
-                "  DiscountPercentage numeric(8, 6) NOT NULL)";
+                "  AmountUpperBound   numeric(12, 2) NOT NULL," +
+                "  DiscountPercentage numeric(8, 6) NOT NULL)," +
+                "  FOREIGN KEY (DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID)";
     }
 
     /**
@@ -78,7 +75,7 @@ public class FlexibleDiscountEntriesTableAccessor extends DatabaseTableBase<Flex
      */
     @Override
     protected String getAuxTableSchema() {
-        return "  EntryID            bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT";
+        return "EntryID            bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT";
     }
 
     /**
@@ -93,23 +90,6 @@ public class FlexibleDiscountEntriesTableAccessor extends DatabaseTableBase<Flex
      */
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        ArrayList<Long> entryIDs = new ArrayList<>();
-        try (PreparedStatement sta = conn.getStatement("SELECT EntryID FROM " + getTableName())) {
-            ResultSet rs = sta.executeQuery();
-            while (rs.next()) entryIDs.add(rs.getLong("EntryID"));
-            rs.close();
-        } catch (
-                SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-        try (PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
-            for (long c : entryIDs) {
-                sta.setLong(1, c);
-                sta.addBatch();
-            }
-            sta.executeBatch();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
+        createAllAuxRowsLongID();
     }
 }

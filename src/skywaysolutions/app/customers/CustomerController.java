@@ -3,44 +3,42 @@ package skywaysolutions.app.customers;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.database.IFilterStatementCreator;
 import skywaysolutions.app.database.MultiLoadSyncMode;
-import skywaysolutions.app.utils.CheckedException;
-import skywaysolutions.app.utils.Decimal;
-import skywaysolutions.app.utils.MonthPeriod;
-import skywaysolutions.app.utils.PersonalInformation;
+import skywaysolutions.app.utils.*;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public class CustomerController implements ICustomerAccessor {
-    private IDB_Connector conn;
+    private final IDB_Connector conn;
     private final Object slock = new Object();
-
     private final AliasFinder finder = new AliasFinder();
-
+    private final AllFilter allFilter = new AllFilter();
+    private final FlexiblePlanFilter flexiblePlanFilter = new FlexiblePlanFilter();
     private final CustomerTableAccessor customerTableAccessor;
     private final DiscountTableAccessor discountTableAccessor;
     private final FlexibleDiscountEntriesTableAccessor flexibleDiscountEntriesTableAccessor;
 
-
-    public CustomerController(IDB_Connector conn) {
+    public CustomerController(IDB_Connector conn) throws CheckedException {
         this.conn = conn;
-        this.customerTableAccessor = new CustomerTableAccessor(conn);
-        this.discountTableAccessor = new DiscountTableAccessor(conn);
-        this.flexibleDiscountEntriesTableAccessor = new FlexibleDiscountEntriesTableAccessor(conn);
+        customerTableAccessor = new CustomerTableAccessor(conn);
+        discountTableAccessor = new DiscountTableAccessor(conn);
+        flexibleDiscountEntriesTableAccessor = new FlexibleDiscountEntriesTableAccessor(conn);
+        discountTableAccessor.assureTableSchema();
+        flexibleDiscountEntriesTableAccessor.assureTableSchema();
+        customerTableAccessor.assureTableSchema();
     }
-
 
     /**
      * Allows for an account to be created.
      *
-     * @param info   The personal information of the account.
+     * @param info The personal information of the account.
      * @param planID The plan ID the account should use (Set to -1 for no plan).
-     * @param alias  The alias of the account.
-     * @param type   The type of the customer.
+     * @param customerDiscountCredited If the customer is credited by storing the discount.
+     * @param currency The local currency of the customer.
+     * @param alias The alias of the account.
+     * @param type The type of the customer.
      * @return The ID of the created account.
      * @throws CheckedException Account creation fails.
      */
@@ -48,14 +46,12 @@ public class CustomerController implements ICustomerAccessor {
     public long createAccount(PersonalInformation info, Long planID, boolean customerDiscountCredited,
                               String currency, String alias, CustomerType type) throws CheckedException {
         synchronized (slock) {
+            if (alias == null || alias.equals("")) alias = info.getFirstName() + info.getLastName() + Time.now().getTime();
+            Customer aliasAccount = getCustomerFromAlias(alias, true);
+            if (aliasAccount == null) throw new CheckedException("Account already exists");
             Customer newAccount = new Customer(this.conn, info, planID, customerDiscountCredited, currency, alias, type);
-            if (newAccount.exists(true)) {
-                throw new CheckedException("Account already exists");
-            } else {
-                newAccount.store();
-                newAccount.unlock();
-                return newAccount.getPlanID();
-            }
+            newAccount.store();
+            return newAccount.getPlanID();
         }
     }
 
@@ -89,7 +85,7 @@ public class CustomerController implements ICustomerAccessor {
     public void setPersonalInformation(long customer, PersonalInformation info) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.load();
+            account.lock();
             account.load();
             account.setInfo(info);
             account.store();
@@ -134,32 +130,10 @@ public class CustomerController implements ICustomerAccessor {
         }
     }
 
-    /**
-     * Returns Customer object from given alias
-     *
-     * @param alias
-     * @param mode
-     * @return
-     * @throws CheckedException Account does not exist with given alias
-     */
-    private Customer getCustomerFromEmailAddress(String alias, MultiLoadSyncMode mode) throws CheckedException {
+    private Customer getCustomerFromAlias(String alias, boolean nullOnFail) throws CheckedException {
         finder.alias = alias;
-        List<Customer> accounts = customerTableAccessor.loadMany(finder, mode);
-        if (accounts.size() > 0) return accounts.get(0); else throw new CheckedException("Account Does Not Exist");
-    }
-
-    /**
-     * Creates a filtered statement to search for alias in Customer table
-     */
-    private static class AliasFinder implements IFilterStatementCreator {
-        public String alias;
-        @Override
-        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws CheckedException {
-            PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "Alias = ?");
-            sta.setString(1, alias);
-
-            return sta;
-        }
+        List<Customer> accounts = customerTableAccessor.loadMany(finder, MultiLoadSyncMode.UnlockAfterLoad);
+        if (accounts.size() > 0) return accounts.get(0); else if (nullOnFail) return null; else throw new CheckedException("Account Does Not Exist");
     }
 
     /**
@@ -171,7 +145,9 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public long getAccountIDGivenAlias(String alias) throws CheckedException {
-        return getCustomerFromEmailAddress(alias, MultiLoadSyncMode.UnlockAfterLoad).getCustomerID();
+        synchronized (slock) {
+            return getCustomerFromAlias(alias, false).getCustomerID();
+        }
     }
 
     /**
@@ -235,16 +211,10 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public long[] listAccounts() throws CheckedException {
         synchronized (slock) {
-            try(PreparedStatement pre = conn.getStatement(
-                    "SELECT CustomerID FROM Customer")){
-                try (ResultSet rs = pre.executeQuery()) {
-                    ArrayList<Long> customerIDs = new ArrayList<>();
-                    while (rs.next()) customerIDs.add(rs.getLong("CustomerID"));
-                    return customerIDs.stream().mapToLong(Long::longValue).toArray();
-                }
-            } catch (SQLException | CheckedException throwables){
-                throw new CheckedException(throwables);
-            }
+            List<Customer> customers = customerTableAccessor.loadMany(allFilter, MultiLoadSyncMode.NoLoad);
+            long[] ids = new long[customers.size()];
+            for (int i = 0; i < ids.length; i++) ids[i] = customers.get(i).getCustomerID();
+            return ids;
         }
     }
 
@@ -307,8 +277,21 @@ public class CustomerController implements ICustomerAccessor {
             Customer account = new Customer(this.conn, customer);
             account.lock();
             account.load();
-            account.unlock();
-            return account.getAccountDiscountCredit();
+            if (account.isCustomerDiscountCredited()) {
+                if (take) {
+                    Decimal credit = account.getAccountDiscountCredit();
+                    account.setAccountDiscountCredit(new Decimal());
+                    account.store();
+                    account.unlock();
+                    return credit;
+                } else {
+                    account.unlock();
+                    return account.getAccountDiscountCredit();
+                }
+            } else {
+                account.unlock();
+                return new Decimal(0);
+            }
         }
     }
 
@@ -325,9 +308,10 @@ public class CustomerController implements ICustomerAccessor {
             Customer account = new Customer(this.conn, customer);
             account.lock();
             account.load();
-            Decimal newAmount = account.getAccountDiscountCredit().add(amount);
-            account.setAccountDiscountCredit(newAmount);
-            account.store();
+            if (account.isCustomerDiscountCredited()) {
+                account.setAccountDiscountCredit(account.getAccountDiscountCredit().add(amount));
+                account.store();
+            }
             account.unlock();
         }
     }
@@ -346,13 +330,14 @@ public class CustomerController implements ICustomerAccessor {
     public Decimal getMonthlyPurchaseAccumulation(long customer, Date date) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
+            account.lock();
             account.load();
-            if (date.getMonth() != account.getPurchaseMonthStart().getMonth() || date.getYear() != account.getPurchaseMonthStart().getYear()) {
+            if (!new MonthPeriod(date).equals(new MonthPeriod(account.getPurchaseMonthStart()))) {
                 account.setPurchaseAccumulation(new Decimal(0));
-                account.setPurchaseMonthStart(new Date());
+                account.setPurchaseMonthStart(new MonthPeriod(Time.now()).getThisMonth());
                 account.store();
-                account.unlock();
             }
+            account.unlock();
             return account.getPurchaseAccumulation();
         }
     }
@@ -375,14 +360,12 @@ public class CustomerController implements ICustomerAccessor {
             Customer account = new Customer(this.conn, customer);
             account.lock();
             account.load();
-
-            if (date.getMonth() != account.getPurchaseMonthStart().getMonth() || date.getYear() != account.getPurchaseMonthStart().getYear()) {
-                account.setPurchaseAccumulation(amount);
-                account.setPurchaseMonthStart(new Date());
-            } else {
+            if (new MonthPeriod(date).equals(new MonthPeriod(account.getPurchaseMonthStart())))
                 account.setPurchaseAccumulation(account.getPurchaseAccumulation().add(amount));
+            else {
+                account.setPurchaseAccumulation(amount);
+                account.setPurchaseMonthStart(new MonthPeriod(Time.now()).getThisMonth());
             }
-
             account.store();
             account.unlock();
         }
@@ -400,18 +383,9 @@ public class CustomerController implements ICustomerAccessor {
     public long createPlan(PlanType type, Decimal percentage) throws CheckedException {
         synchronized (slock) {
             Discount newPlan = new Discount(this.conn, type, percentage);
-            if (newPlan.exists(true)){
-                throw new CheckedException("Discount Plan already exists");
-            } else {
-                newPlan.store();
-
-                newPlan.lock();
-                newPlan.load();
-                newPlan.unlock();
-                return newPlan.getPlanID();
-            }
+            newPlan.store();
+            return newPlan.getPlanID();
         }
-
     }
 
     /**
@@ -446,7 +420,7 @@ public class CustomerController implements ICustomerAccessor {
             discount.lock();
             discount.load();
             discount.unlock();
-            return discount.getPercentage();
+            return (discount.getPlanType() == PlanType.FixedDiscount) ? discount.getPercentage() : new Decimal();
         }
     }
 
@@ -463,8 +437,10 @@ public class CustomerController implements ICustomerAccessor {
             Discount discount = new Discount(this.conn, plan);
             discount.lock();
             discount.load();
-            discount.setPercentage(percentage);
-            discount.store();
+            if (discount.getPlanType() == PlanType.FixedDiscount) {
+                discount.setPercentage(percentage);
+                discount.store();
+            }
             discount.unlock();
         }
     }
@@ -484,7 +460,21 @@ public class CustomerController implements ICustomerAccessor {
             discount.lock();
             discount.load();
             discount.unlock();
-            return discount.getPercentage().mul(amount);
+            if (discount.getPlanType() == PlanType.FixedDiscount) {
+                return amount.mul(new Decimal(1, 0).sub(discount.getPercentage().mul(new Decimal(0.01, 2))));
+            } else{
+                flexiblePlanFilter.PlanID = discount.getPlanID();
+                flexiblePlanFilter.range = new FlexiblePlanRange(amount, amount);
+                List<FlexibleDiscountEntry> entries = flexibleDiscountEntriesTableAccessor.loadMany(flexiblePlanFilter, MultiLoadSyncMode.NoLoad);
+                if (entries.size() > 0) {
+                    FlexibleDiscountEntry entry = entries.get(0);
+                    entry.lock();
+                    entry.load();
+                    entry.unlock();
+                    if (entry.getRange().inRange(amount)) return amount.mul(new Decimal(1, 0).sub(entry.getPercentage().mul(new Decimal(0.01, 2))));
+                }
+            }
+            throw new CheckedException("Could not retrieve plan");
         }
     }
 
@@ -499,8 +489,22 @@ public class CustomerController implements ICustomerAccessor {
         synchronized (slock) {
             Discount discount = new Discount(this.conn, plan);
             discount.lock();
+            discount.load();
             discount.delete();
+            if (discount.getPlanType() == PlanType.FlexibleDiscount) {
+                List<FlexibleDiscountEntry> entries = getFlexiblePlanEntries(plan, null);
+                for (FlexibleDiscountEntry c : entries) {
+                    c.lock();
+                    c.delete();
+                }
+            }
         }
+    }
+
+    private List<FlexibleDiscountEntry> getFlexiblePlanEntries(long plan, FlexiblePlanRange range) throws CheckedException {
+        flexiblePlanFilter.PlanID = plan;
+        flexiblePlanFilter.range = range;
+        return flexibleDiscountEntriesTableAccessor.loadMany(flexiblePlanFilter, MultiLoadSyncMode.UnlockAfterLoad);
     }
 
     /**
@@ -512,7 +516,12 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public FlexiblePlanRange[] getFlexiblePlanRanges(long plan) throws CheckedException {
-
+        synchronized (slock) {
+            List<FlexibleDiscountEntry> entries = getFlexiblePlanEntries(plan, null);
+            FlexiblePlanRange[] ranges = new FlexiblePlanRange[entries.size()];
+            for (int i = 0; i < ranges.length; i++) ranges[i] = entries.get(i).getRange();
+            return ranges;
+        }
     }
 
     /**
@@ -525,7 +534,24 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void createOrUpdateFlexiblePlanEntry(long plan, FlexiblePlanRange range, Decimal percentage) throws CheckedException {
-
+        synchronized (slock) {
+            List<FlexibleDiscountEntry> entries = getFlexiblePlanEntries(plan, range);
+            if (entries.size() == 0) {
+                FlexibleDiscountEntry entry = new FlexibleDiscountEntry(conn, plan, range, percentage);
+                entry.store();
+            } else {
+                boolean stored = false;
+                for (FlexibleDiscountEntry c : entries) if (c.getRange().equals(range)) {
+                    c.lock();
+                    c.setPercentage(percentage);
+                    c.store();
+                    c.unlock();
+                    stored = true;
+                    break;
+                }
+                if (!stored) throw new CheckedException("Flexible Range Entry does not exist as this range");
+            }
+        }
     }
 
     /**
@@ -537,7 +563,13 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public void removeFlexiblePlanRange(long plan, FlexiblePlanRange range) throws CheckedException {
-
+        synchronized (slock) {
+            List<FlexibleDiscountEntry> entries = getFlexiblePlanEntries(plan, range);
+            for (FlexibleDiscountEntry c : entries) if (c.getRange().equals(range)) {
+                c.lock();
+                c.delete();
+            }
+        }
     }
 
     /**
@@ -550,7 +582,10 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public Decimal getFlexiblePlanEntry(long plan, FlexiblePlanRange range) throws CheckedException {
-        return null;
+        synchronized (slock) {
+            List<FlexibleDiscountEntry> entries = getFlexiblePlanEntries(plan, range);
+            if (entries.size() > 0) return entries.get(0).getPercentage(); else throw new CheckedException("Flexible Plan Range Not Found");
+        }
     }
 
     /**
@@ -563,13 +598,11 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public CustomerType getCustomerType(long customer) throws CheckedException {
         synchronized (slock) {
-            synchronized (slock) {
-                Customer account = new Customer(this.conn, customer);
-                account.lock();
-                account.load();
-                account.unlock();
-                return account.getCustomerType();
-            }
+            Customer account = new Customer(this.conn, customer);
+            account.lock();
+            account.load();
+            account.unlock();
+            return account.getCustomerType();
         }
     }
 
@@ -599,7 +632,7 @@ public class CustomerController implements ICustomerAccessor {
      */
     @Override
     public String[] getTables() {
-        return new String[] {"Customer", "DiscountPlan", "FlexibleDiscountEntries"};
+        return new String[] {"DiscountPlan", "FlexibleDiscountEntries", "Customer"};
     }
 
     /**
@@ -611,13 +644,108 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void forceFullUnlock(String tableName) throws CheckedException {
         synchronized (slock) {
-            if (tableName.equals("Customer")) customerTableAccessor.unlockAll();
-            else if (tableName.equals("DiscountPlan")) discountTableAccessor.unlockAll();
-            else if (tableName.equals("FlexibleDiscountEntries")) flexibleDiscountEntriesTableAccessor.unlockAll();
+            switch (tableName) {
+                case "Customer" -> customerTableAccessor.unlockAll(true);
+                case "DiscountPlan" -> discountTableAccessor.unlockAll(true);
+                case "FlexibleDiscountEntries" -> flexibleDiscountEntriesTableAccessor.unlockAll(true);
+            }
         }
     }
 
+    /**
+     * Forces a table to be deleted (Along with its auxiliary table).
+     *
+     * @param tableName The table to purge.
+     * @throws CheckedException The table could not be purged.
+     */
+    @Override
+    public void forceFullPurge(String tableName) throws CheckedException {
+        synchronized (slock) {
+            switch (tableName) {
+                case "Customer" -> customerTableAccessor.purgeTableSchema();
+                case "DiscountPlan" -> discountTableAccessor.purgeTableSchema();
+                case "FlexibleDiscountEntries" -> flexibleDiscountEntriesTableAccessor.purgeTableSchema();
+            }
+        }
+    }
 
+    /**
+     * Creates a filtered statement to search for alias in Customer table.
+     *
+     * @author Karan Sambee
+     */
+    private static class AliasFinder implements IFilterStatementCreator {
+        public String alias;
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws CheckedException, SQLException {
+            PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "Alias = ?");
+            sta.setString(1, alias);
+            return sta;
+        }
+    }
+
+    /**
+     * This class provides a filter that represents no filtering.
+     *
+     * @author Alfred Manville
+     */
+    private static class AllFilter implements IFilterStatementCreator {
+
+        /**
+         * Gets a prepared statement from the specified connection,
+         * using the passed string as the beginning of the SQL template.
+         * <p>
+         * The statement will always begin with "SELECT * FROM [TABLE NAME] WHERE ",
+         * EG: "SELECT * FROM test WHERE " where the table here is test.
+         * </p>
+         * @param conn The database connection.
+         * @param startOfSQLTemplate The start of the SQL Template to use for the statement.
+         * @return The prepared statement with the filters and their parameters applied.
+         * @throws SQLException An SQL error occurred.
+         * @throws CheckedException An error occurred.
+         */
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
+            return conn.getStatement(startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7));
+        }
+    }
+
+    /**
+     * This class provides the ability to filter for the specific discount in the specific range.
+     *
+     * @author Alfred Manville
+     */
+    private static class FlexiblePlanFilter implements IFilterStatementCreator {
+        public long PlanID;
+        public FlexiblePlanRange range;
+
+        /**
+         * Gets a prepared statement from the specified connection,
+         * using the passed string as the beginning of the SQL template.
+         * <p>
+         * The statement will always begin with "SELECT * FROM [TABLE NAME] WHERE ",
+         * EG: "SELECT * FROM test WHERE " where the table here is test.
+         * </p>
+         * @param conn The database connection.
+         * @param startOfSQLTemplate The start of the SQL Template to use for the statement.
+         * @return The prepared statement with the filters and their parameters applied.
+         * @throws SQLException An SQL error occurred.
+         * @throws CheckedException An error occurred.
+         */
+        @Override
+        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
+            PreparedStatement sta = conn.getStatement(startOfSQLTemplate+"DiscountPlanID = ?" + ((range == null) ? "" :
+                    " (AmountLowerBound <= ? AND AmountUpperBound > ?) OR (AmountLowerBound < ? AND AmountUpperBound => ?)"));
+            sta.setLong(1, PlanID);
+            if (range != null) {
+                sta.setDouble(2, range.getLower().getValue());
+                sta.setDouble(3, range.getLower().getValue());
+                sta.setDouble(4, range.getUpper().getValue());
+                sta.setDouble(5, range.getUpper().getValue());
+            }
+            return sta;
+        }
+    }
 }
 
 

@@ -1,22 +1,15 @@
 package skywaysolutions.app.customers;
 
-import skywaysolutions.app.database.DatabaseEntityBase;
 import skywaysolutions.app.database.DatabaseTableBase;
 import skywaysolutions.app.database.IDB_Connector;
-import skywaysolutions.app.stock.Blank;
 import skywaysolutions.app.utils.CheckedException;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class CustomerTableAccessor extends DatabaseTableBase<Customer> {
-    /**
-     * Constructs a new DatabaseTableBase with the specified connection.
-     *
-     * @param conn The connection to use.
-     */
+
     public CustomerTableAccessor(IDB_Connector conn) {
         super(conn);
     }
@@ -32,25 +25,33 @@ public class CustomerTableAccessor extends DatabaseTableBase<Customer> {
     }
 
     /**
-     * This loads one instance of {@link Customer} from the current result set.
-     * DO NOT call {@link ResultSet#next()}.
-     * <p>
-     * This means that the class extending {@link DatabaseEntityBase} should have a
-     * constructor that takes a {@link IDB_Connector} and {@link ResultSet}
-     * to allow for a direct load to occur.
-     * </p>
+     * This should return the name of the ID column.
      *
-     * @param rs The result set to use for loading.
-     * @return An instance of {@link Customer}.
+     * @return The name of the ID column.
      */
     @Override
-    protected Customer loadOneFrom(ResultSet rs) {
+    protected String getIDColumnName() {
+        return "CustomerID";
+    }
+
+    @Override
+    protected Customer loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
-            return new Customer(conn, rs);
+            return new Customer(conn, rs, locked);
         } catch (SQLException e) {
-            return null;
+            throw new CheckedException(e);
         }
     }
+
+    @Override
+    protected Customer noLoadOneFrom(ResultSet rs) throws CheckedException {
+        try {
+            return new Customer(conn, rs.getLong(getIDColumnName()));
+        } catch (SQLException e) {
+            throw new CheckedException(e);
+        }
+    }
+
     /**
      * Gets the table schema (The bit that's located between the brackets).
      * For: "CREATE TABLE test (id int, test varchar(255))"
@@ -91,7 +92,7 @@ public class CustomerTableAccessor extends DatabaseTableBase<Customer> {
      */
     @Override
     protected String getAuxTableSchema() {
-        return "  CustomerID             bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT";
+        return "CustomerID             bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT";
     }
 
     /**
@@ -105,23 +106,7 @@ public class CustomerTableAccessor extends DatabaseTableBase<Customer> {
      * @throws CheckedException An error has occurred.
      */
     protected void createAllAuxRows() throws CheckedException {
-        ArrayList<Long> customerIDs = new ArrayList<>();
-        try(PreparedStatement sta = conn.getStatement("SELECT CustomerID FROM " + getTableName())) {
-            ResultSet rs = sta.executeQuery();
-            while (rs.next()) customerIDs.add(rs.getLong("CustomerID"));
-            rs.close();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-        try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
-            for (long c : customerIDs) {
-                sta.setLong(1, c);
-                sta.addBatch();
-            }
-            sta.executeBatch();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
+        createAllAuxRowsLongID();
     }
 }
 

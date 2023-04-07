@@ -1,6 +1,5 @@
 package skywaysolutions.app.customers;
 
-import skywaysolutions.app.database.DatabaseEntityBase;
 import skywaysolutions.app.database.DatabaseTableBase;
 import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
@@ -8,14 +7,9 @@ import skywaysolutions.app.utils.CheckedException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class DiscountTableAccessor extends DatabaseTableBase<Discount> {
-    /**
-     * Constructs a new DatabaseTableBase with the specified connection.
-     *
-     * @param conn The connection to use.
-     */
+
     public DiscountTableAccessor(IDB_Connector conn) {
         super(conn);
     }
@@ -30,24 +24,26 @@ public class DiscountTableAccessor extends DatabaseTableBase<Discount> {
         return "DiscountPlan";
     }
 
-    /**
-     * This loads one instance of {@link Discount} from the current result set.
-     * DO NOT call {@link ResultSet#next()}.
-     * <p>
-     * This means that the class extending {@link DatabaseEntityBase} should have a
-     * constructor that takes a {@link IDB_Connector} and {@link ResultSet}
-     * to allow for a direct load to occur.
-     * </p>
-     *
-     * @param rs The result set to use for loading.
-     * @return An instance of {@link Discount}.
-     */
     @Override
-    protected Discount loadOneFrom(ResultSet rs) {
+    protected String getIDColumnName() {
+        return "DiscountPlanID";
+    }
+
+    @Override
+    protected Discount loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
         try {
-            return new Discount(conn, rs);
+            return new Discount(conn, rs, locked);
         } catch (SQLException e) {
-            return null;
+            throw new CheckedException(e);
+        }
+    }
+
+    @Override
+    protected Discount noLoadOneFrom(ResultSet rs) throws CheckedException {
+        try {
+            return new Discount(conn, rs.getLong(getIDColumnName()));
+        } catch (SQLException e) {
+            throw new CheckedException(e);
         }
     }
 
@@ -60,7 +56,7 @@ public class DiscountTableAccessor extends DatabaseTableBase<Discount> {
      */
     @Override
     protected String getTableSchema() {
-        return "  DiscountPlanID     bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT," +
+        return "DiscountPlanID     bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT," +
                 "  DiscountType       integer(1) NOT NULL," +
                 "  DiscountPercentage numeric(8, 6)";
     }
@@ -76,7 +72,7 @@ public class DiscountTableAccessor extends DatabaseTableBase<Discount> {
      */
     @Override
     protected String getAuxTableSchema() {
-        return "  DiscountPlanID     bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT";
+        return "DiscountPlanID     bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT";
     }
 
     /**
@@ -91,23 +87,6 @@ public class DiscountTableAccessor extends DatabaseTableBase<Discount> {
      */
     @Override
     protected void createAllAuxRows() throws CheckedException {
-        ArrayList<Long> planIDs = new ArrayList<>();
-        try (PreparedStatement sta = conn.getStatement("SELECT DiscountPlanID FROM " + getTableName())) {
-            ResultSet rs = sta.executeQuery();
-            while (rs.next()) planIDs.add(rs.getLong("DiscountPlanID"));
-            rs.close();
-        } catch (
-                SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
-        try (PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
-            for (long c : planIDs) {
-                sta.setLong(1, c);
-                sta.addBatch();
-            }
-            sta.executeBatch();
-        } catch (SQLException throwables) {
-            throw new CheckedException(throwables);
-        }
+        createAllAuxRowsLongID();
     }
 }

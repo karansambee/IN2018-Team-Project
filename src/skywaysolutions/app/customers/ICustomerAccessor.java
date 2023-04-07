@@ -13,11 +13,14 @@ import java.util.Date;
  * @author Alfred Manville
  */
 public interface ICustomerAccessor extends IRepairable {
+
     /**
      * Allows for an account to be created.
      *
      * @param info The personal information of the account.
      * @param planID The plan ID the account should use (Set to -1 for no plan).
+     * @param customerDiscountCredited If the customer is credited by storing the discount.
+     * @param currency The local currency of the customer.
      * @param alias The alias of the account.
      * @param type The type of the customer.
      * @return The ID of the created account.

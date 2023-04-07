@@ -2,26 +2,18 @@ package skywaysolutions.app.customers;
 
 import skywaysolutions.app.database.DatabaseEntityBase;
 import skywaysolutions.app.database.IDB_Connector;
-import skywaysolutions.app.utils.CheckedException;
-import skywaysolutions.app.utils.Decimal;
-import skywaysolutions.app.utils.PersonalInformation;
-import skywaysolutions.app.utils.Time;
+import skywaysolutions.app.utils.*;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 public class Discount extends DatabaseEntityBase {
-
-    private long planID;
+    private Long planID;
     private PlanType planType;
     private Decimal percentage;
 
-    /**
-     * Constructs a new DatabaseEntityBase with the specified connection.
-     *
-     * @param conn The connection to use.
-     */
     public Discount(IDB_Connector conn, Long id) {
         super(conn);
         planID = id;
@@ -29,17 +21,18 @@ public class Discount extends DatabaseEntityBase {
 
     public Discount(IDB_Connector conn, PlanType planType, Decimal percentage) {
         super(conn);
+        planID = null;
         this.planType = planType;
         this.percentage = percentage;
     }
 
-    public Discount(IDB_Connector conn, ResultSet rs) throws SQLException {
-        super(conn);
+    public Discount(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+        super(conn, locked);
+        setLoadedAndExists();
         planID = rs.getLong("DiscountPlanID");
-        planType = PlanType.getPlanTypeFromValue((int) rs.getLong("DiscountType"));
-        percentage = new Decimal(rs.getDouble("DiscountPercentage"), 2);
-        rs.close();
-        rs.close();
+        planType = PlanType.getPlanTypeFromValue(rs.getInt("DiscountType"));
+        Double dp = ResultSetNullableReturners.getDoubleValue(rs, "DiscountPercentage");
+        percentage = (dp == null) ? null : new Decimal(dp, 6);
     }
 
     /**
@@ -105,10 +98,18 @@ public class Discount extends DatabaseEntityBase {
     @Override
     protected void createRow() throws CheckedException {
         try (PreparedStatement sta = conn.getStatement("INSERT INTO " + getTableName() + " VALUES (?,?,?)")) {
-            sta.setLong(1, planID);
+            if (planID == null) sta.setNull(1, Types.BIGINT); else sta.setLong(1, planID);
             sta.setInt(2, planType.getValue());
-            sta.setDouble(3, percentage.getValue());
+            if (percentage == null) sta.setNull(3, Types.NUMERIC); else sta.setDouble(3, percentage.getValue());
             sta.executeUpdate();
+            if (planID == null) {
+                try (PreparedStatement stac = conn.getStatement("SELECT MAX(DiscountPlanID) as maxID FROM "+getTableName())) {
+                    try (ResultSet rs = stac.executeQuery()) {
+                        if (!rs.next()) throw new CheckedException("No Insert Occurred!");
+                        planID = rs.getLong("maxID");
+                    }
+                }
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
@@ -126,16 +127,14 @@ public class Discount extends DatabaseEntityBase {
      */
     @Override
     protected void updateRow() throws CheckedException {
-        try (PreparedStatement sta = conn.getStatement("UPDATE " + getTableName() + " SET DiscountPlanID = ?, DiscountType  = ?, DiscountPercentage = ? WHERE DiscountPlanID = ?")) {
-            sta.setLong(1, planID);
-            sta.setInt(2, planType.getValue());
-            sta.setDouble(3, percentage.getValue());
-            sta.setLong(4, planID);
-
+        try (PreparedStatement sta = conn.getStatement("UPDATE " + getTableName() + " SET DiscountType  = ?, DiscountPercentage = ? WHERE DiscountPlanID = ?")) {
+            sta.setInt(1, planType.getValue());
+            if (percentage == null) sta.setNull(2, Types.NUMERIC); else sta.setDouble(2, percentage.getValue());
+            sta.setLong(3, planID);
+            sta.executeUpdate();
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
-
     }
 
     /**
@@ -151,12 +150,13 @@ public class Discount extends DatabaseEntityBase {
     protected void loadRow() throws CheckedException {
         try (PreparedStatement sta = conn.getStatement("SELECT DiscountPlanID, DiscountType, DiscountPercentage FROM " + getTableName() + " WHERE DiscountPlanID = ?")) {
             sta.setLong(1, planID);
-            ResultSet rs = sta.executeQuery();
-            rs.next();
-            planID = rs.getLong("DiscountPlanID");
-            planType = PlanType.getPlanTypeFromValue((int) rs.getLong("DiscountType"));
-            percentage = new Decimal(rs.getDouble("DiscountPercentage"), 2);
-            rs.close();
+            try (ResultSet rs = sta.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                planID = rs.getLong("DiscountPlanID");
+                planType = PlanType.getPlanTypeFromValue(rs.getInt("DiscountType"));
+                Double dp = ResultSetNullableReturners.getDoubleValue(rs, "DiscountPercentage");
+                percentage = (dp == null) ? null : new Decimal(dp, 6);
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
@@ -180,7 +180,6 @@ public class Discount extends DatabaseEntityBase {
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
-
     }
 
     /**
@@ -197,12 +196,10 @@ public class Discount extends DatabaseEntityBase {
     protected boolean checkRowExistence() throws CheckedException {
         try (PreparedStatement sta = conn.getStatement("SELECT COUNT(*) as rowCount FROM " + getTableName() + " WHERE DiscountPlanID = ?")) {
             sta.setLong(1, planID);
-            ResultSet rs = sta.executeQuery();
-            rs.next();
-            int rc = rs.getInt("rowCount");
-            rs.close();
-            if (rc > 0) return true;
-            else return false;
+            try (ResultSet rs = sta.executeQuery()) {
+                if (!rs.next()) throw new CheckedException("No Row Exists!");
+                return rs.getInt("rowCount") > 0;
+            }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
