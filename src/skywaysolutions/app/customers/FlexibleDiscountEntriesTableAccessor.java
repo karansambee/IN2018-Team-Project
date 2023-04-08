@@ -56,11 +56,11 @@ public class FlexibleDiscountEntriesTableAccessor extends DatabaseTableBase<Flex
      */
     @Override
     protected String getTableSchema() {
-        return "EntryID            bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT," +
-                "  DiscountPlanID     bigint(19) NOT NULL," +
-                "  AmountLowerBound   numeric(12, 2) NOT NULL," +
-                "  AmountUpperBound   numeric(12, 2) NOT NULL," +
-                "  DiscountPercentage numeric(8, 6) NOT NULL)," +
+        return "EntryID            bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT, " +
+                "  DiscountPlanID     bigint(19) NOT NULL, " +
+                "  AmountLowerBound   numeric(12, 2) NOT NULL, " +
+                "  AmountUpperBound   numeric(12, 2) NOT NULL, " +
+                "  DiscountPercentage numeric(8, 6) NOT NULL, " +
                 "  FOREIGN KEY (DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID)";
     }
 

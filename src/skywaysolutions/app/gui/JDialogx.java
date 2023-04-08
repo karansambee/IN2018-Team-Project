@@ -43,7 +43,7 @@ public abstract class JDialogx extends JDialog {
     /**
      * Shows the dialog, will not show again if shown once and not reusable.
      */
-    public final void showDialog() {
+    public void showDialog() {
         if (reusable || !shown) {
             setSize(dsize);
             centerDialog(true);

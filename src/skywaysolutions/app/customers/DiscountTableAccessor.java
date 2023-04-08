@@ -56,8 +56,8 @@ public class DiscountTableAccessor extends DatabaseTableBase<Discount> {
      */
     @Override
     protected String getTableSchema() {
-        return "DiscountPlanID     bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT," +
-                "  DiscountType       integer(1) NOT NULL," +
+        return "DiscountPlanID     bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT, " +
+                "  DiscountType       integer(1) NOT NULL, " +
                 "  DiscountPercentage numeric(8, 6)";
     }
 

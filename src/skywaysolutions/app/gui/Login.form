@@ -37,6 +37,7 @@
             <properties>
               <font size="16"/>
               <margin top="2" left="6" bottom="2" right="6"/>
+              <preferredSize width="96" height="30"/>
             </properties>
           </component>
           <component id="9712a" class="javax.swing.JLabel">

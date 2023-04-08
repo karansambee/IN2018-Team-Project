@@ -44,6 +44,7 @@ public class SaleController implements ISalesAccessor {
      */
     public SaleController(IDB_Connector conn, IRateAccessor rateAccessor, IStockAccessor stockAccessor) throws CheckedException {
         this.conn = conn;
+        conn.getTableList(true);
         saleTableAccessor = new SaleTableAccessor(conn);
         saleTableAccessor.assureTableSchema();
         transactionTableAccessor = new TransactionTableAccessor(conn);
@@ -110,12 +111,14 @@ public class SaleController implements ISalesAccessor {
 
     private Transaction[] getTransactions(long saleID, MultiLoadSyncMode mode) throws CheckedException {
         idFilterer.columnName = "BlankNumber";
+        idFilterer.orderColumnName = "TransactionDate";
         idFilterer.id = saleID;
         return transactionTableAccessor.loadMany(idFilterer, mode).toArray(new Transaction[0]);
     }
 
     private Refund getRefundInt(long transactionID, MultiLoadSyncMode mode) throws CheckedException {
         idFilterer.columnName = "TranscationID";
+        idFilterer.orderColumnName = "RefundDate";
         idFilterer.id = transactionID;
         Refund[] refunds = refundTableAccessor.loadMany(idFilterer, mode).toArray(new Refund[0]);
         return (refunds.length > 0) ? refunds[0] : null;
@@ -369,6 +372,7 @@ public class SaleController implements ISalesAccessor {
     @Override
     public void forceFullPurge(String tableName) throws CheckedException {
         synchronized (slock) {
+            conn.getTableList(true);
             switch (tableName) {
                 case "Sale" -> saleTableAccessor.purgeTableSchema();
                 case "Transcation" -> transactionTableAccessor.purgeTableSchema();
@@ -385,6 +389,7 @@ public class SaleController implements ISalesAccessor {
     private static class IDFilterer implements IFilterStatementCreator {
         public String columnName;
         public long id;
+        public String orderColumnName;
 
         /**
          * Gets a prepared statement from the specified connection,
@@ -402,7 +407,7 @@ public class SaleController implements ISalesAccessor {
          */
         @Override
         public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
-            PreparedStatement sta = conn.getStatement(startOfSQLTemplate + columnName + " = ?");
+            PreparedStatement sta = conn.getStatement(startOfSQLTemplate + columnName + " = ? ORDER BY " + orderColumnName);
             sta.setLong(1, id);
             return sta;
         }
@@ -437,7 +442,7 @@ public class SaleController implements ISalesAccessor {
         @Override
         public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
             PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "CurrencyName = ?" + ((idColumnName == null) ? "" : " AND "+idColumnName+" = ?") +
-                    ((type == PaymentType.Any) ? "" : " AND SaleType = ?") + ((period == null) ? "" : " AND SaleDate >= ? AND SaleDate < ?"));
+                    ((type == PaymentType.Any) ? "" : " AND SaleType = ?") + ((period == null) ? "" : " AND SaleDate >= ? AND SaleDate < ?") + " ORDER BY SaleDate");
             sta.setString(1, currency);
             int index = 2;
             if (idColumnName != null) sta.setLong(index++, id);

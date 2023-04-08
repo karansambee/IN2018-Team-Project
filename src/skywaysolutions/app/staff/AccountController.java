@@ -25,6 +25,7 @@ public class AccountController implements IStaffAccessor {
     public AccountController(IDB_Connector conn) throws CheckedException {
         this.conn = conn;
         this.accessor = new StaffTableAccessor(conn);
+        conn.getTableList(true);
         accessor.assureTableSchema();
     }
 
@@ -297,7 +298,7 @@ public class AccountController implements IStaffAccessor {
     public String[] listAccounts(StaffRole role) throws CheckedException {
         synchronized (slock) {
             try(PreparedStatement pre = conn.getStatement(
-                    "SELECT EmailAddress FROM Staff" + ((role == StaffRole.Any) ? "" : " WHERE StaffRole = ?"))){
+                    "SELECT EmailAddress FROM Staff" + ((role == StaffRole.Any) ? "" : " WHERE StaffRole = ?") + " ORDER BY StaffID")){
                 if (role != StaffRole.Any) pre.setInt(1, role.getValue());
                 try (ResultSet rs = pre.executeQuery()) {
                     ArrayList<String> addresses = new ArrayList<>();
@@ -450,6 +451,7 @@ public class AccountController implements IStaffAccessor {
     @Override
     public void forceFullPurge(String tableName) throws CheckedException {
         synchronized (slock) {
+            conn.getTableList(true);
             if (tableName.equals("Staff")) accessor.purgeTableSchema();
         }
     }

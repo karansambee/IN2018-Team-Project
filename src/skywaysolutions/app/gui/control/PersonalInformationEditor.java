@@ -76,6 +76,15 @@ public class PersonalInformationEditor extends JPanel {
     }
 
     /**
+     * Sets if the email field is editable.
+     *
+     * @param editable If the email field is editable.
+     */
+    public void setEmailEditable(boolean editable) {
+        textFieldEmailAddress.setEditable(editable);
+    }
+
+    /**
      * Gets the held PersonalInformation.
      *
      * @return The held personal information.

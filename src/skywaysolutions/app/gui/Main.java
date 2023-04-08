@@ -31,14 +31,18 @@ public class Main extends JFrame {
     private final Login login;
     private final CountDownLatch shutDownLatch;
 
-    public Main(String title, AccessorManager manager, CountDownLatch shutdownLatch) throws CheckedException {
+    public Main(String title, IDB_Connector conn, CountDownLatch shutdownLatch) throws CheckedException {
         super(title);
         //Initialize form
         setContentPane(Root);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         //Store shutdown latch for decrementing when form terminates.
         this.shutDownLatch = shutdownLatch;
-
+        //Define the manager that holds the accessor
+        manager = new AccessorManager(conn);
+        this.manager.rateAccessor.assureUSDCurrency();
+        this.manager.staffAccessor.assureDefaultAdministratorAccount();
+        //TODO: Remove test prompt?
         prompt = new Prompt(this, "", "", null, 0, true);
         //Add window listener
         addWindowListener(new WindowAdapter() {
@@ -48,16 +52,13 @@ public class Main extends JFrame {
             }
             @Override
             public void windowClosing(WindowEvent e) {
-                if(manager != null) manager.staffAccessor.logoutAccount();
+                manager.staffAccessor.logoutAccount();
                 hideFrame();
             }
         });
         //Add button events
         exitButton.addActionListener(e -> hideFrame());
         logoutButton.addActionListener(e -> newLogin());
-        //Define the manager that holds the accessor
-        this.manager = manager;
-        this.manager.staffAccessor.assureDefaultAdministratorAccount();
         pack();
         //Create the login form
         login = new Login(this, true, this.manager);

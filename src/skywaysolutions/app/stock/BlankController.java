@@ -29,6 +29,7 @@ public class BlankController implements IStockAccessor {
         this.conn = conn;
         this.blankTableAccessor = new BlankTableAccessor(conn);
         this.blankTypeTableAccessor = new BlankTypeTableAccessor(conn);
+        conn.getTableList(true);
         blankTypeTableAccessor.assureTableSchema();
         blankTableAccessor.assureTableSchema();
     }
@@ -438,6 +439,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public void forceFullPurge(String tableName) throws CheckedException {
         synchronized (slock) {
+            conn.getTableList(true);
             if (tableName.equals("Blank")) blankTableAccessor.purgeTableSchema();
             else if (tableName.equals("BlankType")) blankTypeTableAccessor.purgeTableSchema();
         }
@@ -449,8 +451,8 @@ public class BlankController implements IStockAccessor {
         @Override
         public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
             PreparedStatement sta = conn.getStatement((staffID == -1) ?
-                    startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7) :
-                    startOfSQLTemplate + "StaffID = ?");
+                    startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 6) + "ORDER BY BlankNumber" :
+                    startOfSQLTemplate + "StaffID = ? ORDER BY BlankNumber");
             if (staffID != -1) sta.setLong(1, (staffID == -2) ? -1 : staffID);
             return sta;
         }
@@ -459,7 +461,7 @@ public class BlankController implements IStockAccessor {
     private static class AllFilter implements IFilterStatementCreator {
         @Override
         public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
-            return conn.getStatement(startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7));
+            return conn.getStatement(startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 6) + "ORDER BY TypeNumber");
         }
     }
 }

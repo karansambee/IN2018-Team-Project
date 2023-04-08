@@ -114,6 +114,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             if (!tblList.contains(getTableName())) {
                 try(PreparedStatement sta = conn.getStatement("CREATE TABLE "+getTableName()+" ("+getTableSchema()+")")) {
                     sta.executeUpdate();
+                    tblList.add(getTableName());
                 } catch (SQLException e) {
                     throw new CheckedException(e);
                 }
@@ -122,6 +123,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             if (!tblList.contains(getAuxTableName())) {
                 try(PreparedStatement sta = conn.getStatement("CREATE TABLE "+getAuxTableName()+" ("+getAuxTableSchema()+")")) {
                     sta.executeUpdate();
+                    tblList.add(getAuxTableName());
                 } catch (SQLException e) {
                     throw new CheckedException(e);
                 }
@@ -141,6 +143,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             if (tblList.contains(getTableName())) {
                 try(PreparedStatement sta = conn.getStatement("DROP TABLE "+getTableName())) {
                     sta.executeUpdate();
+                    tblList.remove(getTableName());
                 } catch (SQLException e) {
                     throw new CheckedException(e);
                 }
@@ -149,6 +152,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             if (tblList.contains(getAuxTableName())) {
                 try(PreparedStatement sta = conn.getStatement("DROP TABLE "+getAuxTableName())) {
                     sta.executeUpdate();
+                    tblList.remove(getAuxTableName());
                 } catch (SQLException e) {
                     throw new CheckedException(e);
                 }
@@ -251,6 +255,13 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
+        try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getAuxTableName())) {
+            try (ResultSet rs = sta.executeQuery()) {
+                while (rs.next()) IDs.remove((Object) rs.getInt(getIDColumnName()));
+            }
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
         try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
             for (int c : IDs) {
                 sta.setInt(1, c);
@@ -276,6 +287,13 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
+        try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getAuxTableName())) {
+            try (ResultSet rs = sta.executeQuery()) {
+                while (rs.next()) IDs.remove(rs.getLong(getIDColumnName()));
+            }
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
         try(PreparedStatement sta = conn.getStatement("INSERT INTO " + getAuxTableName() + " VALUES (?)")) {
             for (long c : IDs) {
                 sta.setLong(1, c);
@@ -297,6 +315,13 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
         try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getTableName())) {
             try (ResultSet rs = sta.executeQuery()) {
                 while (rs.next()) IDs.add(rs.getString(getIDColumnName()));
+            }
+        } catch (SQLException throwables) {
+            throw new CheckedException(throwables);
+        }
+        try(PreparedStatement sta = conn.getStatement("SELECT "+getIDColumnName()+" FROM " + getAuxTableName())) {
+            try (ResultSet rs = sta.executeQuery()) {
+                while (rs.next()) IDs.remove(rs.getString(getIDColumnName()));
             }
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);

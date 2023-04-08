@@ -81,6 +81,7 @@ public class Login extends JDialogx {
     public void hideDialog() {
         loginTextField.setText("");
         passwordPasswordField.setText("");
+        loginTextField.requestFocusInWindow();
         super.hideDialog();
     }
 }

@@ -16,6 +16,7 @@ import skywaysolutions.app.stock.IStockAccessor;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -32,6 +33,7 @@ public final class AccessorManager {
     public final ISalesAccessor salesAccessor;
     public final IReportAccessor reportAccessor;
     public final String[] tables;
+    public final String[] rTables;
 
     /**
      * Constructs a new AccessorManager with the specified database connection.
@@ -41,6 +43,7 @@ public final class AccessorManager {
      */
     public AccessorManager(IDB_Connector conn) throws CheckedException {
         this.conn = conn;
+        conn.getTableList(true);
         this.rateAccessor = new RateController(conn);
         this.staffAccessor = new AccountController(conn);
         this.stockAccessor = new BlankController(conn);
@@ -54,6 +57,8 @@ public final class AccessorManager {
         tables.addAll(List.of(customerAccessor.getTables()));
         tables.addAll(List.of(salesAccessor.getTables()));
         this.tables = tables.toArray(new String[0]);
+        Collections.reverse(tables);
+        rTables = tables.toArray(new String[0]);
     }
 
     /**
@@ -63,7 +68,7 @@ public final class AccessorManager {
      * @throws CheckedException An error occurred during unlocking.
      */
     public void forceUnlock(String table) throws CheckedException {
-        if (table == null) {
+        if (table != null) {
             rateAccessor.forceFullUnlock(table);
             staffAccessor.forceFullUnlock(table);
             stockAccessor.forceFullUnlock(table);
@@ -74,15 +79,21 @@ public final class AccessorManager {
         }
     }
 
+    /**
+     * Forces the purge of a specified table (Or all tables if null is passed).
+     *
+     * @param table The table name or null.
+     * @throws CheckedException An error occurred during purging.
+     */
     public void forcePurge(String table) throws CheckedException {
-        if (table == null) {
+        if (table != null) {
             rateAccessor.forceFullPurge(table);
             staffAccessor.forceFullPurge(table);
             stockAccessor.forceFullPurge(table);
             customerAccessor.forceFullPurge(table);
             salesAccessor.forceFullPurge(table);
         } else {
-            for (String c : tables) forcePurge(c);
+            for (String c : rTables) forcePurge(c);
         }
     }
 

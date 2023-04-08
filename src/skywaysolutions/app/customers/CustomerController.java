@@ -14,7 +14,6 @@ public class CustomerController implements ICustomerAccessor {
     private final IDB_Connector conn;
     private final Object slock = new Object();
     private final AliasFinder finder = new AliasFinder();
-    private final AllFilter allFilter = new AllFilter();
     private final FlexiblePlanFilter flexiblePlanFilter = new FlexiblePlanFilter();
     private final CustomerFilter customerFilter = new CustomerFilter();
     private final DiscountFilter discountFilter = new DiscountFilter();
@@ -27,6 +26,7 @@ public class CustomerController implements ICustomerAccessor {
         customerTableAccessor = new CustomerTableAccessor(conn);
         discountTableAccessor = new DiscountTableAccessor(conn);
         flexibleDiscountEntriesTableAccessor = new FlexibleDiscountEntriesTableAccessor(conn);
+        conn.getTableList(true);
         discountTableAccessor.assureTableSchema();
         flexibleDiscountEntriesTableAccessor.assureTableSchema();
         customerTableAccessor.assureTableSchema();
@@ -512,7 +512,6 @@ public class CustomerController implements ICustomerAccessor {
             Discount discount = new Discount(this.conn, plan);
             discount.lock();
             discount.load();
-            discount.delete();
             if (discount.getPlanType() == PlanType.FlexibleDiscount) {
                 List<FlexibleDiscountEntry> entries = getFlexiblePlanEntries(plan, null);
                 for (FlexibleDiscountEntry c : entries) {
@@ -520,6 +519,7 @@ public class CustomerController implements ICustomerAccessor {
                     c.delete();
                 }
             }
+            discount.delete();
         }
     }
 
@@ -683,6 +683,7 @@ public class CustomerController implements ICustomerAccessor {
     @Override
     public void forceFullPurge(String tableName) throws CheckedException {
         synchronized (slock) {
+            conn.getTableList(true);
             switch (tableName) {
                 case "Customer" -> customerTableAccessor.purgeTableSchema();
                 case "DiscountPlan" -> discountTableAccessor.purgeTableSchema();
@@ -700,8 +701,8 @@ public class CustomerController implements ICustomerAccessor {
         public CustomerType type;
         @Override
         public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
-            PreparedStatement sta = conn.getStatement((type == CustomerType.Any) ? startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7) :
-                    startOfSQLTemplate+"CustomerType = ?");
+            PreparedStatement sta = conn.getStatement((type == CustomerType.Any) ? startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 6) + "ORDER BY Alias" :
+                    startOfSQLTemplate+"CustomerType = ? ORDER BY Alias");
             if (type != CustomerType.Any) sta.setInt(1, type.getValue());
             return sta;
         }
@@ -739,32 +740,6 @@ public class CustomerController implements ICustomerAccessor {
     }
 
     /**
-     * This class provides a filter that represents no filtering.
-     *
-     * @author Alfred Manville
-     */
-    private static class AllFilter implements IFilterStatementCreator {
-
-        /**
-         * Gets a prepared statement from the specified connection,
-         * using the passed string as the beginning of the SQL template.
-         * <p>
-         * The statement will always begin with "SELECT * FROM [TABLE NAME] WHERE ",
-         * EG: "SELECT * FROM test WHERE " where the table here is test.
-         * </p>
-         * @param conn The database connection.
-         * @param startOfSQLTemplate The start of the SQL Template to use for the statement.
-         * @return The prepared statement with the filters and their parameters applied.
-         * @throws SQLException An SQL error occurred.
-         * @throws CheckedException An error occurred.
-         */
-        @Override
-        public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
-            return conn.getStatement(startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7));
-        }
-    }
-
-    /**
      * This class provides the ability to filter for the specific discount in the specific range.
      *
      * @author Alfred Manville
@@ -789,7 +764,7 @@ public class CustomerController implements ICustomerAccessor {
         @Override
         public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
             PreparedStatement sta = conn.getStatement(startOfSQLTemplate+"DiscountPlanID = ?" + ((range == null) ? "" :
-                    " (AmountLowerBound <= ? AND AmountUpperBound > ?) OR (AmountLowerBound < ? AND AmountUpperBound => ?)"));
+                    " AND ((AmountLowerBound <= ? AND AmountUpperBound > ?) OR (AmountLowerBound < ? AND AmountUpperBound => ?))") + " ORDER BY AmountLowerBound");
             sta.setLong(1, PlanID);
             if (range != null) {
                 sta.setDouble(2, range.getLower().getValue());
