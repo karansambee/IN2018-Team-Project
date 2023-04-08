@@ -167,6 +167,27 @@ public class AccountController implements IStaffAccessor {
         }
     }
 
+    /**
+     * Clears the password of an account.
+     *
+     * @param emailAddress The email address of the account.
+     * @throws CheckedException Changing the account password has failed.
+     */
+    @Override
+    public void clearPassword(String emailAddress) throws CheckedException {
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            if (currentAccount.getRole() == StaffRole.Administrator){
+                Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
+                account.setPassword(new PasswordString(new byte[32], new byte[32]));
+                account.store();
+                accessor.unlockAll(false);
+            } else {
+                throw new CheckedException("Cannot change the password of another account unless you are System Administrator");
+            }
+        }
+    }
+
 
     /**
      * Gets the personal information of an account.
