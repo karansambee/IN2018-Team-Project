@@ -18,6 +18,8 @@ target/
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+# Run Configurations
+runConfigurations/
 # Built files
 out/
 
