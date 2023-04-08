@@ -27,7 +27,7 @@ public final class Decimal {
      * @param decimals The number of decimal places to use.
      */
     public Decimal(double value, int decimals) {
-        _value = (long) (value*(10^decimals));
+        _value = (long) (value*(Math.pow(10, decimals)));
         _decimals = decimals;
     }
     private Decimal(long value, int decimals, Object dummy) {
@@ -52,7 +52,7 @@ public final class Decimal {
      * @return The value as a double.
      */
     public double getValue() {
-        return ((double) _value)/(10^_decimals);
+        return ((double) _value)/(Math.pow(10, _decimals));
     }
 
     /**
@@ -82,8 +82,8 @@ public final class Decimal {
     public Decimal add(Decimal dec) {
         //Gets stored values at the largest amount of decimal places
         int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : 10^(targetDecimals - _decimals));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : 10^(targetDecimals - dec.getDecimalPlaces()));
+        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
+        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10,(targetDecimals - dec.getDecimalPlaces())));
         return Decimal.fromStored(current + passed, targetDecimals);
     }
 
@@ -96,8 +96,8 @@ public final class Decimal {
     public Decimal sub(Decimal dec) {
         //Gets stored values at the largest amount of decimal places
         int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : 10^(targetDecimals - _decimals));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : 10^(targetDecimals - dec.getDecimalPlaces()));
+        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
+        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10,(targetDecimals - dec.getDecimalPlaces())));
         return Decimal.fromStored(current - passed, targetDecimals);
     }
 
@@ -120,8 +120,8 @@ public final class Decimal {
     public Decimal div(Decimal dec) {
         //Gets stored values at the largest amount of decimal places
         int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : 10^(targetDecimals - _decimals));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : 10^(targetDecimals - dec.getDecimalPlaces()));
+        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
+        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10,(targetDecimals - dec.getDecimalPlaces())));
         return Decimal.fromStored(current / passed, targetDecimals);
     }
 
@@ -134,8 +134,8 @@ public final class Decimal {
     public Decimal mod(Decimal dec) {
         //Gets stored values at the largest amount of decimal places
         int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : 10^(targetDecimals - _decimals));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : 10^(targetDecimals - dec.getDecimalPlaces()));
+        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
+        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10,(targetDecimals - dec.getDecimalPlaces())));
         return Decimal.fromStored(current % passed, targetDecimals);
     }
 
@@ -148,8 +148,8 @@ public final class Decimal {
     public boolean lessThan(Decimal dec) {
         //Gets stored values at the largest amount of decimal places
         int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : 10^(targetDecimals - _decimals));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : 10^(targetDecimals - dec.getDecimalPlaces()));
+        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
+        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10,(targetDecimals - dec.getDecimalPlaces())));
         return current < passed;
     }
 
@@ -162,8 +162,8 @@ public final class Decimal {
     public boolean lessThanOrEqualTo(Decimal dec) {
         //Gets stored values at the largest amount of decimal places
         int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : 10^(targetDecimals - _decimals));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : 10^(targetDecimals - dec.getDecimalPlaces()));
+        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
+        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10, (targetDecimals - dec.getDecimalPlaces())));
         return current <= passed;
     }
 
@@ -176,8 +176,8 @@ public final class Decimal {
     public boolean greaterThan(Decimal dec) {
         //Gets stored values at the largest amount of decimal places
         int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : 10^(targetDecimals - _decimals));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : 10^(targetDecimals - dec.getDecimalPlaces()));
+        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
+        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10,(targetDecimals - dec.getDecimalPlaces())));
         return current > passed;
     }
 
@@ -190,8 +190,8 @@ public final class Decimal {
     public boolean greaterThanOrEqualTo(Decimal dec) {
         //Gets stored values at the largest amount of decimal places
         int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : 10^(targetDecimals - _decimals));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : 10^(targetDecimals - dec.getDecimalPlaces()));
+        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
+        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10,(targetDecimals - dec.getDecimalPlaces())));
         return current >= passed;
     }
 
@@ -202,7 +202,7 @@ public final class Decimal {
      */
     @Override
     public String toString() {
-        if (_decimals < 0) return String.valueOf(_value*10^(-1*_decimals));
+        if (_decimals < 0) return String.valueOf(_value*Math.pow(10,(-1*_decimals)));
         String sValue = String.valueOf(_value);
         return sValue.substring(0, sValue.length() - _decimals) + ((_decimals > 0) ? "." + sValue.substring(sValue.length() - _decimals) : "");
     }
