@@ -61,23 +61,23 @@ public class CustomerTableAccessor extends DatabaseTableBase<Customer> {
      */
     @Override
     protected String getTableSchema() {
-        return "CustomerID             bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT," +
-                "  DiscountPlanID         bigint(19)," +
-                "  CurrencyName           char(4) NOT NULL," +
-                "  Firstname              varchar(15) NOT NULL," +
-                "  Surname                varchar(15) NOT NULL," +
-                "  PhoneNumber            varchar(15) NOT NULL," +
-                "  EmailAddress           varchar(25)," +
-                "  DateOfBirth            date NOT NULL," +
-                "  Postcode               varchar(7) NOT NULL," +
-                "  HouseNumber            varchar(4) NOT NULL," +
-                "  StreetName             varchar(20) NOT NULL," +
-                "  AccountDiscountCredit  numeric(12, 2)," +
-                "  PurchaseAccumulation   numeric(10, 2) NOT NULL," +
-                "  PurchaseMonthBeginning date NOT NULL," +
-                "  Alias                  varchar(32) NOT NULL UNIQUE," +
-                "  CustomerType           integer(1) NOT NULL," +
-                "  FOREIGN KEY (DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID)," +
+        return "CustomerID             bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT, " +
+                "  DiscountPlanID         bigint(19), " +
+                "  CurrencyName           char(4) NOT NULL, " +
+                "  Firstname              varchar(15) NOT NULL, " +
+                "  Surname                varchar(15) NOT NULL, " +
+                "  PhoneNumber            varchar(15) NOT NULL, " +
+                "  EmailAddress           varchar(25), " +
+                "  DateOfBirth            date NOT NULL, " +
+                "  Postcode               varchar(7) NOT NULL, " +
+                "  HouseNumber            varchar(4) NOT NULL, " +
+                "  StreetName             varchar(20) NOT NULL, " +
+                "  AccountDiscountCredit  numeric(12, 2), " +
+                "  PurchaseAccumulation   numeric(10, 2) NOT NULL, " +
+                "  PurchaseMonthBeginning date NOT NULL, " +
+                "  Alias                  varchar(32) NOT NULL UNIQUE, " +
+                "  CustomerType           integer(1) NOT NULL, " +
+                "  FOREIGN KEY (DiscountPlanID) REFERENCES DiscountPlan(DiscountPlanID), " +
                 "  FOREIGN KEY (CurrencyName) REFERENCES ExchangeRate(CurrencyName)";
     }
 

@@ -74,6 +74,14 @@ public interface IStaffAccessor extends IRepairable {
     void changePassword(String emailAddress, String password) throws CheckedException;
 
     /**
+     * Clears the password of an account.
+     *
+     * @param emailAddress The email address of the account.
+     * @throws CheckedException Changing the account password has failed.
+     */
+    void clearPassword(String emailAddress) throws CheckedException;
+
+    /**
      * Gets the personal information of an account.
      *
      * @param emailAddress The email address of the account (Null for the current logged-in account).

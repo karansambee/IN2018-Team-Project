@@ -44,6 +44,7 @@ public class SaleController implements ISalesAccessor {
      */
     public SaleController(IDB_Connector conn, IRateAccessor rateAccessor, IStockAccessor stockAccessor) throws CheckedException {
         this.conn = conn;
+        conn.getTableList(true);
         saleTableAccessor = new SaleTableAccessor(conn);
         saleTableAccessor.assureTableSchema();
         transactionTableAccessor = new TransactionTableAccessor(conn);
@@ -108,14 +109,16 @@ public class SaleController implements ISalesAccessor {
         }
     }
 
-    private Transaction[] getTransactions(long saleID, MultiLoadSyncMode mode) throws CheckedException {
+    private Transaction[] getTransactionsInt(long saleID, MultiLoadSyncMode mode) throws CheckedException {
         idFilterer.columnName = "BlankNumber";
+        idFilterer.orderColumnName = "TransactionDate";
         idFilterer.id = saleID;
         return transactionTableAccessor.loadMany(idFilterer, mode).toArray(new Transaction[0]);
     }
 
     private Refund getRefundInt(long transactionID, MultiLoadSyncMode mode) throws CheckedException {
         idFilterer.columnName = "TranscationID";
+        idFilterer.orderColumnName = "RefundDate";
         idFilterer.id = transactionID;
         Refund[] refunds = refundTableAccessor.loadMany(idFilterer, mode).toArray(new Refund[0]);
         return (refunds.length > 0) ? refunds[0] : null;
@@ -126,7 +129,7 @@ public class SaleController implements ISalesAccessor {
         sale.lock();
         sale.load();
         sale.unlock();
-        Transaction[] transactions = getTransactions(saleID, MultiLoadSyncMode.UnlockAfterLoad);
+        Transaction[] transactions = getTransactionsInt(saleID, MultiLoadSyncMode.UnlockAfterLoad);
         Decimal paid = new Decimal();
         for (Transaction c : transactions) {
             paid = paid.add(c.getPayment().getAmount());
@@ -175,14 +178,14 @@ public class SaleController implements ISalesAccessor {
      * Refunds or gets the refunds of a sale.
      *
      * @param saleID The sale ID.
-     * @param date The date of any new refunds.
+     * @param date The date of any new refunds (null to get existing refunds).
      * @return The IDs of the refunds.
      * @throws CheckedException The refund operation / obtaining the refund IDs has failed.
      */
     @Override
     public long[] refund(long saleID, Date date) throws CheckedException {
         synchronized (slock) {
-            Transaction[] transactions = getTransactions(saleID, MultiLoadSyncMode.NoLoad);
+            Transaction[] transactions = getTransactionsInt(saleID, MultiLoadSyncMode.NoLoad);
             long[] refundIDs = new long[transactions.length];
             int refundCount = 0;
             for (int i = 0; i < transactions.length; i++) {
@@ -283,6 +286,23 @@ public class SaleController implements ISalesAccessor {
     }
 
     /**
+     * Gets the transactions of a specified sale.
+     *
+     * @param saleID The sale ID.
+     * @return The array of transaction IDs.
+     * @throws CheckedException Retrieving the transactions has failed.
+     */
+    @Override
+    public long[] getTransactions(long saleID) throws CheckedException {
+        synchronized (slock) {
+            Transaction[] transactions = getTransactionsInt(saleID, MultiLoadSyncMode.NoLoad);
+            long[] ids = new long[transactions.length];
+            for (int i = 0; i < ids.length; i++) ids[i] = transactions[i].getTransactionID();
+            return ids;
+        }
+    }
+
+    /**
      * Gets the sale given the ID.
      *
      * @param saleID The sale ID.
@@ -297,6 +317,24 @@ public class SaleController implements ISalesAccessor {
             sale.load();
             sale.unlock();
             return sale;
+        }
+    }
+
+    /**
+     * Gets the transaction given the ID.
+     *
+     * @param transactionID The transaction ID.
+     * @return The transaction corresponding to the ID.
+     * @throws CheckedException Retrieving the transaction has failed.
+     */
+    @Override
+    public Transaction getTransaction(long transactionID) throws CheckedException {
+        synchronized (slock) {
+            Transaction transaction = new Transaction(conn, transactionID);
+            transaction.lock();
+            transaction.load();
+            transaction.unlock();
+            return transaction;
         }
     }
 
@@ -369,6 +407,7 @@ public class SaleController implements ISalesAccessor {
     @Override
     public void forceFullPurge(String tableName) throws CheckedException {
         synchronized (slock) {
+            conn.getTableList(true);
             switch (tableName) {
                 case "Sale" -> saleTableAccessor.purgeTableSchema();
                 case "Transcation" -> transactionTableAccessor.purgeTableSchema();
@@ -385,6 +424,7 @@ public class SaleController implements ISalesAccessor {
     private static class IDFilterer implements IFilterStatementCreator {
         public String columnName;
         public long id;
+        public String orderColumnName;
 
         /**
          * Gets a prepared statement from the specified connection,
@@ -402,7 +442,7 @@ public class SaleController implements ISalesAccessor {
          */
         @Override
         public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
-            PreparedStatement sta = conn.getStatement(startOfSQLTemplate + columnName + " = ?");
+            PreparedStatement sta = conn.getStatement(startOfSQLTemplate + columnName + " = ? ORDER BY " + orderColumnName);
             sta.setLong(1, id);
             return sta;
         }
@@ -437,7 +477,7 @@ public class SaleController implements ISalesAccessor {
         @Override
         public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
             PreparedStatement sta = conn.getStatement(startOfSQLTemplate + "CurrencyName = ?" + ((idColumnName == null) ? "" : " AND "+idColumnName+" = ?") +
-                    ((type == PaymentType.Any) ? "" : " AND SaleType = ?") + ((period == null) ? "" : " AND SaleDate >= ? AND SaleDate < ?"));
+                    ((type == PaymentType.Any) ? "" : " AND SaleType = ?") + ((period == null) ? "" : " AND SaleDate >= ? AND SaleDate < ?") + " ORDER BY SaleDate");
             sta.setString(1, currency);
             int index = 2;
             if (idColumnName != null) sta.setLong(index++, id);

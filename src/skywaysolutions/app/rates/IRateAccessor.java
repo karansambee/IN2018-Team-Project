@@ -1,6 +1,5 @@
 package skywaysolutions.app.rates;
 
-import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.IRepairable;
@@ -11,6 +10,12 @@ import skywaysolutions.app.utils.IRepairable;
  * @author Alfred Manville
  */
 public interface IRateAccessor extends IRepairable {
+    /**
+     * Assures that the USD currency is defined.
+     *
+     * @throws CheckedException An assurance error has occurred.
+     */
+    void assureUSDCurrency() throws CheckedException;
     /**
      * Gets the conversion rate for the specified currency to USD.
      *

@@ -30,7 +30,29 @@ public class RateController implements IRateAccessor {
     public RateController(IDB_Connector conn) throws CheckedException {
         this.conn = conn;
         accessor = new ExchangeRateTableAccessor(conn);
+        conn.getTableList(true);
         accessor.assureTableSchema();
+    }
+
+    /**
+     * Assures that the USD currency is defined.
+     *
+     * @throws CheckedException An assurance error has occurred.
+     */
+    @Override
+    public void assureUSDCurrency() throws CheckedException {
+        synchronized (slock) {
+            ConversionRate rate = new ConversionRate(conn, "USD", "$", new Decimal(1));
+            if (rate.exists(true)) {
+                rate.lock();
+                rate.load();
+                rate.setCurrencySymbol("$");
+                rate.setConversionRate(new Decimal(1));
+                rate.unlock();
+            } else {
+                rate.store();
+            }
+        }
     }
 
     /**
@@ -174,6 +196,7 @@ public class RateController implements IRateAccessor {
     @Override
     public void forceFullPurge(String tableName) throws CheckedException {
         synchronized (slock) {
+            conn.getTableList(true);
             if (tableName.equals("ExchangeRate")) accessor.purgeTableSchema();
         }
     }
@@ -200,7 +223,7 @@ public class RateController implements IRateAccessor {
          */
         @Override
         public PreparedStatement createFilteredStatementFor(IDB_Connector conn, String startOfSQLTemplate) throws SQLException, CheckedException {
-            return conn.getStatement(startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 7));
+            return conn.getStatement(startOfSQLTemplate.substring(0, startOfSQLTemplate.length() - 6) + "ORDER BY CurrencyName");
         }
     }
 }

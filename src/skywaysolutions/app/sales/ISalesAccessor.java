@@ -68,7 +68,7 @@ public interface ISalesAccessor extends IRepairable {
      * Refunds or gets the refunds of a sale.
      *
      * @param saleID The sale ID.
-     * @param date The date of any new refunds.
+     * @param date The date of any new refunds (null to get existing refunds).
      * @return The IDs of the refunds.
      * @throws CheckedException The refund operation / obtaining the refund IDs has failed.
      */
@@ -110,6 +110,15 @@ public interface ISalesAccessor extends IRepairable {
     long[] getSalesByCustomer(MonthPeriod period, PaymentType type, String currency, long customerID) throws CheckedException;
 
     /**
+     * Gets the transactions of a specified sale.
+     *
+     * @param saleID The sale ID.
+     * @return The array of transaction IDs.
+     * @throws CheckedException Retrieving the transactions has failed.
+     */
+    long[] getTransactions(long saleID) throws CheckedException;
+
+    /**
      * Gets the sale given the ID.
      *
      * @param saleID The sale ID.
@@ -117,6 +126,15 @@ public interface ISalesAccessor extends IRepairable {
      * @throws CheckedException Retrieving the sale has failed.
      */
     Sale getSale(long saleID) throws CheckedException;
+
+    /**
+     * Gets the transaction given the ID.
+     *
+     * @param transactionID The transaction ID.
+     * @return The transaction corresponding to the ID.
+     * @throws CheckedException Retrieving the transaction has failed.
+     */
+    Transaction getTransaction(long transactionID) throws CheckedException;
 
     /**
      * Gets the refund given the ID.
