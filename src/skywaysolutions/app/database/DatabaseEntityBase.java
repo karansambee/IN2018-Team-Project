@@ -167,6 +167,18 @@ public abstract class DatabaseEntityBase {
     }
 
     /**
+     * Marks the entity unlocked.
+     * Used for when {@link DatabaseTableBase#unlockAll(boolean)} is called in order to make sure entities returned by
+     * {@link DatabaseTableBase#loadMany(IFilterStatementCreator, MultiLoadSyncMode)} with {@link MultiLoadSyncMode#KeepLockedAfterLoad}
+     * are marked unlocked (This needs to be done manually).
+     */
+    public final void markUnlocked() {
+        synchronized (slock) {
+            _lock = false;
+        }
+    }
+
+    /**
      * Returns if this object is in use by this connection and can be loaded and stored.
      *
      * @return If the object is locked.

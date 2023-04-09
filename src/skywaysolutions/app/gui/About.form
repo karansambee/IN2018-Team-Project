@@ -28,7 +28,9 @@
           <horizontalScrollBarPolicy value="31"/>
           <verticalScrollBarPolicy value="22"/>
         </properties>
-        <border type="none"/>
+        <border type="line" title="Description:">
+          <color color="-4473925"/>
+        </border>
         <children>
           <component id="cc13" class="javax.swing.JTextArea" binding="textAreaDescription">
             <constraints/>
@@ -49,7 +51,7 @@
           <horizontalScrollBarPolicy value="31"/>
           <verticalScrollBarPolicy value="22"/>
         </properties>
-        <border type="none"/>
+        <border type="line" title="License:"/>
         <children>
           <component id="81d5c" class="javax.swing.JTextArea" binding="textAreaLicense">
             <constraints/>

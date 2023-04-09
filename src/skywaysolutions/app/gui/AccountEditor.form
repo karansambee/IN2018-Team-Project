@@ -39,21 +39,6 @@
           <text value="Ok"/>
         </properties>
       </component>
-      <component id="91aff" class="javax.swing.JSpinner" binding="spinnerStaffID">
-        <constraints>
-          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-          <gridbag top="0" left="0" bottom="0" right="2" weightx="0.5" weighty="0.05"/>
-        </constraints>
-        <properties>
-          <alignmentX value="0.5"/>
-          <font/>
-          <maximumSize width="32767" height="32767"/>
-          <minimumSize width="65" height="30"/>
-          <preferredSize width="65" height="30"/>
-        </properties>
-      </component>
       <component id="c8124" class="javax.swing.JLabel">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
@@ -97,26 +82,6 @@
           <text value="Commission Rate (%):"/>
         </properties>
       </component>
-      <component id="b8e5c" class="javax.swing.JComboBox" binding="comboBoxRole">
-        <constraints>
-          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-          <gridbag top="0" left="0" bottom="0" right="2" weightx="0.5" weighty="0.05"/>
-        </constraints>
-        <properties>
-          <alignmentX value="0.5"/>
-          <font/>
-          <minimumSize width="65" height="30"/>
-          <model>
-            <item value="Advisor"/>
-            <item value="Manager"/>
-            <item value="Administrator"/>
-          </model>
-          <preferredSize width="65" height="30"/>
-          <selectedIndex value="-1"/>
-        </properties>
-      </component>
       <component id="7025e" class="javax.swing.JLabel">
         <constraints>
           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
@@ -129,21 +94,6 @@
           <minimumSize width="65" height="16"/>
           <preferredSize width="65" height="16"/>
           <text value="Staff Role:"/>
-        </properties>
-      </component>
-      <component id="e687f" class="javax.swing.JComboBox" binding="comboBoxCurrency">
-        <constraints>
-          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-          <gridbag top="0" left="0" bottom="0" right="2" weightx="0.5" weighty="0.05"/>
-        </constraints>
-        <properties>
-          <alignmentX value="0.5"/>
-          <editable value="true"/>
-          <font/>
-          <minimumSize width="65" height="30"/>
-          <preferredSize width="65" height="30"/>
         </properties>
       </component>
       <component id="84e8c" class="javax.swing.JLabel">
@@ -232,6 +182,86 @@
               <opaque value="false"/>
               <preferredSize width="52" height="16"/>
               <text value="Confirm Password:"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <grid id="4e8dc" binding="panelStaffID" layout-manager="GridBagLayout">
+        <constraints>
+          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="91aff" class="javax.swing.JSpinner" binding="spinnerStaffID">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                <preferred-size width="150" height="-1"/>
+              </grid>
+              <gridbag weightx="1.0" weighty="1.0"/>
+            </constraints>
+            <properties>
+              <alignmentX value="0.5"/>
+              <font/>
+              <maximumSize width="32767" height="32767"/>
+              <minimumSize width="65" height="30"/>
+              <preferredSize width="65" height="30"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <grid id="7313a" binding="panelRole" layout-manager="GridBagLayout">
+        <constraints>
+          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="b8e5c" class="javax.swing.JComboBox" binding="comboBoxRole">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                <preferred-size width="150" height="-1"/>
+              </grid>
+              <gridbag weightx="1.0" weighty="1.0"/>
+            </constraints>
+            <properties>
+              <alignmentX value="0.5"/>
+              <font/>
+              <minimumSize width="65" height="30"/>
+              <model>
+                <item value="Advisor"/>
+                <item value="Manager"/>
+                <item value="Administrator"/>
+              </model>
+              <preferredSize width="65" height="30"/>
+              <selectedIndex value="-1"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <grid id="c1602" binding="panelCurrency" layout-manager="GridBagLayout">
+        <constraints>
+          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="e687f" class="javax.swing.JComboBox" binding="comboBoxCurrency">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                <preferred-size width="150" height="-1"/>
+              </grid>
+              <gridbag weightx="1.0" weighty="1.0"/>
+            </constraints>
+            <properties>
+              <alignmentX value="0.5"/>
+              <editable value="true"/>
+              <font/>
+              <minimumSize width="65" height="30"/>
+              <preferredSize width="65" height="30"/>
             </properties>
           </component>
         </children>

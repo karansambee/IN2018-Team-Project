@@ -37,6 +37,12 @@ public class AccountEditor extends JDialogx {
     private JLabel labelCommissionRate;
     private JLabel labelPassword;
     private JLabel labelCPassword;
+    private JPanel panelCurrency;
+    private JPanel panelRole;
+    private JPanel panelStaffID;
+    private final JTextField textFieldRCurrency;
+    private final JTextField textFieldRRole;
+    private final JTextField textFieldRStaffID;
     private final AccessorManager manager;
     private String accountName;
     private String[] currencies;
@@ -51,6 +57,13 @@ public class AccountEditor extends JDialogx {
     public AccountEditor(Window owner, boolean reusable, AccessorManager manager) {
         super(owner, "", reusable);
         this.manager = manager;
+        //Setup readonly textfields (Used as readonly controls that swap with controls that have to be disabled to be readonly)
+        textFieldRRole = new JTextField();
+        textFieldRRole.setEditable(false);
+        textFieldRCurrency = new JTextField();
+        textFieldRCurrency.setEditable(false);
+        textFieldRStaffID = new JTextField();
+        textFieldRStaffID.setEditable(false);
         //Setup form contents
         setContentPane(Root);
         getRootPane().setDefaultButton(buttonOk);
@@ -95,6 +108,11 @@ public class AccountEditor extends JDialogx {
         });
         buttonOk.addActionListener(e -> {
             if (!statusBar.isInHelpMode()) {
+                //Check email address state
+                if (personalInformationEditor.getInformation().getEmailAddress() == null || personalInformationEditor.getInformation().getEmailAddress().equals("")) {
+                    statusBar.setStatus("Email address is empty!", "", 2500);
+                    return;
+                }
                 //Check password state, allow blank password for no change when editing an account
                 if (accountName == null || passwordFieldPassword.getPassword().length > 0 || passwordFieldCPassword.getPassword().length > 0) {
                     boolean exitOut = false;
@@ -119,7 +137,7 @@ public class AccountEditor extends JDialogx {
                     if (accountName == null) {
                         manager.staffAccessor.createAccount(personalInformationEditor.getInformation(), StaffRole.getStaffRoleFromValue(comboBoxRole.getSelectedIndex()),
                                 (StaffRole.getStaffRoleFromValue(comboBoxRole.getSelectedIndex()) == StaffRole.Advisor) ? new Decimal(Double.parseDouble(textFieldCommissionRate.getText()), 6) : null,
-                                comboBoxCurrency.getItemAt(comboBoxCurrency.getSelectedIndex()).toString(), String.valueOf(passwordFieldCPassword.getPassword()), ((long) spinnerStaffID.getValue() > 0) ? (long) spinnerStaffID.getValue() : null);
+                                comboBoxCurrency.getItemAt(comboBoxCurrency.getSelectedIndex()).toString(), String.valueOf(passwordFieldCPassword.getPassword()), ((Integer) spinnerStaffID.getValue() > 0) ? ((Number) spinnerStaffID.getValue()).longValue() : null);
                     } else {
                         String emailAddr = personalInformationEditor.getInformation().getEmailAddress();
                         StaffRole sRole = manager.staffAccessor.getAccountRole(null);
@@ -128,7 +146,7 @@ public class AccountEditor extends JDialogx {
                             if (sRole == StaffRole.Administrator) {
                                 manager.staffAccessor.setAccountRole(emailAddr, StaffRole.getStaffRoleFromValue(comboBoxRole.getSelectedIndex()));
                                 manager.staffAccessor.setCurrency(emailAddr, comboBoxCurrency.getItemAt(comboBoxCurrency.getSelectedIndex()).toString());
-                                manager.staffAccessor.changePassword(emailAddr, String.valueOf(passwordFieldCPassword.getPassword()));
+                                if (passwordFieldCPassword.getPassword().length > 0) manager.staffAccessor.changePassword(emailAddr, String.valueOf(passwordFieldCPassword.getPassword()));
                             }
                         }
                         manager.staffAccessor.setPersonalInformation(emailAddr, personalInformationEditor.getInformation());
@@ -143,11 +161,12 @@ public class AccountEditor extends JDialogx {
         pack();
         setMinimumSize(Root.getMinimumSize());
         dsize = getSize();
+        statusBar.createPrompt(this);
     }
 
     private void updateInterfaceState() throws CheckedException {
-        spinnerStaffID.setEnabled(accountName == null);
-        comboBoxRole.setEnabled(accountName == null);
+        swapControl(panelStaffID, spinnerStaffID, textFieldRStaffID, (accountName == null) ? spinnerStaffID : textFieldRStaffID);
+        swapControl(panelRole, comboBoxRole, textFieldRRole, (accountName == null) ? comboBoxRole : textFieldRRole);
         personalInformationEditor.setEmailEditable(accountName == null);
         boolean canChangePassword = accountName == null || accountName.equals(manager.staffAccessor.getLoggedInAccountEmail()) ||
                 manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator;
@@ -155,17 +174,18 @@ public class AccountEditor extends JDialogx {
         passwordFieldPassword.setEnabled(canChangePassword);
         labelCPassword.setEnabled(canChangePassword);
         passwordFieldCPassword.setEnabled(canChangePassword);
-        comboBoxCurrency.setEnabled(manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator);
+        swapControl(panelCurrency, comboBoxCurrency, textFieldRCurrency, (manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator) ?
+                comboBoxCurrency : textFieldRCurrency);
         switch (StaffRole.getStaffRoleFromValue(comboBoxRole.getSelectedIndex())) {
             case Advisor -> {
-                boolean canChangeCommissionRate = manager.staffAccessor.getAccountRole(accountName) == StaffRole.Manager ||
-                        manager.staffAccessor.getAccountRole(accountName) == StaffRole.Administrator;
+                boolean canChangeCommissionRate = manager.staffAccessor.getAccountRole(null) == StaffRole.Manager ||
+                        manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator;
                 labelCommissionRate.setEnabled(canChangeCommissionRate);
-                textFieldCommissionRate.setEditable(canChangeCommissionRate);
+                textFieldCommissionRate.setEnabled(canChangeCommissionRate);
             }
             case Manager, Administrator -> {
                 labelCommissionRate.setEnabled(false);
-                textFieldCommissionRate.setEditable(false);
+                textFieldCommissionRate.setEnabled(false);
             }
         }
     }
@@ -186,6 +206,8 @@ public class AccountEditor extends JDialogx {
                 comboBoxCurrency.removeAllItems();
                 currencies = manager.rateAccessor.getConvertableCurrencies();
                 for (String c : currencies) comboBoxCurrency.addItem(c);
+                passwordFieldPassword.setText("");
+                passwordFieldCPassword.setText("");
                 if (accountName == null) {
                     spinnerStaffID.setValue(0);
                     comboBoxRole.setSelectedIndex(0);
@@ -193,11 +215,17 @@ public class AccountEditor extends JDialogx {
                     comboBoxCurrency.setSelectedItem("USD");
                     personalInformationEditor.setInformation(new PersonalInformation());
                 } else {
-                    spinnerStaffID.setValue(manager.staffAccessor.getAccountID(accountName));
-                    comboBoxRole.setSelectedIndex(manager.staffAccessor.getAccountRole(accountName).getValue());
+                    long accID = manager.staffAccessor.getAccountID(accountName);
+                    spinnerStaffID.setValue(accID);
+                    textFieldRStaffID.setText(String.valueOf(accID));
+                    StaffRole accRl = manager.staffAccessor.getAccountRole(accountName);
+                    comboBoxRole.setSelectedIndex(accRl.getValue());
+                    textFieldRRole.setText(accRl.toString());
                     Decimal commissionRate = manager.staffAccessor.getCommission(accountName);
                     textFieldCommissionRate.setText((commissionRate == null) ? "0.0" : commissionRate.toString());
-                    comboBoxCurrency.setSelectedItem(manager.staffAccessor.getCurrency(accountName));
+                    String accCur = manager.staffAccessor.getCurrency(accountName);
+                    comboBoxCurrency.setSelectedItem(accCur);
+                    textFieldRCurrency.setText(accCur);
                     personalInformationEditor.setInformation(manager.staffAccessor.getPersonalInformation(accountName));
                 }
                 updateInterfaceState();
@@ -206,5 +234,11 @@ public class AccountEditor extends JDialogx {
             }
         }
         super.showDialog();
+    }
+
+    @Override
+    public void hideDialog() {
+        statusBar.deactivateHelp();
+        super.hideDialog();
     }
 }

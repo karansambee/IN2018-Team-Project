@@ -67,11 +67,14 @@ public class BlankController implements IStockAccessor {
     public void returnBlank(long id, Date returnedDate) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.setReturned(returnedDate);
-            blank.store();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+                blank.setReturned(returnedDate);
+                blank.store();
+            } finally {
+                blank.unlock();
+            }
         }
     }
 
@@ -85,11 +88,14 @@ public class BlankController implements IStockAccessor {
     public void blacklistBlank(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.setBlackListed(true);
-            blank.store();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+                blank.setBlackListed(true);
+                blank.store();
+            } finally {
+                blank.unlock();
+            }
         }
     }
 
@@ -103,11 +109,14 @@ public class BlankController implements IStockAccessor {
     public void voidBlank(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.setVoided(true);
-            blank.store();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+                blank.setVoided(true);
+                blank.store();
+            } finally {
+                blank.unlock();
+            }
         }
     }
 
@@ -122,9 +131,12 @@ public class BlankController implements IStockAccessor {
     public int getBlankType(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+            } finally {
+                blank.unlock();
+            }
             return blank.getBlankType();
         }
     }
@@ -158,9 +170,12 @@ public class BlankController implements IStockAccessor {
     public boolean isBlankReturned(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+            } finally {
+                blank.unlock();
+            }
             return blank.isReturned() != null;
         }
     }
@@ -176,9 +191,13 @@ public class BlankController implements IStockAccessor {
     public Date getBlankReturnedDate(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+                blank.unlock();
+            } finally {
+                blank.unlock();
+            }
             return blank.isReturned();
         }
     }
@@ -194,9 +213,12 @@ public class BlankController implements IStockAccessor {
     public boolean isBlankBlacklisted(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+            } finally {
+                blank.unlock();
+            }
             return blank.isBlackListed();
         }
     }
@@ -212,9 +234,12 @@ public class BlankController implements IStockAccessor {
     public boolean isBlankVoided(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+            } finally {
+                blank.unlock();
+            }
             return blank.isVoided();
         }
     }
@@ -249,9 +274,12 @@ public class BlankController implements IStockAccessor {
     public String getBlankTypeDescription(int typeCode) throws CheckedException {
         synchronized (slock) {
             BlankType blankType = new BlankType(conn, typeCode);
-            blankType.lock();
-            blankType.load();
-            blankType.unlock();
+            try {
+                blankType.lock();
+                blankType.load();
+            } finally {
+                blankType.unlock();
+            }
             return blankType.getDescription();
         }
     }
@@ -267,11 +295,14 @@ public class BlankController implements IStockAccessor {
     public void setBlankTypeDescription(int typeCode, String description) throws CheckedException {
         synchronized (slock) {
             BlankType blankType = new BlankType(conn, typeCode);
-            blankType.lock();
-            blankType.load();
-            blankType.setDescription(description);
-            blankType.store();
-            blankType.unlock();
+            try {
+                blankType.lock();
+                blankType.load();
+                blankType.setDescription(description);
+                blankType.store();
+            } finally {
+                blankType.unlock();
+            }
         }
     }
 
@@ -285,8 +316,12 @@ public class BlankController implements IStockAccessor {
     public void deleteBlankType(int typeCode) throws CheckedException {
         synchronized (slock) {
             BlankType blankType = new BlankType(conn, typeCode);
-            blankType.lock();
-            blankType.delete();
+            try {
+                blankType.lock();
+                blankType.delete();
+            } finally {
+                blankType.unlock();
+            }
         }
     }
 
@@ -317,9 +352,12 @@ public class BlankController implements IStockAccessor {
     public String getBlankDescription(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+            } finally {
+                blank.unlock();
+            }
             return blank.getDescription();
         }
     }
@@ -335,11 +373,14 @@ public class BlankController implements IStockAccessor {
     public void setBlankDescription(long id, String description) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.setDescription(description);
-            blank.store();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+                blank.setDescription(description);
+                blank.store();
+            } finally {
+                blank.unlock();
+            }
         }
     }
 
@@ -356,11 +397,14 @@ public class BlankController implements IStockAccessor {
         synchronized (slock) {
             if (assignedID < -1) assignedID = -1;
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.setAssignedStaffID(assignedID, assignmentDate);
-            blank.store();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+                blank.setAssignedStaffID(assignedID, assignmentDate);
+                blank.store();
+            } finally {
+                blank.unlock();
+            }
         }
     }
 
@@ -368,9 +412,12 @@ public class BlankController implements IStockAccessor {
     public Date getBlankCreationDate(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+            } finally {
+                blank.unlock();
+            }
             return blank.getAssignmentDate();
         }
     }
@@ -386,11 +433,14 @@ public class BlankController implements IStockAccessor {
     public void setBlankCreationDate(long id, Date date) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.setCreationDate(date);
-            blank.store();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+                blank.setCreationDate(date);
+                blank.store();
+            } finally {
+                blank.unlock();
+            }
         }
     }
 
@@ -399,9 +449,12 @@ public class BlankController implements IStockAccessor {
     public Date getBlankAssignmentDate(long id) throws CheckedException {
         synchronized (slock) {
             Blank blank = new Blank(conn, id);
-            blank.lock();
-            blank.load();
-            blank.unlock();
+            try {
+                blank.lock();
+                blank.load();
+            } finally {
+                blank.unlock();
+            }
             return blank.getAssignmentDate();
         }
     }

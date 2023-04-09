@@ -157,6 +157,18 @@ public class StatusBar extends JPanel {
     }
 
     /**
+     * Deactivates the help system if active.
+     */
+    public void deactivateHelp() {
+        if (activeHelp) {
+            //Restore help button to ?
+            activeHelp = false;
+            helpButton.setText("?");
+            statusLabel.setText(currentStatus);
+        }
+    }
+
+    /**
      * This class provides the action for when a mouse action occurs on a control with help in help mode.
      *
      * @author Alfred Manville
