@@ -221,6 +221,20 @@ public class RateController implements IRateAccessor {
     }
 
     /**
+     * Assures the existence of a table.
+     *
+     * @param tableName The table to assure the existence of.
+     * @throws CheckedException The table could not be assured.
+     */
+    @Override
+    public void assureExistence(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            if (tableName.equals("ExchangeRate")) accessor.assureTableSchema();
+        }
+    }
+
+    /**
      * This class provides a filter that represents no filtering.
      *
      * @author Alfred Manville

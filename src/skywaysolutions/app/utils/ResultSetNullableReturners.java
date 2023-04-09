@@ -37,7 +37,7 @@ public final class ResultSetNullableReturners {
     }
 
     /**
-     * This gets an long value from the passed result set.
+     * This gets a long value from the passed result set.
      *
      * @param rs The result set.
      * @param columnLabel The column label name.
@@ -50,7 +50,7 @@ public final class ResultSetNullableReturners {
     }
 
     /**
-     * This gets an long value from the passed result set.
+     * This gets a long value from the passed result set.
      *
      * @param rs The result set.
      * @param columnNumber The column number (1 based).
@@ -63,7 +63,7 @@ public final class ResultSetNullableReturners {
     }
 
     /**
-     * This gets an double value from the passed result set.
+     * This gets a double value from the passed result set.
      *
      * @param rs The result set.
      * @param columnLabel The column label name.
@@ -76,7 +76,7 @@ public final class ResultSetNullableReturners {
     }
 
     /**
-     * This gets an double value from the passed result set.
+     * This gets a double value from the passed result set.
      *
      * @param rs The result set.
      * @param columnNumber The column number (1 based).
@@ -89,7 +89,7 @@ public final class ResultSetNullableReturners {
     }
 
     /**
-     * This gets an string value from the passed result set.
+     * This gets a string value from the passed result set.
      *
      * @param rs The result set.
      * @param columnLabel The column label name.
@@ -102,7 +102,7 @@ public final class ResultSetNullableReturners {
     }
 
     /**
-     * This gets an string value from the passed result set.
+     * This gets a string value from the passed result set.
      *
      * @param rs The result set.
      * @param columnNumber The column number (1 based).
@@ -115,7 +115,7 @@ public final class ResultSetNullableReturners {
     }
 
     /**
-     * This gets an date value from the passed result set.
+     * This gets a date value from the passed result set.
      *
      * @param rs The result set.
      * @param columnLabel The column label name.
@@ -128,7 +128,7 @@ public final class ResultSetNullableReturners {
     }
 
     /**
-     * This gets an date value from the passed result set.
+     * This gets a date value from the passed result set.
      *
      * @param rs The result set.
      * @param columnNumber The column number (1 based).
@@ -137,6 +137,84 @@ public final class ResultSetNullableReturners {
      */
     public static Date getDateValue(ResultSet rs, int columnNumber) throws SQLException {
         Date toret = rs.getDate(columnNumber);
+        if (rs.wasNull()) return null; else return toret;
+    }
+
+    /**
+     * This gets a boolean value from the passed result set.
+     *
+     * @param rs The result set.
+     * @param columnLabel The column label name.
+     * @return The boolean value or null.
+     * @throws SQLException An SQL Error occurs.
+     */
+    public static Boolean getBooleanValue(ResultSet rs, String columnLabel) throws SQLException {
+        Boolean toret = rs.getBoolean(columnLabel);
+        if (rs.wasNull()) return null; else return toret;
+    }
+
+    /**
+     * This gets a boolean value from the passed result set.
+     *
+     * @param rs The result set.
+     * @param columnNumber The column number (1 based).
+     * @return The boolean value or null.
+     * @throws SQLException An SQL Error occurs.
+     */
+    public static Boolean getBooleanValue(ResultSet rs, int columnNumber) throws SQLException {
+        Boolean toret = rs.getBoolean(columnNumber);
+        if (rs.wasNull()) return null; else return toret;
+    }
+
+    /**
+     * This gets a byte value from the passed result set.
+     *
+     * @param rs The result set.
+     * @param columnLabel The column label name.
+     * @return The byte value or null.
+     * @throws SQLException An SQL Error occurs.
+     */
+    public static Byte getByteValue(ResultSet rs, String columnLabel) throws SQLException {
+        Byte toret = rs.getByte(columnLabel);
+        if (rs.wasNull()) return null; else return toret;
+    }
+
+    /**
+     * This gets a byte value from the passed result set.
+     *
+     * @param rs The result set.
+     * @param columnNumber The column number (1 based).
+     * @return The byte value or null.
+     * @throws SQLException An SQL Error occurs.
+     */
+    public static Byte getByteValue(ResultSet rs, int columnNumber) throws SQLException {
+        Byte toret = rs.getByte(columnNumber);
+        if (rs.wasNull()) return null; else return toret;
+    }
+
+    /**
+     * This gets a bytes value from the passed result set.
+     *
+     * @param rs The result set.
+     * @param columnLabel The column label name.
+     * @return The bytes value or null.
+     * @throws SQLException An SQL Error occurs.
+     */
+    public static byte[] getBytesValue(ResultSet rs, String columnLabel) throws SQLException {
+        byte[] toret = rs.getBytes(columnLabel);
+        if (rs.wasNull()) return null; else return toret;
+    }
+
+    /**
+     * This gets a bytes value from the passed result set.
+     *
+     * @param rs The result set.
+     * @param columnNumber The column number (1 based).
+     * @return The bytes value or null.
+     * @throws SQLException An SQL Error occurs.
+     */
+    public static byte[] getBytesValue(ResultSet rs, int columnNumber) throws SQLException {
+        byte[] toret = rs.getBytes(columnNumber);
         if (rs.wasNull()) return null; else return toret;
     }
 }

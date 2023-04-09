@@ -767,6 +767,24 @@ public class CustomerController implements ICustomerAccessor {
     }
 
     /**
+     * Assures the existence of a table.
+     *
+     * @param tableName The table to assure the existence of.
+     * @throws CheckedException The table could not be assured.
+     */
+    @Override
+    public void assureExistence(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            switch (tableName) {
+                case "Customer" -> customerTableAccessor.assureTableSchema();
+                case "DiscountPlan" -> discountTableAccessor.assureTableSchema();
+                case "FlexibleDiscountEntries" -> flexibleDiscountEntriesTableAccessor.assureTableSchema();
+            }
+        }
+    }
+
+    /**
      * Creates a filtered statement to search for customers of a specified type.
      *
      * @author Alfred Manville

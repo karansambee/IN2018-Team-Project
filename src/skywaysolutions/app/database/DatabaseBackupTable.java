@@ -1,7 +1,7 @@
 package skywaysolutions.app.database;
 
-import skywaysolutions.app.utils.CheckedException;
-import skywaysolutions.app.utils.Stream;
+import skywaysolutions.app.utils.*;
+import skywaysolutions.app.utils.Time;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -49,12 +50,14 @@ public final class DatabaseBackupTable {
                     Object[] row = new Object[columnTypes.size()];
                     for (int i = 0; i < columnTypes.size(); ++i) {
                         row[i] = switch (columnTypes.get(i)) {
-                            case Types.BOOLEAN -> rs.getBoolean(i + 1);
-                            case Types.TINYINT -> rs.getByte(i + 1) != 0;
-                            case Types.INTEGER -> rs.getInt(i + 1);
-                            case Types.BIGINT -> rs.getLong(i + 1);
-                            case Types.CHAR, Types.VARCHAR -> rs.getString(i + 1);
-                            case Types.BINARY, Types.VARBINARY -> rs.getBytes(i + 1);
+                            case Types.BOOLEAN -> ResultSetNullableReturners.getBooleanValue(rs, i + 1);
+                            case Types.TINYINT -> getBooleanFromByte(rs, i + 1);
+                            case Types.INTEGER -> ResultSetNullableReturners.getIntegerValue(rs, i + 1);
+                            case Types.BIGINT -> ResultSetNullableReturners.getLongValue(rs, i + 1);
+                            case Types.CHAR, Types.VARCHAR -> ResultSetNullableReturners.getStringValue(rs, i + 1);
+                            case Types.BINARY, Types.VARBINARY -> ResultSetNullableReturners.getBytesValue(rs, i + 1);
+                            case Types.NUMERIC, Types.DECIMAL, Types.DOUBLE, Types.FLOAT -> getLongValueFromDouble(rs, i + 1);
+                            case Types.DATE -> getLongValueFromDate(rs, i + 1);
                             default -> 0;
                         };
                     }
@@ -75,12 +78,12 @@ public final class DatabaseBackupTable {
     public DatabaseBackupTable(InputStream is) throws CheckedException {
         try {
             //Read table name from the stream
-            tableName = new String(Stream.readBytes(is), StandardCharsets.UTF_8);
+            tableName = getNonNullString(Stream.readBytes(is));
             //Read column information from the stream
             int columnCount = Stream.readInteger(is);
             for (int i = 0; i < columnCount; ++i) {
                 columnTypes.add(Stream.readInteger(is));
-                columnNames.add(new String(Stream.readBytes(is), StandardCharsets.UTF_8));
+                columnNames.add(getNonNullString(Stream.readBytes(is)));
             }
             //Read row information from the stream
             int rowCount = Stream.readInteger(is);
@@ -88,10 +91,10 @@ public final class DatabaseBackupTable {
                 Object[] row = new Object[columnCount];
                 for (int i = 0; i < columnTypes.size(); ++i) {
                     row[i] = switch (columnTypes.get(i)) {
-                        case Types.BOOLEAN, Types.TINYINT -> is.read() > 0;
-                        case Types.INTEGER -> Stream.readInteger(is);
-                        case Types.BIGINT -> Stream.readLong(is);
-                        case Types.CHAR, Types.VARCHAR -> new String(Stream.readBytes(is), StandardCharsets.UTF_8);
+                        case Types.BOOLEAN, Types.TINYINT -> getNullableBool(is.read());
+                        case Types.INTEGER -> Stream.readNullableInteger(is);
+                        case Types.BIGINT, Types.DATE, Types.NUMERIC, Types.DECIMAL, Types.DOUBLE, Types.FLOAT -> Stream.readNullableLong(is);
+                        case Types.CHAR, Types.VARCHAR -> getNullableString(Stream.readBytes(is));
                         case Types.BINARY, Types.VARBINARY -> Stream.readBytes(is);
                         default -> 0;
                     };
@@ -125,12 +128,16 @@ public final class DatabaseBackupTable {
         try(PreparedStatement sta = conn.getStatement("INSERT INTO " + tableName + " VALUES (" + templateIndicators + ")")) {
             for (Object[] row : rows) {
                 for (int i = 0; i < columnTypes.size(); ++i) {
-                    switch (columnTypes.get(i)) {
-                        case Types.BOOLEAN, Types.TINYINT -> sta.setBoolean(i+1, (boolean) row[i]);
-                        case Types.INTEGER -> sta.setInt(i+1, (int) row[i]);
-                        case Types.BIGINT -> sta.setLong(i+1, (long) row[i]);
-                        case Types.CHAR, Types.VARCHAR -> sta.setString(i+1, (String) row[i]);
-                        case Types.BINARY, Types.VARBINARY -> sta.setBytes(i+1, (byte[]) row[i]);
+                    if (row[i] == null) sta.setNull(i + 1, columnTypes.get(i)); else {
+                        switch (columnTypes.get(i)) {
+                            case Types.BOOLEAN, Types.TINYINT -> sta.setBoolean(i + 1, (boolean) row[i]);
+                            case Types.INTEGER -> sta.setInt(i + 1, (int) row[i]);
+                            case Types.BIGINT -> sta.setLong(i + 1, (long) row[i]);
+                            case Types.CHAR, Types.VARCHAR -> sta.setString(i + 1, (String) row[i]);
+                            case Types.BINARY, Types.VARBINARY -> sta.setBytes(i + 1, (byte[]) row[i]);
+                            case Types.NUMERIC, Types.DECIMAL, Types.DOUBLE, Types.FLOAT -> sta.setDouble(i + 1, Decimal.fromStored((long) row[i], 8).getValue());
+                            case Types.DATE -> sta.setDate(i + 1, Time.toSQLDate(new Date((long) row[i])));
+                        }
                     }
                 }
                 sta.addBatch();
@@ -162,10 +169,10 @@ public final class DatabaseBackupTable {
             for (Object[] row : rows) {
                 for (int i = 0; i < columnTypes.size(); ++i) {
                     switch (columnTypes.get(i)) {
-                        case Types.BOOLEAN, Types.TINYINT -> os.write(((boolean) row[i]) ? 1 : 0);
-                        case Types.INTEGER -> Stream.writeInteger(os, (int) row[i]);
-                        case Types.BIGINT -> Stream.writeLong(os, (long) row[i]);
-                        case Types.CHAR, Types.VARCHAR -> Stream.writeBytes(os, ((String) row[i]).getBytes(StandardCharsets.UTF_8));
+                        case Types.BOOLEAN, Types.TINYINT -> os.write(toNullableBool((Boolean) row[i]));
+                        case Types.INTEGER -> Stream.writeNullableInteger(os, (Integer) row[i]);
+                        case Types.BIGINT, Types.DATE, Types.NUMERIC, Types.DECIMAL, Types.DOUBLE, Types.FLOAT -> Stream.writeNullableLong(os, (Long) row[i]);
+                        case Types.CHAR, Types.VARCHAR -> Stream.writeBytes(os, toNullableString((String) row[i]));
                         case Types.BINARY, Types.VARBINARY -> Stream.writeBytes(os, (byte[]) row[i]);
                     }
                 }
@@ -215,12 +222,14 @@ public final class DatabaseBackupTable {
                     while (rs.next()) {
                         for (int i = 0; i < rsm.getColumnCount(); ++i) {
                             switch (columnTypes.get(i)) {
-                                case Types.BOOLEAN -> os.write((rs.getBoolean(i + 1)) ? 1 : 0);
-                                case Types.TINYINT -> os.write((rs.getByte(i + 1) != 0) ? 1 : 0);
-                                case Types.INTEGER -> Stream.writeInteger(os, rs.getInt(i + 1));
-                                case Types.BIGINT -> Stream.writeLong(os, rs.getLong(i + 1));
-                                case Types.CHAR, Types.VARCHAR -> Stream.writeBytes(os, rs.getString(i + 1).getBytes(StandardCharsets.UTF_8));
-                                case Types.BINARY, Types.VARBINARY -> Stream.writeBytes(os, rs.getBytes(i + 1));
+                                case Types.BOOLEAN -> os.write(toNullableBool(ResultSetNullableReturners.getBooleanValue(rs, i + 1)));
+                                case Types.TINYINT -> os.write(toNullableBool(getBooleanFromByte(rs, i + 1)));
+                                case Types.INTEGER -> Stream.writeNullableInteger(os, ResultSetNullableReturners.getIntegerValue(rs, i + 1));
+                                case Types.BIGINT -> Stream.writeNullableLong(os, ResultSetNullableReturners.getLongValue(rs, i + 1));
+                                case Types.CHAR, Types.VARCHAR -> Stream.writeBytes(os, toNullableString(ResultSetNullableReturners.getStringValue(rs, i + 1)));
+                                case Types.BINARY, Types.VARBINARY -> Stream.writeBytes(os, ResultSetNullableReturners.getBytesValue(rs, i + 1));
+                                case Types.NUMERIC, Types.DECIMAL, Types.DOUBLE, Types.FLOAT -> Stream.writeNullableLong(os, getLongValueFromDouble(rs, i + 1));
+                                case Types.DATE -> Stream.writeNullableLong(os, getLongValueFromDate(rs, i + 1));
                             }
                         }
                     }
@@ -241,7 +250,7 @@ public final class DatabaseBackupTable {
     public static void restore(IDB_Connector conn, InputStream is) throws CheckedException {
         try {
             //Read table name from the stream
-            String tableName = new String(Stream.readBytes(is), StandardCharsets.UTF_8);
+            String tableName = getNonNullString(Stream.readBytes(is));
             //Check if table exists
             if (!conn.getTableList(true).contains(tableName)) throw new CheckedException("Table does not exist");
             //Read column information from the stream
@@ -261,16 +270,41 @@ public final class DatabaseBackupTable {
             //Read row information from the stream
             //And, Upload the backup to the database
             int rowCount = Stream.readInteger(is);
+            Object v = null;
             try(PreparedStatement sta = conn.getStatement("INSERT INTO " + tableName + " VALUES (" + templateIndicators + ")")) {
                 for (int j = 0; j < rowCount; ++j) {
                     for (int i = 0; i < columnTypes.size(); ++i) {
                         switch (columnTypes.get(i)) {
-                            case Types.BOOLEAN, Types.TINYINT -> sta.setBoolean(i+1, is.read() > 0);
-                            case Types.INTEGER -> sta.setInt(i+1, Stream.readInteger(is));
-                            case Types.BIGINT -> sta.setLong(i+1, Stream.readLong(is));
-                            case Types.CHAR, Types.VARCHAR -> sta.setString(i+1, new String(Stream.readBytes(is), StandardCharsets.UTF_8));
-                            case Types.BINARY, Types.VARBINARY -> sta.setBytes(i+1, Stream.readBytes(is));
+                            case Types.BOOLEAN, Types.TINYINT -> {
+                                v = getNullableBool(is.read());
+                                if (v != null) sta.setBoolean(i+1, (boolean) v);
+                            }
+                            case Types.INTEGER -> {
+                                v = Stream.readNullableInteger(is);
+                                if (v != null) sta.setInt(i+1, (Integer) v);
+                            }
+                            case Types.BIGINT -> {
+                                v = Stream.readNullableLong(is);
+                                if (v != null) sta.setLong(i+1, (Long) v);
+                            }
+                            case Types.CHAR, Types.VARCHAR -> {
+                                v = getNullableString(Stream.readBytes(is));
+                                if (v != null) sta.setString(i+1, (String) v);
+                            }
+                            case Types.BINARY, Types.VARBINARY -> {
+                                v = Stream.readBytes(is);
+                                if (v != null) sta.setBytes(i+1, (byte[]) v);
+                            }
+                            case Types.NUMERIC, Types.DECIMAL, Types.DOUBLE, Types.FLOAT -> {
+                                v = Stream.readNullableLong(is);
+                                if (v != null) sta.setDouble(i+1, Decimal.fromStored((Long) v, 8).getValue());
+                            }
+                            case Types.DATE -> {
+                                v = Stream.readNullableLong(is);
+                                if (v != null) sta.setDate(i+1, Time.toSQLDate(new Date((Long) v)));
+                            }
                         }
+                        if (v == null) sta.setNull(i + 1, columnTypes.get(i));
                     }
                     sta.addBatch();
                 }
@@ -279,5 +313,48 @@ public final class DatabaseBackupTable {
         } catch (IOException | SQLException e) {
             throw new CheckedException(e);
         }
+    }
+
+    private static Boolean getBooleanFromByte(ResultSet rs, int columnNumber) throws SQLException {
+        Byte b = ResultSetNullableReturners.getByteValue(rs, columnNumber);
+        if (b == null) return null;
+        return b != 0;
+    }
+
+    private static Long getLongValueFromDouble(ResultSet rs, int columnNumber) throws SQLException {
+        Double d = ResultSetNullableReturners.getDoubleValue(rs, columnNumber);
+        if (d == null) return null;
+        return new Decimal(d, 8).getStoredValue();
+    }
+
+    private static Long getLongValueFromDate(ResultSet rs, int columnNumber) throws SQLException {
+        java.sql.Date d = ResultSetNullableReturners.getDateValue(rs, columnNumber);
+        if (d == null) return null;
+        return Time.fromSQLDate(d).getTime();
+    }
+
+    private static Boolean getNullableBool(int b) {
+        if (b == 0) return null;
+        return b > 1;
+    }
+
+    private static String getNullableString(byte[] bytes) {
+        if (bytes == null) return null;
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    private static String getNonNullString(byte[] bytes) {
+        if (bytes == null) return "";
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    private static int toNullableBool(Boolean b) {
+        if (b == null) return 0;
+        return (b) ? 2 : 1;
+    }
+
+    private static byte[] toNullableString(String s) {
+        if (s == null) return null;
+        return s.getBytes(StandardCharsets.UTF_8);
     }
 }

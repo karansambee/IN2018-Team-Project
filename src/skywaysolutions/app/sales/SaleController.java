@@ -429,6 +429,24 @@ public class SaleController implements ISalesAccessor {
     }
 
     /**
+     * Assures the existence of a table.
+     *
+     * @param tableName The table to assure the existence of.
+     * @throws CheckedException The table could not be assured.
+     */
+    @Override
+    public void assureExistence(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            switch (tableName) {
+                case "Sale" -> saleTableAccessor.assureTableSchema();
+                case "Transcation" -> transactionTableAccessor.assureTableSchema();
+                case "Refund" -> refundTableAccessor.assureTableSchema();
+            }
+        }
+    }
+
+    /**
      * This class provides a filter statement for an ID of a specified column.
      *
      * @author Alfred Manville

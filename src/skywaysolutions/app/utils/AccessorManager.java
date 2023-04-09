@@ -98,6 +98,23 @@ public final class AccessorManager {
     }
 
     /**
+     * Assures the existence of a specified table (Or all tables if null is passed).
+     * @param table The table name or null.
+     * @throws CheckedException An error occurred during assurance.
+     */
+    public void assureTable(String table) throws CheckedException {
+        if (table != null) {
+            rateAccessor.assureExistence(table);
+            staffAccessor.assureExistence(table);
+            stockAccessor.assureExistence(table);
+            customerAccessor.assureExistence(table);
+            salesAccessor.assureExistence(table);
+        } else {
+            for (String c : tables) assureTable(c);
+        }
+    }
+
+    /**
      * Backups the database contents to a file.
      *
      * @param file The file to backup the database too.

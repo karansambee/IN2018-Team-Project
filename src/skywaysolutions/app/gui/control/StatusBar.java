@@ -157,6 +157,19 @@ public class StatusBar extends JPanel {
     }
 
     /**
+     * Clears the status if it is the same as the passed status text.
+     *
+     * @param status The status text.
+     */
+    public void clearStatus(String status) {
+        boolean isStatus = false;
+        synchronized (slock) {
+            isStatus = currentStatus != null && currentStatus.equals(status);
+        }
+        if (isStatus) clearStatus();
+    }
+
+    /**
      * Deactivates the help system if active.
      */
     public void deactivateHelp() {

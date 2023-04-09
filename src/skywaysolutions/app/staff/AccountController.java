@@ -36,7 +36,7 @@ public class AccountController implements IStaffAccessor {
     }
 
     /**
-     * Assures the default administrator account of ID 0 exists.
+     * Assures the default administrator account of ID 1 exists.
      *
      * @throws CheckedException An assurance error has occurred.
      */
@@ -507,6 +507,20 @@ public class AccountController implements IStaffAccessor {
         synchronized (slock) {
             conn.getTableList(true);
             if (tableName.equals("Staff")) accessor.purgeTableSchema();
+        }
+    }
+
+    /**
+     * Assures the existence of a table.
+     *
+     * @param tableName The table to assure the existence of.
+     * @throws CheckedException The table could not be assured.
+     */
+    @Override
+    public void assureExistence(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            if (tableName.equals("Staff")) accessor.assureTableSchema();
         }
     }
 

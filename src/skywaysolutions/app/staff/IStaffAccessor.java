@@ -13,7 +13,7 @@ import skywaysolutions.app.utils.PersonalInformation;
 public interface IStaffAccessor extends IRepairable {
 
     /**
-     * Assures the default administrator account of ID 0 exists.
+     * Assures the default administrator account of ID 1 exists.
      *
      * @throws CheckedException An assurance error has occurred.
      */

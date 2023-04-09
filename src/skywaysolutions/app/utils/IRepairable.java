@@ -29,4 +29,12 @@ public interface IRepairable {
      * @throws CheckedException The table could not be purged.
      */
     void forceFullPurge(String tableName) throws CheckedException;
+
+    /**
+     * Assures the existence of a table.
+     *
+     * @param tableName The table to assure the existence of.
+     * @throws CheckedException The table could not be assured.
+     */
+    void assureExistence(String tableName) throws CheckedException;
 }

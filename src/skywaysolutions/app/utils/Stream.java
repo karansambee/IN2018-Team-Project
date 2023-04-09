@@ -25,6 +25,18 @@ public final class Stream {
     }
 
     /**
+     * Reads an integer from a stream.
+     *
+     * @param is The input stream to read from.
+     * @return The integer.
+     * @throws IOException An I/O Error occurs.
+     */
+    public static Integer readNullableInteger(InputStream is) throws IOException {
+        if (is.read() == 0) return null;
+        return readInteger(is);
+    }
+
+    /**
      * Writes an integer to a stream.
      *
      * @param os The output stream to write to.
@@ -46,6 +58,20 @@ public final class Stream {
     }
 
     /**
+     * Writes an integer to a stream.
+     *
+     * @param os The output stream to write to.
+     * @param toWrite The integer to write.
+     * @throws IOException An I/O Error occurs.
+     */
+    public static void writeNullableInteger(OutputStream os, Integer toWrite) throws IOException {
+        if (toWrite == null) os.write(0); else {
+            os.write(1);
+            writeInteger(os, toWrite);
+        }
+    }
+
+    /**
      * Reads a long from a stream.
      *
      * @param is The input stream to read from.
@@ -58,6 +84,18 @@ public final class Stream {
         int firstByte = longBuffer[0] & 0xff;
         return ((long) ((firstByte > 127) ? firstByte - 128 : firstByte) * 72057594037927936L + (long) (longBuffer[1] & 0xff) * 281474976710656L + (long) (longBuffer[2] & 0xff) * 1099511627776L + (long) (longBuffer[3] & 0xff) * 4294967296L +
                 (long) (longBuffer[4] & 0xff) * 16777216L + (long) (longBuffer[5] & 0xff) * 65536L + (long) (longBuffer[6] & 0xff) * 256L + (long)(longBuffer[7] & 0xff)) * (long) ((firstByte > 127) ? -1 : 1);
+    }
+
+    /**
+     * Reads a long from a stream.
+     *
+     * @param is The input stream to read from.
+     * @return The long.
+     * @throws IOException An I/O Error occurs.
+     */
+    public static Long readNullableLong(InputStream is) throws IOException {
+        if (is.read() == 0) return null;
+        return readLong(is);
     }
 
     /**
@@ -90,6 +128,20 @@ public final class Stream {
     }
 
     /**
+     * Writes a long to a stream.
+     *
+     * @param os The output stream to write to.
+     * @param toWrite The long to write.
+     * @throws IOException An I/O Error occurs.
+     */
+    public static void writeNullableLong(OutputStream os, Long toWrite) throws IOException {
+        if (toWrite == null) os.write(0); else {
+            os.write(1);
+            writeLong(os, toWrite);
+        }
+    }
+
+    /**
      * Reads a byte set from a stream.
      *
      * @param is The input stream to read from.
@@ -98,6 +150,7 @@ public final class Stream {
      */
     public static byte[] readBytes(InputStream is) throws IOException {
         int length = readInteger(is);
+        if (length < 0) return null;
         byte[] byteBuffer = new byte[length];
         if (is.read(byteBuffer) != length) throw new IOException("Could not read byte set");
         return byteBuffer;
@@ -111,7 +164,11 @@ public final class Stream {
      * @throws IOException An I/O Error occurs.
      */
     public static void writeBytes(OutputStream os, byte[] bytes) throws IOException {
-        writeInteger(os, bytes.length);
-        os.write(bytes);
+        if (bytes == null) {
+            writeInteger(os, -1);
+        } else {
+            writeInteger(os, bytes.length);
+            os.write(bytes);
+        }
     }
 }
