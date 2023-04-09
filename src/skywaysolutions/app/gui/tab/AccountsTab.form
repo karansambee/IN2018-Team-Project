@@ -85,7 +85,8 @@
           <component id="5dc19" class="javax.swing.JTable" binding="tableListed">
             <constraints/>
             <properties>
-              <preferredSize width="200" height="40"/>
+              <fillsViewportHeight value="true"/>
+              <preferredSize width="-1" height="-1"/>
             </properties>
           </component>
         </children>

@@ -214,10 +214,10 @@ public class AccountController implements IStaffAccessor {
         synchronized (slock) {
             if (emailAddress == null || emailAddress.equals(currentAccount.getEmail())) {
                 return currentAccount.getInfo();
-            } else if (currentAccount.getRole() == StaffRole.Administrator) {
+            } else if (currentAccount.getRole() != StaffRole.Advisor) {
                 return getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.UnlockAfterLoad).getInfo();
             } else {
-                throw new CheckedException("Cannot retrieve info of another account unless you are System Administrator");
+                throw new CheckedException("Cannot retrieve info of another account unless you are System Administrator or Manager");
             }
         }
     }
@@ -243,7 +243,7 @@ public class AccountController implements IStaffAccessor {
                 } finally {
                     currentAccount.unlock();
                 }
-            } else if (currentAccount.getRole() == StaffRole.Administrator) {
+            } else if (currentAccount.getRole() != StaffRole.Advisor) {
                 try {
                     Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
                     account.setInfo(info);
@@ -252,7 +252,7 @@ public class AccountController implements IStaffAccessor {
                     accessor.unlockAll(false);
                 }
             } else {
-                throw new CheckedException("Cannot change the info of another account unless you are System Administrator");
+                throw new CheckedException("Cannot change the info of another account unless you are System Administrator or Manager");
             }
         }
     }
@@ -289,7 +289,7 @@ public class AccountController implements IStaffAccessor {
         synchronized (slock) {
             if (emailAddress == null || emailAddress.equals(currentAccount.getEmail())) {
                 return currentAccount.getRole();
-            } else if (currentAccount.getRole() == StaffRole.Administrator || currentAccount.getRole() == StaffRole.Manager) {
+            } else if (currentAccount.getRole() != StaffRole.Advisor) {
                 return getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.UnlockAfterLoad).getRole();
             } else {
                 throw new CheckedException("Cannot get the role of another account unless you are System Administrator or Manager");
@@ -392,7 +392,7 @@ public class AccountController implements IStaffAccessor {
         synchronized (slock) {
             if (emailAddress == null || emailAddress.equals(currentAccount.getEmail())) {
                 return currentAccount.getCommission();
-            } else if (currentAccount.getRole() == StaffRole.Manager || currentAccount.getRole() == StaffRole.Administrator) {
+            } else if (currentAccount.getRole() != StaffRole.Advisor) {
                 return getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.UnlockAfterLoad).getCommission();
             } else {
                 throw new CheckedException("Cannot retrieve commission rates of another account unless you are System Administrator or Manager");
@@ -411,7 +411,7 @@ public class AccountController implements IStaffAccessor {
     public void setCommission(String emailAddress, Decimal commission) throws CheckedException {
         if (currentAccount == null) throw new CheckedException("No Logged in Account");
         synchronized (slock) {
-            if (currentAccount.getRole() == StaffRole.Manager || currentAccount.getRole() == StaffRole.Administrator) {
+            if (currentAccount.getRole() != StaffRole.Advisor) {
                 try {
                     Account account = getAccountFromEmailAddress(emailAddress, MultiLoadSyncMode.KeepLockedAfterLoad);
                     account.setCommission(commission);
@@ -455,7 +455,7 @@ public class AccountController implements IStaffAccessor {
     public void setCurrency(String emailAddress, String currency) throws CheckedException {
         if (currentAccount == null) throw new CheckedException("No Logged in Account");
         synchronized (slock) {
-            if (currentAccount.getRole() == StaffRole.Administrator || currentAccount.getRole() == StaffRole.Manager) {
+            if (currentAccount.getRole() != StaffRole.Advisor) {
                 if (emailAddress == null || emailAddress.equals(currentAccount.getEmail())) {
                     currentAccount.setCurrency(currency);
                 } else {

@@ -77,4 +77,40 @@ public abstract class JDialogx extends JDialog {
     public final boolean isReusable() {
         return reusable;
     }
+
+    /**
+     * Swaps the control in the provided panel with another control.
+     *
+     * @param panel The panel.
+     * @param controlA One of the controls.
+     * @param controlB Another of the controls.
+     * @param target The target control to insert, however if neither control is in the panel controlA will be placed, null to swap.
+     */
+    protected void swapControl(JPanel panel, Component controlA, Component controlB, Component target) {
+        if (controlA == null || controlB == null) return;
+        Component[] components = panel.getComponents();
+        Component contained = null;
+        for (Component c : components) {
+            if (c == controlA) {
+                contained = controlA;
+                break;
+            }
+            if (c == controlB) {
+                contained = controlB;
+                break;
+            }
+        }
+        if (target != null && contained == target) return;
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.weighty = 1;
+        constraints.weightx = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        if (contained == null || contained == controlB) {
+            if (contained == controlB) panel.remove(controlB);
+            panel.add(controlA, constraints);
+        } else {
+            panel.remove(controlA);
+            panel.add(controlB, constraints);
+        }
+    }
 }

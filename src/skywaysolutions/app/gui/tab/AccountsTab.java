@@ -2,6 +2,7 @@ package skywaysolutions.app.gui.tab;
 
 import skywaysolutions.app.gui.AccountEditor;
 import skywaysolutions.app.gui.Prompt;
+import skywaysolutions.app.gui.control.NonEditableDefaultTableModel;
 import skywaysolutions.app.gui.control.StatusBar;
 import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.AccessorManager;
@@ -43,7 +44,7 @@ public class AccountsTab extends JPanel implements ITab {
     public AccountsTab() {
         super(true);
         //Populate table
-        tableModel = new DefaultTableModel(new Object[] {"ID", "Email", "Name", "Role", "Currency", "Commission %"}, 0);
+        tableModel = new NonEditableDefaultTableModel(new Object[] {"ID", "Email", "Name", "Role", "Currency", "Commission %"}, 0);
         tableListed.getTableHeader().setReorderingAllowed(false);
         tableListed.getTableHeader().setResizingAllowed(true);
         tableListed.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -110,14 +111,11 @@ public class AccountsTab extends JPanel implements ITab {
             if (setupNotDone) return;
             if (!statusBar.isInHelpMode()) refresh();
         });
-        tableListed.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                boolean enb = tableListed.getSelectedRows().length > 0;
-                buttonEdit.setEnabled(enb);
-                buttonDelete.setEnabled(enb);
-                buttonDisable.setEnabled(enb);
-            }
+        tableListed.getSelectionModel().addListSelectionListener(e -> {
+            boolean enb = tableListed.getSelectedRows().length > 0;
+            buttonEdit.setEnabled(enb);
+            buttonDelete.setEnabled(enb);
+            buttonDisable.setEnabled(enb);
         });
         //Setup contents (Tab requires explicit adding)
         setLayout(new GridBagLayout());
@@ -150,6 +148,12 @@ public class AccountsTab extends JPanel implements ITab {
      */
     @Override
     public void refresh() {
+        try {
+            if (comboBoxFilter.getSelectedIndex() > 1 && manager.staffAccessor.getAccountRole(null) != StaffRole.Administrator)
+                comboBoxFilter.setSelectedIndex(1);
+        } catch (CheckedException e) {
+            statusBar.setStatus(e, 2500);
+        }
         refresh(-1);
     }
 
@@ -176,9 +180,11 @@ public class AccountsTab extends JPanel implements ITab {
 
     private void refresh(int selectionIndex) {
         tableModel.setRowCount(0);
+        tableBacker.clear();
         try {
             buttonAdd.setEnabled(manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator);
-            String[] accounts = manager.staffAccessor.listAccounts(StaffRole.getStaffRoleFromValue(comboBoxFilter.getSelectedIndex() - 1));
+            String[] accounts = manager.staffAccessor.listAccounts((manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator) ?
+                    StaffRole.getStaffRoleFromValue(comboBoxFilter.getSelectedIndex() - 1) : StaffRole.Advisor);
             for (String c : accounts) addRow(c);
         } catch (CheckedException e) {
             statusBar.setStatus(e, 2500);
