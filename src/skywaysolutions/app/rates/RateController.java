@@ -44,11 +44,14 @@ public class RateController implements IRateAccessor {
         synchronized (slock) {
             ConversionRate rate = new ConversionRate(conn, "USD", "$", new Decimal(1));
             if (rate.exists(true)) {
-                rate.lock();
-                rate.load();
-                rate.setCurrencySymbol("$");
-                rate.setConversionRate(new Decimal(1));
-                rate.unlock();
+                try {
+                    rate.lock();
+                    rate.load();
+                    rate.setCurrencySymbol("$");
+                    rate.setConversionRate(new Decimal(1));
+                } finally {
+                    rate.unlock();
+                }
             } else {
                 rate.store();
             }
@@ -66,9 +69,12 @@ public class RateController implements IRateAccessor {
     public Decimal getConversionRate(String currency) throws CheckedException {
         synchronized (slock) {
             ConversionRate crate = new ConversionRate(conn, currency);
-            crate.lock();
-            crate.load();
-            crate.unlock();
+            try {
+                crate.lock();
+                crate.load();
+            } finally {
+                crate.unlock();
+            }
             return crate.getConversionRate();
         }
     }
@@ -84,13 +90,16 @@ public class RateController implements IRateAccessor {
     public void setConversionRate(String currency, Decimal rate) throws CheckedException {
         synchronized (slock) {
             ConversionRate crate = new ConversionRate(conn, currency);
-            if (crate.exists(true)) {
-                crate.lock();
-                crate.load();
+            try {
+                if (crate.exists(true)) {
+                    crate.lock();
+                    crate.load();
+                }
+                crate.setConversionRate(rate);
+                crate.store();
+            } finally {
+                crate.unlock();
             }
-            crate.setConversionRate(rate);
-            crate.store();
-            crate.unlock();
         }
     }
 
@@ -105,9 +114,12 @@ public class RateController implements IRateAccessor {
     public String getCurrencySymbol(String currency) throws CheckedException {
         synchronized (slock) {
             ConversionRate crate = new ConversionRate(conn, currency);
-            crate.lock();
-            crate.load();
-            crate.unlock();
+            try {
+                crate.lock();
+                crate.load();
+            } finally {
+                crate.unlock();
+            }
             return crate.getCurrencySymbol();
         }
     }
@@ -123,13 +135,16 @@ public class RateController implements IRateAccessor {
     public void setCurrencySymbol(String currency, String symbol) throws CheckedException {
         synchronized (slock) {
             ConversionRate crate = new ConversionRate(conn, currency);
-            if (crate.exists(true)) {
-                crate.lock();
-                crate.load();
+            try {
+                if (crate.exists(true)) {
+                    crate.lock();
+                    crate.load();
+                }
+                crate.setCurrencySymbol(symbol);
+                crate.store();
+            } finally {
+                crate.unlock();
             }
-            crate.setCurrencySymbol(symbol);
-            crate.store();
-            crate.unlock();
         }
     }
 
@@ -143,8 +158,12 @@ public class RateController implements IRateAccessor {
     public void removeConversionRate(String currency) throws CheckedException {
         synchronized (slock) {
             ConversionRate crate = new ConversionRate(conn, currency);
-            crate.lock();
-            crate.delete();
+            try {
+                crate.lock();
+                crate.delete();
+            } finally {
+                crate.unlock();
+            }
         }
     }
 

@@ -170,23 +170,28 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
      * @throws CheckedException An error occurs.
      */
     public final List<T> loadMany(IFilterStatementCreator filter, MultiLoadSyncMode syncMode) throws CheckedException {
-        assureTableSchema();
-        if (syncMode != MultiLoadSyncMode.NoLockBeforeLoad && syncMode != MultiLoadSyncMode.NoLoad) lockAll();
-        List<T> toReturn = new ArrayList<>();
-        synchronized (slock) {
-            if ((!_lock) && (syncMode == MultiLoadSyncMode.UnlockAfterLoad || syncMode == MultiLoadSyncMode.KeepLockedAfterLoad)) throw new CheckedException("Lock not applied");
-            try(PreparedStatement sta = filter.createFilteredStatementFor(conn, "SELECT "+
-                    ((syncMode == MultiLoadSyncMode.NoLoad) ? getIDColumnName() : "*")+" FROM "+getTableName()+" WHERE ")) {
-                try (ResultSet rs = sta.executeQuery()) {
-                    while (rs.next())
-                        toReturn.add((syncMode == MultiLoadSyncMode.NoLoad) ? noLoadOneFrom(rs) : loadOneFrom(rs, _lock));
+        try {
+            assureTableSchema();
+            if (syncMode != MultiLoadSyncMode.NoLockBeforeLoad && syncMode != MultiLoadSyncMode.NoLoad) lockAll();
+            List<T> toReturn = new ArrayList<>();
+            synchronized (slock) {
+                if ((!_lock) && (syncMode == MultiLoadSyncMode.UnlockAfterLoad || syncMode == MultiLoadSyncMode.KeepLockedAfterLoad))
+                    throw new CheckedException("Lock not applied");
+                try (PreparedStatement sta = filter.createFilteredStatementFor(conn, "SELECT " +
+                        ((syncMode == MultiLoadSyncMode.NoLoad) ? getIDColumnName() : "*") + " FROM " + getTableName() + " WHERE ")) {
+                    try (ResultSet rs = sta.executeQuery()) {
+                        while (rs.next())
+                            toReturn.add((syncMode == MultiLoadSyncMode.NoLoad) ? noLoadOneFrom(rs) : loadOneFrom(rs, _lock));
+                    }
+                } catch (SQLException e) {
+                    throw new CheckedException(e);
                 }
-            } catch (SQLException e) {
-                throw new CheckedException(e);
+                if (syncMode == MultiLoadSyncMode.UnlockAfterLoad) for (T c : toReturn) c.markUnlocked();
             }
+            return toReturn;
+        } finally {
+            if (syncMode == MultiLoadSyncMode.UnlockAfterLoad) unlockAll(false);
         }
-        if (syncMode == MultiLoadSyncMode.UnlockAfterLoad) unlockAll(false);
-        return toReturn;
     }
 
     /**

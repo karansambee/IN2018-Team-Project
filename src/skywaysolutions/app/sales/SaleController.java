@@ -126,9 +126,12 @@ public class SaleController implements ISalesAccessor {
 
     private boolean fullyPaidInt(long saleID, Date date) throws CheckedException {
         Sale sale = new Sale(conn, saleID);
-        sale.lock();
-        sale.load();
-        sale.unlock();
+        try {
+            sale.lock();
+            sale.load();
+        } finally {
+            sale.unlock();
+        }
         Transaction[] transactions = getTransactionsInt(saleID, MultiLoadSyncMode.UnlockAfterLoad);
         Decimal paid = new Decimal();
         for (Transaction c : transactions) {
@@ -313,9 +316,12 @@ public class SaleController implements ISalesAccessor {
     public Sale getSale(long saleID) throws CheckedException {
         synchronized (slock) {
             Sale sale = new Sale(conn, saleID);
-            sale.lock();
-            sale.load();
-            sale.unlock();
+            try {
+                sale.lock();
+                sale.load();
+            } finally {
+                sale.unlock();
+            }
             return sale;
         }
     }
@@ -331,9 +337,12 @@ public class SaleController implements ISalesAccessor {
     public Transaction getTransaction(long transactionID) throws CheckedException {
         synchronized (slock) {
             Transaction transaction = new Transaction(conn, transactionID);
-            transaction.lock();
-            transaction.load();
-            transaction.unlock();
+            try {
+                transaction.lock();
+                transaction.load();
+            } finally {
+                transaction.unlock();
+            }
             return transaction;
         }
     }
@@ -349,9 +358,12 @@ public class SaleController implements ISalesAccessor {
     public Refund getRefund(long refundID) throws CheckedException {
         synchronized (slock) {
             Refund refund = new Refund(conn, refundID);
-            refund.lock();
-            refund.load();
-            refund.unlock();
+            try {
+                refund.lock();
+                refund.load();
+            } finally {
+                refund.unlock();
+            }
             return refund;
         }
     }

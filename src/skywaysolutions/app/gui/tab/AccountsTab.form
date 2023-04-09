@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="skywaysolutions.app.gui.tab.AccountsTab">
+  <grid id="27dc6" binding="Root" layout-manager="GridBagLayout">
+    <constraints>
+      <xy x="20" y="20" width="500" height="400"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <component id="a4064" class="javax.swing.JButton" binding="buttonAdd">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.15" weighty="0.15"/>
+        </constraints>
+        <properties>
+          <preferredSize width="30" height="30"/>
+          <text value="Add"/>
+        </properties>
+      </component>
+      <component id="7475c" class="javax.swing.JButton" binding="buttonEdit">
+        <constraints>
+          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.15" weighty="0.15"/>
+        </constraints>
+        <properties>
+          <preferredSize width="30" height="30"/>
+          <text value="Edit"/>
+        </properties>
+      </component>
+      <component id="f4b4a" class="javax.swing.JButton" binding="buttonDisable">
+        <constraints>
+          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.15" weighty="0.15"/>
+        </constraints>
+        <properties>
+          <preferredSize width="30" height="30"/>
+          <text value="Disable"/>
+        </properties>
+      </component>
+      <component id="60e17" class="javax.swing.JButton" binding="buttonDelete">
+        <constraints>
+          <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.15" weighty="0.15"/>
+        </constraints>
+        <properties>
+          <preferredSize width="30" height="30"/>
+          <text value="Delete"/>
+        </properties>
+      </component>
+      <component id="5c023" class="javax.swing.JButton" binding="buttonRefresh">
+        <constraints>
+          <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.15" weighty="0.15"/>
+        </constraints>
+        <properties>
+          <preferredSize width="30" height="30"/>
+          <text value="Refresh"/>
+        </properties>
+      </component>
+      <component id="189dc" class="javax.swing.JComboBox" binding="comboBoxFilter">
+        <constraints>
+          <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.25" weighty="0.15"/>
+        </constraints>
+        <properties>
+          <model>
+            <item value="Any"/>
+            <item value="Advisor"/>
+            <item value="Manager"/>
+            <item value="Administrator"/>
+          </model>
+          <preferredSize width="50" height="30"/>
+        </properties>
+      </component>
+      <scrollpane id="7f48e">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="6" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="1.0" weighty="0.85"/>
+        </constraints>
+        <properties>
+          <preferredSize width="200" height="428"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="5dc19" class="javax.swing.JTable" binding="tableListed">
+            <constraints/>
+            <properties>
+              <preferredSize width="200" height="40"/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
+    </children>
+  </grid>
+</form>

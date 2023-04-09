@@ -24,6 +24,7 @@ public class DateField extends JPanel {
     private Date lower = new Date(0);
     private Date upper = new Date(Long.MAX_VALUE);
     private Date value;
+    private StatusBar statusBar;
 
     /**
      * Constructs a new instance of the DateField control.
@@ -31,8 +32,10 @@ public class DateField extends JPanel {
     public DateField() {
         super(true);
         buttonGetDate.addActionListener(e -> {
-            setValue(Time.now());
-            processEntry(e);
+            if (statusBar != null && !statusBar.isInHelpMode()) {
+                setValue(Time.now());
+                processEntry(e);
+            }
         });
         textFieldDate.addFocusListener(new FocusAdapter() {
             @Override
@@ -50,6 +53,7 @@ public class DateField extends JPanel {
      * @throws CheckedException Initializing the text field has failed.
      */
     public void setup(StatusBar statusBar) throws CheckedException {
+        this.statusBar = statusBar;
         textFieldDate.setup("([0-9]{4})\\-([0-9]{1,2})\\-([0-9]{1,2})", statusBar, "Invalid Date Entered", true, true);
         //Setup help
         statusBar.registerComponentForHelp(textFieldDate, "Date format is yyyy-mm-dd.\nBut yyyy-m-dd, yyyy-mm-d, yyyy-m-d are also supported.");

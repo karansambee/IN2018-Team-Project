@@ -19,7 +19,7 @@ import java.util.ArrayList;
  *
  * @author Alfred Manville
  */
-public class DashboardTab extends JPanel {
+public class DashboardTab extends JPanel implements ITab {
     private JPanel Root;
     private JLabel labelEmailAddress;
     private JLabel labelRole;
@@ -51,7 +51,9 @@ public class DashboardTab extends JPanel {
         buttonViewNotification.addActionListener(e -> {
             int indx = listNotifications.getSelectedIndex();
             if (indx > -1) {
+                prompt.setTitle("Notification");
                 prompt.setContents(extendedNotifications.get(indx));
+                prompt.setButtons(new String[] {"Close", "Dismiss"}, 0);
                 prompt.showDialog();
                 if (prompt.getLastButton() != null && prompt.getLastButton().equals("Dismiss")) {
                     listModel.remove(indx);
@@ -66,11 +68,7 @@ public class DashboardTab extends JPanel {
                 extendedNotifications.remove(indx);
             }
         });
-        listNotifications.addListSelectionListener(e -> {
-            buttonViewNotification.setEnabled(listNotifications.getSelectedIndex() > -1);
-            buttonRemoveNotification.setEnabled(listNotifications.getSelectedIndex() > -1);
-        });
-
+        listNotifications.addListSelectionListener(e -> updateNotificationButtons());
         //Setup contents (Tab requires explicit adding)
         setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
@@ -81,14 +79,16 @@ public class DashboardTab extends JPanel {
     }
 
     /**
-     * Set-ups the dashboard tab with the specified owner, status bar and accessor manager.
+     * Set-ups the tab with the specified owner, prompt, status bar and accessor manager.
      *
-     * @param owner The parent windows the control is contained on.
+     * @param owner The parent window the control is contained on.
+     * @param prompt The prompt to use.
      * @param statusBar The status bar to use.
      * @param manager The accessor manager to use.
      */
-    public void setup(Window owner, StatusBar statusBar, AccessorManager manager) {
-        prompt = new Prompt(owner, "Notification", "", new String[] {"Close", "Dismiss"}, 0, true);
+    @Override
+    public void setup(Window owner, Prompt prompt, StatusBar statusBar, AccessorManager manager) {
+        this.prompt = prompt;
         accountEditor = new AccountEditor(owner, true, manager);
         this.statusBar = statusBar;
         this.manager = manager;
@@ -96,8 +96,9 @@ public class DashboardTab extends JPanel {
     }
 
     /**
-     * Refreshes the dashboard with the information of the current logged in account.
+     * Refreshes the tab's contents.
      */
+    @Override
     public void refresh() {
         if (setupNotDone) return;
         try {
@@ -126,9 +127,30 @@ public class DashboardTab extends JPanel {
             }
             //If there are notifications, select the first one
             if (listModel.size() > 0) listNotifications.setSelectedIndex(0);
+            updateNotificationButtons();
         } catch (CheckedException ex) {
             statusBar.setStatus(ex, 2500);
         }
+    }
+
+    /**
+     * If the tab can be accessed by the current, logged in, account.
+     *
+     * @return If the tab is accessible.
+     */
+    @Override
+    public boolean accessAllowed() {
+        return true;
+    }
+
+    /**
+     * Gets the caption of the tab.
+     *
+     * @return The caption.
+     */
+    @Override
+    public String getCaption() {
+        return "Dashboard";
     }
 
     private Decimal getOwed(Sale sale) throws CheckedException {
@@ -139,5 +161,10 @@ public class DashboardTab extends JPanel {
         long[] refunds = manager.salesAccessor.refund(sale.getBlankNumber(), null);
         for (long c : refunds) owed = owed.add(manager.salesAccessor.getRefund(c).getRefundAmount());
         return owed;
+    }
+
+    private void updateNotificationButtons() {
+        buttonViewNotification.setEnabled(listNotifications.getSelectedIndex() > -1);
+        buttonRemoveNotification.setEnabled(listNotifications.getSelectedIndex() > -1);
     }
 }

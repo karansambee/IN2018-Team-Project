@@ -95,6 +95,11 @@ public class AccountEditor extends JDialogx {
         });
         buttonOk.addActionListener(e -> {
             if (!statusBar.isInHelpMode()) {
+                //Check email address state
+                if (personalInformationEditor.getInformation().getEmailAddress() == null || personalInformationEditor.getInformation().getEmailAddress().equals("")) {
+                    statusBar.setStatus("Email address is empty!", "", 2500);
+                    return;
+                }
                 //Check password state, allow blank password for no change when editing an account
                 if (accountName == null || passwordFieldPassword.getPassword().length > 0 || passwordFieldCPassword.getPassword().length > 0) {
                     boolean exitOut = false;
@@ -119,7 +124,7 @@ public class AccountEditor extends JDialogx {
                     if (accountName == null) {
                         manager.staffAccessor.createAccount(personalInformationEditor.getInformation(), StaffRole.getStaffRoleFromValue(comboBoxRole.getSelectedIndex()),
                                 (StaffRole.getStaffRoleFromValue(comboBoxRole.getSelectedIndex()) == StaffRole.Advisor) ? new Decimal(Double.parseDouble(textFieldCommissionRate.getText()), 6) : null,
-                                comboBoxCurrency.getItemAt(comboBoxCurrency.getSelectedIndex()).toString(), String.valueOf(passwordFieldCPassword.getPassword()), ((long) spinnerStaffID.getValue() > 0) ? (long) spinnerStaffID.getValue() : null);
+                                comboBoxCurrency.getItemAt(comboBoxCurrency.getSelectedIndex()).toString(), String.valueOf(passwordFieldCPassword.getPassword()), ((Integer) spinnerStaffID.getValue() > 0) ? ((Number) spinnerStaffID.getValue()).longValue() : null);
                     } else {
                         String emailAddr = personalInformationEditor.getInformation().getEmailAddress();
                         StaffRole sRole = manager.staffAccessor.getAccountRole(null);
@@ -128,7 +133,7 @@ public class AccountEditor extends JDialogx {
                             if (sRole == StaffRole.Administrator) {
                                 manager.staffAccessor.setAccountRole(emailAddr, StaffRole.getStaffRoleFromValue(comboBoxRole.getSelectedIndex()));
                                 manager.staffAccessor.setCurrency(emailAddr, comboBoxCurrency.getItemAt(comboBoxCurrency.getSelectedIndex()).toString());
-                                manager.staffAccessor.changePassword(emailAddr, String.valueOf(passwordFieldCPassword.getPassword()));
+                                if (passwordFieldCPassword.getPassword().length > 0) manager.staffAccessor.changePassword(emailAddr, String.valueOf(passwordFieldCPassword.getPassword()));
                             }
                         }
                         manager.staffAccessor.setPersonalInformation(emailAddr, personalInformationEditor.getInformation());
@@ -143,6 +148,7 @@ public class AccountEditor extends JDialogx {
         pack();
         setMinimumSize(Root.getMinimumSize());
         dsize = getSize();
+        statusBar.createPrompt(this);
     }
 
     private void updateInterfaceState() throws CheckedException {
@@ -206,5 +212,11 @@ public class AccountEditor extends JDialogx {
             }
         }
         super.showDialog();
+    }
+
+    @Override
+    public void hideDialog() {
+        statusBar.deactivateHelp();
+        super.hideDialog();
     }
 }

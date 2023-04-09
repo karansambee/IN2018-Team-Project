@@ -68,9 +68,12 @@ public class CustomerController implements ICustomerAccessor {
     public PersonalInformation getPersonalInformation(long customer) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+            } finally {
+                account.unlock();
+            }
             return account.getInfo();
         }
     }
@@ -87,11 +90,14 @@ public class CustomerController implements ICustomerAccessor {
     public void setPersonalInformation(long customer, PersonalInformation info) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.setInfo(info);
-            account.store();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+                account.setInfo(info);
+                account.store();
+            } finally {
+                account.unlock();
+            }
         }
     }
 
@@ -106,9 +112,12 @@ public class CustomerController implements ICustomerAccessor {
     public String getAccountAlias(long customer) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+            } finally {
+                account.unlock();
+            }
             return account.getAlias();
         }
     }
@@ -124,11 +133,14 @@ public class CustomerController implements ICustomerAccessor {
     public void setAccountAlias(long customer, String alias) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.setAlias(alias);
-            account.store();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+                account.setAlias(alias);
+                account.store();
+            } finally {
+                account.unlock();
+            }
         }
     }
 
@@ -163,9 +175,12 @@ public class CustomerController implements ICustomerAccessor {
     public long getAccountPlan(long customer) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+            } finally {
+                account.unlock();
+            }
             return account.getPlanID();
         }
     }
@@ -181,11 +196,14 @@ public class CustomerController implements ICustomerAccessor {
     public void setAccountPlan(long customer, long plan) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.setPlanID(plan);
-            account.store();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+                account.setPlanID(plan);
+                account.store();
+            } finally {
+                account.unlock();
+            }
         }
     }
 
@@ -199,8 +217,12 @@ public class CustomerController implements ICustomerAccessor {
     public void deleteAccount(long customer) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.delete();
+            try {
+                account.lock();
+                account.delete();
+            } finally {
+                account.unlock();
+            }
         }
     }
 
@@ -237,9 +259,12 @@ public class CustomerController implements ICustomerAccessor {
     public boolean isCustomerDiscountCredited(long customer) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+            } finally {
+                account.unlock();
+            }
             return account.isCustomerDiscountCredited();
         }
     }
@@ -259,11 +284,14 @@ public class CustomerController implements ICustomerAccessor {
     public void setIfCustomerIsDiscountCredited(long customer, boolean isDiscountCredited) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.setCustomerDiscountCredited(isDiscountCredited);
-            account.store();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+                account.setCustomerDiscountCredited(isDiscountCredited);
+                account.store();
+            } finally {
+                account.unlock();
+            }
         }
     }
 
@@ -279,22 +307,23 @@ public class CustomerController implements ICustomerAccessor {
     public Decimal getCustomerDiscountCredit(long customer, boolean take) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            if (account.isCustomerDiscountCredited()) {
-                if (take) {
-                    Decimal credit = account.getAccountDiscountCredit();
-                    account.setAccountDiscountCredit(new Decimal());
-                    account.store();
-                    account.unlock();
-                    return credit;
+            try {
+                account.lock();
+                account.load();
+                if (account.isCustomerDiscountCredited()) {
+                    if (take) {
+                        Decimal credit = account.getAccountDiscountCredit();
+                        account.setAccountDiscountCredit(new Decimal());
+                        account.store();
+                        return credit;
+                    } else {
+                        return account.getAccountDiscountCredit();
+                    }
                 } else {
-                    account.unlock();
-                    return account.getAccountDiscountCredit();
+                    return new Decimal(0);
                 }
-            } else {
+            } finally {
                 account.unlock();
-                return new Decimal(0);
             }
         }
     }
@@ -310,13 +339,16 @@ public class CustomerController implements ICustomerAccessor {
     public void addCustomerDiscountCredit(long customer, Decimal amount) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            if (account.isCustomerDiscountCredited()) {
-                account.setAccountDiscountCredit(account.getAccountDiscountCredit().add(amount));
-                account.store();
+            try {
+                account.lock();
+                account.load();
+                if (account.isCustomerDiscountCredited()) {
+                    account.setAccountDiscountCredit(account.getAccountDiscountCredit().add(amount));
+                    account.store();
+                }
+            } finally {
+                account.unlock();
             }
-            account.unlock();
         }
     }
 
@@ -334,14 +366,17 @@ public class CustomerController implements ICustomerAccessor {
     public Decimal getMonthlyPurchaseAccumulation(long customer, Date date) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            if (!new MonthPeriod(date).equals(new MonthPeriod(account.getPurchaseMonthStart()))) {
-                account.setPurchaseAccumulation(new Decimal(0));
-                account.setPurchaseMonthStart(new MonthPeriod(Time.now()).getThisMonth());
-                account.store();
+            try {
+                account.lock();
+                account.load();
+                if (!new MonthPeriod(date).equals(new MonthPeriod(account.getPurchaseMonthStart()))) {
+                    account.setPurchaseAccumulation(new Decimal(0));
+                    account.setPurchaseMonthStart(new MonthPeriod(Time.now()).getThisMonth());
+                    account.store();
+                }
+            } finally {
+                account.unlock();
             }
-            account.unlock();
             return account.getPurchaseAccumulation();
         }
     }
@@ -362,16 +397,19 @@ public class CustomerController implements ICustomerAccessor {
     public void addPurchase(long customer, Date date, Decimal amount) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            if (new MonthPeriod(date).equals(new MonthPeriod(account.getPurchaseMonthStart())))
-                account.setPurchaseAccumulation(account.getPurchaseAccumulation().add(amount));
-            else {
-                account.setPurchaseAccumulation(amount);
-                account.setPurchaseMonthStart(new MonthPeriod(Time.now()).getThisMonth());
+            try {
+                account.lock();
+                account.load();
+                if (new MonthPeriod(date).equals(new MonthPeriod(account.getPurchaseMonthStart())))
+                    account.setPurchaseAccumulation(account.getPurchaseAccumulation().add(amount));
+                else {
+                    account.setPurchaseAccumulation(amount);
+                    account.setPurchaseMonthStart(new MonthPeriod(Time.now()).getThisMonth());
+                }
+                account.store();
+            } finally {
+                account.unlock();
             }
-            account.store();
-            account.unlock();
         }
     }
 
@@ -421,9 +459,12 @@ public class CustomerController implements ICustomerAccessor {
     public PlanType getPlanType(long plan) throws CheckedException {
         synchronized (slock) {
             Discount discount = new Discount(this.conn, plan);
-            discount.lock();
-            discount.load();
-            discount.unlock();
+            try {
+                discount.lock();
+                discount.load();
+            } finally {
+                discount.unlock();
+            }
             return discount.getPlanType();
         }
     }
@@ -439,9 +480,12 @@ public class CustomerController implements ICustomerAccessor {
     public Decimal getPlanPercentage(long plan) throws CheckedException {
         synchronized (slock) {
             Discount discount = new Discount(this.conn, plan);
-            discount.lock();
-            discount.load();
-            discount.unlock();
+            try {
+                discount.lock();
+                discount.load();
+            } finally {
+                discount.unlock();
+            }
             return (discount.getPlanType() == PlanType.FixedDiscount) ? discount.getPercentage() : new Decimal();
         }
     }
@@ -457,13 +501,16 @@ public class CustomerController implements ICustomerAccessor {
     public void setPlanPercentage(long plan, Decimal percentage) throws CheckedException {
         synchronized (slock) {
             Discount discount = new Discount(this.conn, plan);
-            discount.lock();
-            discount.load();
-            if (discount.getPlanType() == PlanType.FixedDiscount) {
-                discount.setPercentage(percentage);
-                discount.store();
+            try {
+                discount.lock();
+                discount.load();
+                if (discount.getPlanType() == PlanType.FixedDiscount) {
+                    discount.setPercentage(percentage);
+                    discount.store();
+                }
+            } finally {
+                discount.unlock();
             }
-            discount.unlock();
         }
     }
 
@@ -479,9 +526,12 @@ public class CustomerController implements ICustomerAccessor {
     public Decimal usePlan(long plan, Decimal amount) throws CheckedException {
         synchronized (slock) {
             Discount discount = new Discount(this.conn, plan);
-            discount.lock();
-            discount.load();
-            discount.unlock();
+            try {
+                discount.lock();
+                discount.load();
+            } finally {
+                discount.unlock();
+            }
             if (discount.getPlanType() == PlanType.FixedDiscount) {
                 return amount.mul(new Decimal(1, 0).sub(discount.getPercentage().mul(new Decimal(0.01, 2))));
             } else{
@@ -490,9 +540,12 @@ public class CustomerController implements ICustomerAccessor {
                 List<FlexibleDiscountEntry> entries = flexibleDiscountEntriesTableAccessor.loadMany(flexiblePlanFilter, MultiLoadSyncMode.NoLoad);
                 if (entries.size() > 0) {
                     FlexibleDiscountEntry entry = entries.get(0);
-                    entry.lock();
-                    entry.load();
-                    entry.unlock();
+                    try {
+                        entry.lock();
+                        entry.load();
+                    } finally {
+                        entry.unlock();
+                    }
                     if (entry.getRange().inRange(amount)) return amount.mul(new Decimal(1, 0).sub(entry.getPercentage().mul(new Decimal(0.01, 2))));
                 }
             }
@@ -510,13 +563,21 @@ public class CustomerController implements ICustomerAccessor {
     public void removePlan(long plan) throws CheckedException {
         synchronized (slock) {
             Discount discount = new Discount(this.conn, plan);
-            discount.lock();
-            discount.load();
+            try {
+                discount.lock();
+                discount.load();
+            } finally {
+                discount.unlock();
+            }
             if (discount.getPlanType() == PlanType.FlexibleDiscount) {
                 List<FlexibleDiscountEntry> entries = getFlexiblePlanEntries(plan, null);
                 for (FlexibleDiscountEntry c : entries) {
-                    c.lock();
-                    c.delete();
+                    try {
+                        c.lock();
+                        c.delete();
+                    } finally {
+                        c.unlock();
+                    }
                 }
             }
             discount.delete();
@@ -564,10 +625,13 @@ public class CustomerController implements ICustomerAccessor {
             } else {
                 boolean stored = false;
                 for (FlexibleDiscountEntry c : entries) if (c.getRange().equals(range)) {
-                    c.lock();
-                    c.setPercentage(percentage);
-                    c.store();
-                    c.unlock();
+                    try {
+                        c.lock();
+                        c.setPercentage(percentage);
+                        c.store();
+                    } finally {
+                        c.unlock();
+                    }
                     stored = true;
                     break;
                 }
@@ -588,8 +652,12 @@ public class CustomerController implements ICustomerAccessor {
         synchronized (slock) {
             List<FlexibleDiscountEntry> entries = getFlexiblePlanEntries(plan, range);
             for (FlexibleDiscountEntry c : entries) if (c.getRange().equals(range)) {
-                c.lock();
-                c.delete();
+                try {
+                    c.lock();
+                    c.delete();
+                } finally {
+                    c.unlock();
+                }
             }
         }
     }
@@ -621,9 +689,12 @@ public class CustomerController implements ICustomerAccessor {
     public CustomerType getCustomerType(long customer) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+            } finally {
+                account.unlock();
+            }
             return account.getCustomerType();
         }
     }
@@ -639,11 +710,14 @@ public class CustomerController implements ICustomerAccessor {
     public void setCustomerType(long customer, CustomerType type) throws CheckedException {
         synchronized (slock) {
             Customer account = new Customer(this.conn, customer);
-            account.lock();
-            account.load();
-            account.setCustomerType(type);
-            account.store();
-            account.unlock();
+            try {
+                account.lock();
+                account.load();
+                account.setCustomerType(type);
+                account.store();
+            } finally {
+                account.unlock();
+            }
         }
     }
 
