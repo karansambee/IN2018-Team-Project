@@ -24,20 +24,21 @@ public interface IRateAccessor extends IRepairable {
      * @throws CheckedException An assurance error has occurred.
      */
     void assureUSDCurrency() throws CheckedException;
+
     /**
-     * Gets the conversion rate for the specified currency to USD.
+     * Gets the conversion rate for USD to the specified currency.
      *
      * @param currency The currency code.
-     * @return The conversion rate to USD.
+     * @return The conversion rate from USD.
      * @throws CheckedException The conversion rate retrieval failed.
      */
     Decimal getConversionRate(String currency) throws CheckedException;
 
     /**
-     * Sets the conversion rate for a specified currency to USD.
+     * Sets the conversion rate for USD to a specified currency.
      *
      * @param currency The currency code.
-     * @param rate The new conversion rate to USD.
+     * @param rate     The new conversion rate from USD.
      * @throws CheckedException The conversion rate storing failed.
      */
     void setConversionRate(String currency, Decimal rate) throws CheckedException;
