@@ -3,6 +3,7 @@ package skywaysolutions.app.database;
 import skywaysolutions.app.utils.CheckedException;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * This class provides a base class that is used by all database stored entities.
@@ -39,6 +40,13 @@ public abstract class DatabaseEntityBase {
         this(conn);
         _lock = locked;
     }
+
+    /**
+     * Gets the ID of the object that is used for caching.
+     *
+     * @return The ID of the object.
+     */
+    public abstract Object getPrimaryID();
 
     /**
      * Sets _loaded and _exists to true.
@@ -122,6 +130,16 @@ public abstract class DatabaseEntityBase {
     protected abstract void loadRow() throws CheckedException;
 
     /**
+     * This should load the current object from the passed result set.
+     *
+     * @param rs The result set to load from.
+     * @param locked If the object is considered locked.
+     * @throws SQLException An SQL error has occurred.
+     * @throws CheckedException An error has occurred.
+     */
+    public abstract void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException;
+
+    /**
      * This should delete the row corresponding to the current object.
      * Use {@link IDB_Connector#getStatement(String)} to get a {@link java.sql.PreparedStatement}.
      * ^ Don't forget to use the try([resource]) {}
@@ -167,6 +185,17 @@ public abstract class DatabaseEntityBase {
     }
 
     /**
+     * Marks the entity as locked (Must exist).
+     * Used for {@link DatabaseTableBase#lockAll()} on cache objects.
+     */
+    public final void markLocked() {
+        synchronized (slock) {
+            if (!_exists) return;
+            _lock = true;
+        }
+    }
+
+    /**
      * Marks the entity unlocked.
      * Used for when {@link DatabaseTableBase#unlockAll(boolean)} is called in order to make sure entities returned by
      * {@link DatabaseTableBase#loadMany(IFilterStatementCreator, MultiLoadSyncMode)} with {@link MultiLoadSyncMode#KeepLockedAfterLoad}
@@ -174,6 +203,17 @@ public abstract class DatabaseEntityBase {
      */
     public final void markUnlocked() {
         synchronized (slock) {
+            _lock = false;
+        }
+    }
+
+    /**
+     * Marks the entity deleted.
+     * Used for {@link DatabaseTableBase#deleteAll()} on cache objects.
+     */
+    public final void markDeleted() {
+        synchronized (slock) {
+            _exists = false;
             _lock = false;
         }
     }
@@ -274,5 +314,17 @@ public abstract class DatabaseEntityBase {
      */
     public final boolean isLoaded() {
         return _loaded;
+    }
+
+    /**
+     * Sets the locked state.
+     * Used for {@link #loadFrom(ResultSet, boolean)}.
+     *
+     * @param locked The lock state.
+     */
+    protected final void setLockedState(boolean locked) {
+        synchronized (slock) {
+            _lock = locked;
+        }
     }
 }

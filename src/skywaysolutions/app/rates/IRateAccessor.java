@@ -11,6 +11,14 @@ import skywaysolutions.app.utils.IRepairable;
  */
 public interface IRateAccessor extends IRepairable {
     /**
+     * Refreshes a cached conversion rate.
+     *
+     * @param currency The currency code.
+     * @throws CheckedException The cache refresh operation failed.
+     */
+    void refreshConversionRate(String currency) throws CheckedException;
+
+    /**
      * Assures that the USD currency is defined.
      *
      * @throws CheckedException An assurance error has occurred.

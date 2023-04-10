@@ -13,6 +13,14 @@ import skywaysolutions.app.utils.PersonalInformation;
 public interface IStaffAccessor extends IRepairable {
 
     /**
+     * Refreshes the cache of the specified account.
+     *
+     * @param id The ID of the account.
+     * @throws CheckedException An error occurred during refresh.
+     */
+    void refreshAccount(long id) throws CheckedException;
+
+    /**
      * Assures the default administrator account of ID 1 exists.
      *
      * @throws CheckedException An assurance error has occurred.

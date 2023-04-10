@@ -36,6 +36,19 @@ public class AccountController implements IStaffAccessor {
     }
 
     /**
+     * Refreshes the cache of the specified account.
+     *
+     * @param id The ID of the account.
+     * @throws CheckedException An error occurred during refresh.
+     */
+    @Override
+    public void refreshAccount(long id) throws CheckedException {
+        synchronized (slock) {
+            accessor.load(id, true);
+        }
+    }
+
+    /**
      * Assures the default administrator account of ID 1 exists.
      *
      * @throws CheckedException An assurance error has occurred.
@@ -43,7 +56,7 @@ public class AccountController implements IStaffAccessor {
     @Override
     public void assureDefaultAdministratorAccount() throws CheckedException {
         synchronized (slock) {
-            Account dAdmin = new Account(conn, 1L);
+            Account dAdmin = accessor.load(1L, true);
             if (dAdmin.exists(true)) {
                 try {
                     dAdmin.lock();
@@ -102,6 +115,7 @@ public class AccountController implements IStaffAccessor {
                 throw new CheckedException("Account already exists");
             } else {
                 newAccount.store();
+                accessor.cacheOne(newAccount);
                 return newAccount.getAccountID();
             }
         }
@@ -521,6 +535,20 @@ public class AccountController implements IStaffAccessor {
         synchronized (slock) {
             conn.getTableList(true);
             if (tableName.equals("Staff")) accessor.assureTableSchema();
+        }
+    }
+
+    /**
+     * Refreshes the cache of a table accessor.
+     *
+     * @param tableName The name of the table to refresh the cache of.
+     * @throws CheckedException The table could not be refreshed.
+     */
+    @Override
+    public void refreshCache(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            if (tableName.equals("Staff")) accessor.refreshAll();
         }
     }
 

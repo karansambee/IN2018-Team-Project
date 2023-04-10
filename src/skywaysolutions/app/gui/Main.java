@@ -65,10 +65,6 @@ public class Main extends JFrame {
                 hideFrame();
             }
         });
-        //Add Tab Change Listener
-        tabbedPaneMain.addChangeListener(e -> {
-            if (tabbedPaneMain.getSelectedIndex() > -1) tabs.get(tabbedPaneMain.getSelectedIndex()).refresh();
-        });
         //Add button events
         exitButton.addActionListener(e -> hideFrame());
         logoutButton.addActionListener(e -> newLogin());
@@ -105,7 +101,10 @@ public class Main extends JFrame {
             //Add tabs
             dashboardTab.refresh();
             try {
-                for (ITab c : tabs) if (c.accessAllowed()) tabbedPaneMain.addTab(c.getCaption(), (Component) c);
+                for (ITab c : tabs) if (c.accessAllowed()) {
+                    tabbedPaneMain.addTab(c.getCaption(), (Component) c);
+                    c.refresh();
+                }
             } catch (CheckedException e) {
                 statusBar.setStatus(e, 2500);
             }

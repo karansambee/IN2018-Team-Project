@@ -70,6 +70,30 @@ public class TransactionTableAccessor extends DatabaseTableBase<Transaction> {
         return "TranscationID   bigint(19) NOT NULL PRIMARY KEY AUTO_INCREMENT";
     }
 
+    /**
+     * Gets the ID of the object in the result set position.
+     *
+     * @param rs The result set.
+     * @return The ID.
+     * @throws SQLException An SQL error has occurred.
+     */
+    @Override
+    protected Object getObjectID(ResultSet rs) throws SQLException {
+        return rs.getLong(getIDColumnName());
+    }
+
+    /**
+     * Loads one object via its ID.
+     *
+     * @param ID The ID of the object to load.
+     * @return The object.
+     * @throws CheckedException A load error has occurred.
+     */
+    @Override
+    protected Transaction loadOne(Object ID) throws CheckedException {
+        return internalLoad(new Transaction(conn, (Long) ID));
+    }
+
     @Override
     protected void createAllAuxRows() throws CheckedException {
         createAllAuxRowsLongID();

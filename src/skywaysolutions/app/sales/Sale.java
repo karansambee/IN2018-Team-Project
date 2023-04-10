@@ -76,24 +76,19 @@ public class Sale extends DatabaseEntityBase {
         this.preDiscountCost = preDiscountCost;
     }
 
-    Sale(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+    Sale(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException, CheckedException {
         super(conn, locked);
-        setLoadedAndExists();
-        blankNumber = rs.getLong("BlankNumber");
-        customerID = rs.getLong("CustomerID");
-        currency = rs.getString("CurrencyName");
-        saleType = SaleType.getSaleTypeFromValue(rs.getInt("SaleType"));
-        commissionRate = new Decimal(rs.getDouble("CommissonRate"),2);
-        saleDate = Time.fromSQLDate(rs.getDate("SaleDate"));
-        dueDate = Time.fromSQLDate(rs.getDate("DueDate"));
-        cost = new Decimal(rs.getDouble("Cost"), 2);
-        Double ciusd = ResultSetNullableReturners.getDoubleValue(rs, "CostInUSD");
-        costInUSD = (ciusd == null) ? null : new Decimal(ciusd, 2);
-        tax = new Decimal(rs.getDouble("Tax"), 2);
-        Double at = ResultSetNullableReturners.getDoubleValue(rs, "AdditionalTax");
-        additionalTax = (at == null) ? null : new Decimal(at, 2);
-        Double pdc = ResultSetNullableReturners.getDoubleValue(rs, "PreDiscountCost");
-        preDiscountCost = (pdc == null) ? null : new Decimal(pdc, 2);
+        loadFrom(rs, locked);
+    }
+
+    /**
+     * Gets the ID of the object that is used for caching.
+     *
+     * @return The ID of the object.
+     */
+    @Override
+    public Object getPrimaryID() {
+        return blankNumber;
     }
 
     @Override
@@ -188,6 +183,35 @@ public class Sale extends DatabaseEntityBase {
         } catch (SQLException e) {
             throw new CheckedException(e);
         }
+    }
+
+    /**
+     * This should load the current object from the passed result set.
+     *
+     * @param rs     The result set to load from.
+     * @param locked If the object is considered locked.
+     * @throws SQLException     An SQL error has occurred.
+     * @throws CheckedException An error has occurred.
+     */
+    @Override
+    public void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException {
+        setLoadedAndExists();
+        setLockedState(locked);
+        blankNumber = rs.getLong("BlankNumber");
+        customerID = rs.getLong("CustomerID");
+        currency = rs.getString("CurrencyName");
+        saleType = SaleType.getSaleTypeFromValue(rs.getInt("SaleType"));
+        commissionRate = new Decimal(rs.getDouble("CommissonRate"),2);
+        saleDate = Time.fromSQLDate(rs.getDate("SaleDate"));
+        dueDate = Time.fromSQLDate(rs.getDate("DueDate"));
+        cost = new Decimal(rs.getDouble("Cost"), 2);
+        Double ciusd = ResultSetNullableReturners.getDoubleValue(rs, "CostInUSD");
+        costInUSD = (ciusd == null) ? null : new Decimal(ciusd, 2);
+        tax = new Decimal(rs.getDouble("Tax"), 2);
+        Double at = ResultSetNullableReturners.getDoubleValue(rs, "AdditionalTax");
+        additionalTax = (at == null) ? null : new Decimal(at, 2);
+        Double pdc = ResultSetNullableReturners.getDoubleValue(rs, "PreDiscountCost");
+        preDiscountCost = (pdc == null) ? null : new Decimal(pdc, 2);
     }
 
     @Override

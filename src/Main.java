@@ -3,6 +3,7 @@ import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.gui.Prompt;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
+import skywaysolutions.app.utils.Decimal;
 
 import java.util.concurrent.CountDownLatch;
 

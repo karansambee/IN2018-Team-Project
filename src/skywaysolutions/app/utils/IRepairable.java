@@ -37,4 +37,12 @@ public interface IRepairable {
      * @throws CheckedException The table could not be assured.
      */
     void assureExistence(String tableName) throws CheckedException;
+
+    /**
+     * Refreshes the cache of a table accessor.
+     *
+     * @param tableName The name of the table to refresh the cache of.
+     * @throws CheckedException The table could not be refreshed.
+     */
+    void refreshCache(String tableName) throws CheckedException;
 }

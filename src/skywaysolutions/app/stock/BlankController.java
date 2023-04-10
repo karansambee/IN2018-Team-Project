@@ -35,6 +35,28 @@ public class BlankController implements IStockAccessor {
     }
 
     /**
+     * Refreshes a blank's cache given the ID.
+     *
+     * @param id The ID of the blank.
+     * @throws CheckedException A refresh error has occurred.
+     */
+    @Override
+    public void refreshBlank(long id) throws CheckedException {
+        blankTableAccessor.load(id, true);
+    }
+
+    /**
+     * Refreshes a blank type's cache given the ID.
+     *
+     * @param id The ID of the blank.
+     * @throws CheckedException A refresh error has occurred.
+     */
+    @Override
+    public void refreshBlankType(int id) throws CheckedException {
+        blankTypeTableAccessor.load(id, true);
+    }
+
+    /**
      * Creates a blank with the specified ID,
      * an ID of a staff member it's assigned to (Not assigned if -1)
      * and a description of the blanks contents.
@@ -53,6 +75,7 @@ public class BlankController implements IStockAccessor {
                 throw new CheckedException("Blank already exists");
             } else {
                 newBlank.store();
+                blankTableAccessor.cacheOne(newBlank);
             }
         }
     }
@@ -66,10 +89,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void returnBlank(long id, Date returnedDate) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
+            Blank blank = blankTableAccessor.load(id, true);
             try {
                 blank.lock();
-                blank.load();
                 blank.setReturned(returnedDate);
                 blank.store();
             } finally {
@@ -87,10 +109,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void blacklistBlank(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
+            Blank blank = blankTableAccessor.load(id, true);
             try {
                 blank.lock();
-                blank.load();
                 blank.setBlackListed(true);
                 blank.store();
             } finally {
@@ -108,10 +129,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void voidBlank(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
+            Blank blank = blankTableAccessor.load(id, true);
             try {
                 blank.lock();
-                blank.load();
                 blank.setVoided(true);
                 blank.store();
             } finally {
@@ -130,14 +150,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public int getBlankType(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
-            try {
-                blank.lock();
-                blank.load();
-            } finally {
-                blank.unlock();
-            }
-            return blank.getBlankType();
+            return blankTableAccessor.load(id, false).getBlankType();
         }
     }
 
@@ -169,14 +182,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public boolean isBlankReturned(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
-            try {
-                blank.lock();
-                blank.load();
-            } finally {
-                blank.unlock();
-            }
-            return blank.isReturned() != null;
+            return blankTableAccessor.load(id, false).isReturned() != null;
         }
     }
 
@@ -190,15 +196,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public Date getBlankReturnedDate(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
-            try {
-                blank.lock();
-                blank.load();
-                blank.unlock();
-            } finally {
-                blank.unlock();
-            }
-            return blank.isReturned();
+            return blankTableAccessor.load(id, false).isReturned();
         }
     }
 
@@ -212,14 +210,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public boolean isBlankBlacklisted(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
-            try {
-                blank.lock();
-                blank.load();
-            } finally {
-                blank.unlock();
-            }
-            return blank.isBlackListed();
+            return blankTableAccessor.load(id, false).isBlackListed();
         }
     }
 
@@ -233,14 +224,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public boolean isBlankVoided(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
-            try {
-                blank.lock();
-                blank.load();
-            } finally {
-                blank.unlock();
-            }
-            return blank.isVoided();
+            return blankTableAccessor.load(id, false).isVoided();
         }
     }
 
@@ -259,6 +243,7 @@ public class BlankController implements IStockAccessor {
                 throw new CheckedException("Blank Type exists");
             } else {
                 newBlankType.store();
+                blankTypeTableAccessor.cacheOne(newBlankType);
             }
         }
     }
@@ -273,14 +258,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public String getBlankTypeDescription(int typeCode) throws CheckedException {
         synchronized (slock) {
-            BlankType blankType = new BlankType(conn, typeCode);
-            try {
-                blankType.lock();
-                blankType.load();
-            } finally {
-                blankType.unlock();
-            }
-            return blankType.getDescription();
+            return blankTypeTableAccessor.load(typeCode, false).getDescription();
         }
     }
 
@@ -294,7 +272,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public void setBlankTypeDescription(int typeCode, String description) throws CheckedException {
         synchronized (slock) {
-            BlankType blankType = new BlankType(conn, typeCode);
+            BlankType blankType = blankTypeTableAccessor.load(typeCode, true);
             try {
                 blankType.lock();
                 blankType.load();
@@ -315,7 +293,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public void deleteBlankType(int typeCode) throws CheckedException {
         synchronized (slock) {
-            BlankType blankType = new BlankType(conn, typeCode);
+            BlankType blankType = blankTypeTableAccessor.load(typeCode, false);
             try {
                 blankType.lock();
                 blankType.delete();
@@ -351,14 +329,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public String getBlankDescription(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
-            try {
-                blank.lock();
-                blank.load();
-            } finally {
-                blank.unlock();
-            }
-            return blank.getDescription();
+            return blankTableAccessor.load(id, false).getDescription();
         }
     }
 
@@ -372,10 +343,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void setBlankDescription(long id, String description) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
+            Blank blank = blankTableAccessor.load(id, true);
             try {
                 blank.lock();
-                blank.load();
                 blank.setDescription(description);
                 blank.store();
             } finally {
@@ -396,10 +366,9 @@ public class BlankController implements IStockAccessor {
     public void reAssignBlank(long id, long assignedID, Date assignmentDate) throws CheckedException {
         synchronized (slock) {
             if (assignedID < -1) assignedID = -1;
-            Blank blank = new Blank(conn, id);
+            Blank blank = blankTableAccessor.load(id, true);
             try {
                 blank.lock();
-                blank.load();
                 blank.setAssignedStaffID(assignedID, assignmentDate);
                 blank.store();
             } finally {
@@ -411,14 +380,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public Date getBlankCreationDate(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
-            try {
-                blank.lock();
-                blank.load();
-            } finally {
-                blank.unlock();
-            }
-            return blank.getAssignmentDate();
+            return blankTableAccessor.load(id, false).getAssignmentDate();
         }
     }
 
@@ -432,10 +394,9 @@ public class BlankController implements IStockAccessor {
     @Override
     public void setBlankCreationDate(long id, Date date) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
+            Blank blank = blankTableAccessor.load(id, true);
             try {
                 blank.lock();
-                blank.load();
                 blank.setCreationDate(date);
                 blank.store();
             } finally {
@@ -448,14 +409,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public Date getBlankAssignmentDate(long id) throws CheckedException {
         synchronized (slock) {
-            Blank blank = new Blank(conn, id);
-            try {
-                blank.lock();
-                blank.load();
-            } finally {
-                blank.unlock();
-            }
-            return blank.getAssignmentDate();
+            return blankTableAccessor.load(id, false).getAssignmentDate();
         }
     }
 
@@ -510,6 +464,21 @@ public class BlankController implements IStockAccessor {
             conn.getTableList(true);
             if (tableName.equals("Blank")) blankTableAccessor.assureTableSchema();
             else if (tableName.equals("BlankType")) blankTypeTableAccessor.assureTableSchema();
+        }
+    }
+
+    /**
+     * Refreshes the cache of a table accessor.
+     *
+     * @param tableName The name of the table to refresh the cache of.
+     * @throws CheckedException The table could not be refreshed.
+     */
+    @Override
+    public void refreshCache(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            if (tableName.equals("Blank")) blankTableAccessor.refreshAll();
+            else if (tableName.equals("BlankType")) blankTypeTableAccessor.refreshAll();
         }
     }
 

@@ -1,9 +1,12 @@
 package skywaysolutions.app.gui.control;
 
 import skywaysolutions.app.utils.CheckedException;
+import skywaysolutions.app.utils.Time;
 
 import javax.swing.*;
 import java.awt.event.*;
+import java.time.temporal.TemporalUnit;
+import java.util.Date;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -16,6 +19,7 @@ public class VTextField extends JTextField {
     protected Pattern pattern;
     protected FocusAdapter focusAdapter;
     protected ActionListener actionListener;
+    protected Date lastInvokeTime;
     private final Object slock = new Object();
 
     /**
@@ -56,7 +60,10 @@ public class VTextField extends JTextField {
         if (pattern != null && !pattern.matcher(getText()).matches()) {
             if (statusBar != null && invalidMessage != null) statusBar.setStatus(invalidMessage, "", 2500);
             if (clear) setText("");
-            if (focus) requestFocusInWindow();
+            if (focus && (lastInvokeTime == null || lastInvokeTime.toInstant().plusSeconds(1).getEpochSecond() < Time.now().toInstant().getEpochSecond())) {
+                lastInvokeTime = Time.now();
+                requestFocusInWindow();
+            }
         }
     }
 

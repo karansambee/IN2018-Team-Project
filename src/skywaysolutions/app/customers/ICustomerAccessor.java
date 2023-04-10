@@ -13,6 +13,29 @@ import java.util.Date;
  * @author Alfred Manville
  */
 public interface ICustomerAccessor extends IRepairable {
+    /**
+     * Refreshes the cache of the customer entity of the given ID.
+     *
+     * @param id The entity ID.
+     * @throws CheckedException The refresh operation fails.
+     */
+    void refreshCustomer(long id) throws CheckedException;
+
+    /**
+     * Refreshes the cache of the discount entity of the given ID.
+     *
+     * @param id The entity ID.
+     * @throws CheckedException The refresh operation fails.
+     */
+    void refreshDiscount(long id) throws CheckedException;
+
+    /**
+     * Refreshes the cache of the flexible discount entry entity of the given ID.
+     *
+     * @param id The entity ID.
+     * @throws CheckedException The refresh operation fails.
+     */
+    void refreshFlexibleDiscountEntry(long id) throws CheckedException;
 
     /**
      * Allows for an account to be created.

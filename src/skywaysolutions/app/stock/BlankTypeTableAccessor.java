@@ -92,6 +92,30 @@ public class BlankTypeTableAccessor extends DatabaseTableBase<BlankType> {
     }
 
     /**
+     * Gets the ID of the object in the result set position.
+     *
+     * @param rs The result set.
+     * @return The ID.
+     * @throws SQLException An SQL error has occurred.
+     */
+    @Override
+    protected Object getObjectID(ResultSet rs) throws SQLException {
+        return rs.getInt(getIDColumnName());
+    }
+
+    /**
+     * Loads one object via its ID.
+     *
+     * @param ID The ID of the object to load.
+     * @return The object.
+     * @throws CheckedException A load error has occurred.
+     */
+    @Override
+    protected BlankType loadOne(Object ID) throws CheckedException {
+        return internalLoad(new BlankType(conn, (Integer) ID));
+    }
+
+    /**
      * This should insert all the aux rows.
      * Select all the IDs from the main table to get what to insert.
      * Use {@link IDB_Connector#getStatement(String)} to get a {@link PreparedStatement}.
