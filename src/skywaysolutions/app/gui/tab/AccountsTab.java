@@ -4,6 +4,9 @@ import skywaysolutions.app.gui.AccountEditor;
 import skywaysolutions.app.gui.Prompt;
 import skywaysolutions.app.gui.control.NonEditableDefaultTableModel;
 import skywaysolutions.app.gui.control.StatusBar;
+import skywaysolutions.app.gui.hoster.HostRunner;
+import skywaysolutions.app.gui.hoster.IHostInvokable;
+import skywaysolutions.app.staff.Account;
 import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
@@ -11,8 +14,6 @@ import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.PersonalInformation;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ import java.util.List;
  *
  * @author Alfred Manville
  */
-public class AccountsTab extends JPanel implements ITab {
+public class AccountsTab extends JPanel implements ITab, IHostInvokable {
     private JPanel Root;
     private JButton buttonAdd;
     private JButton buttonEdit;
@@ -40,9 +41,14 @@ public class AccountsTab extends JPanel implements ITab {
     private AccessorManager manager;
     private final Object slock = new Object();
     private boolean setupNotDone = true;
+    private boolean isAdmin = false;
+    private final HostRunner runner;
 
     public AccountsTab() {
         super(true);
+        //Create host runner
+        runner = new HostRunner(this, statusBar);
+        runner.start();
         //Populate table
         tableModel = new NonEditableDefaultTableModel(new Object[] {"ID", "Email", "Name", "Role", "Currency", "Commission %"}, 0);
         tableListed.getTableHeader().setReorderingAllowed(false);
@@ -71,40 +77,23 @@ public class AccountsTab extends JPanel implements ITab {
         buttonDelete.addActionListener(e -> {
             if (setupNotDone) return;
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
+                prompt.setTitle("Are You Sure?");
                 prompt.setContents("Are you sure you want to delete the account(s)?\nThis operation may fail.");
-                prompt.setButtons(new String[] {"Yes", "No"}, 0);
+                prompt.setButtons(new String[] {"No", "Yes"}, 0);
                 prompt.showDialog();
-                if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes")) {
-                    try {
-                        int[] rows = tableListed.getSelectedRows();
-                        for (int i = rows.length - 1; i >= 0; i--) {
-                            manager.staffAccessor.deleteAccount(tableBacker.get(rows[i]));
-                            tableListed.removeRowSelectionInterval(rows[i], rows[i]);
-                            tableModel.removeRow(rows[i]);
-                            tableBacker.remove(rows[i]);
-                        }
-                    } catch (CheckedException ex) {
-                        statusBar.setStatus(ex, 2500);
-                    }
-                    refresh();
-                }
+                if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes"))
+                    invDeleteAccount();
             }
         });
         buttonDisable.addActionListener(e -> {
             if (setupNotDone) return;
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
+                prompt.setTitle("Are You Sure?");
                 prompt.setContents("Are you sure you want to disable the account(s)?");
-                prompt.setButtons(new String[]{"Yes", "No"}, 0);
+                prompt.setButtons(new String[]{"No", "Yes"}, 0);
                 prompt.showDialog();
-                if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes")) {
-                    try {
-                        int[] rows = tableListed.getSelectedRows();
-                        for (int i = rows.length - 1; i >= 0; i--)
-                            manager.staffAccessor.clearPassword(tableBacker.get(rows[i]));
-                    } catch (CheckedException ex) {
-                        statusBar.setStatus(ex, 2500);
-                    }
-                }
+                if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes"))
+                    invDisableAccount();
             }
         });
         buttonRefresh.addActionListener(e -> {
@@ -114,8 +103,8 @@ public class AccountsTab extends JPanel implements ITab {
         tableListed.getSelectionModel().addListSelectionListener(e -> {
             boolean enb = tableListed.getSelectedRows().length > 0;
             buttonEdit.setEnabled(enb);
-            buttonDelete.setEnabled(enb);
-            buttonDisable.setEnabled(enb);
+            buttonDelete.setEnabled(enb && isAdmin);
+            buttonDisable.setEnabled(enb && isAdmin);
         });
         //Setup contents (Tab requires explicit adding)
         setLayout(new GridBagLayout());
@@ -148,6 +137,7 @@ public class AccountsTab extends JPanel implements ITab {
      */
     @Override
     public void refresh() {
+        if (setupNotDone) return;
         try {
             if (comboBoxFilter.getSelectedIndex() > 1 && manager.staffAccessor.getAccountRole(null) != StaffRole.Administrator)
                 comboBoxFilter.setSelectedIndex(1);
@@ -179,34 +169,104 @@ public class AccountsTab extends JPanel implements ITab {
     }
 
     private void refresh(int selectionIndex) {
-        tableModel.setRowCount(0);
-        tableBacker.clear();
+        if (setupNotDone) return;
+        runner.addEvent("refreshClear", null);
         try {
-            buttonAdd.setEnabled(manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator);
-            String[] accounts = manager.staffAccessor.listAccounts((manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator) ?
-                    StaffRole.getStaffRoleFromValue(comboBoxFilter.getSelectedIndex() - 1) : StaffRole.Advisor);
-            for (String c : accounts) addRow(c);
+            isAdmin = manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator;
+            runner.addEvent("refreshAccounts", new Object[] {selectionIndex});
         } catch (CheckedException e) {
+            isAdmin = false;
             statusBar.setStatus(e, 2500);
         }
+        buttonAdd.setEnabled(isAdmin);
+        buttonDisable.setEnabled(isAdmin);
         boolean enb = selectionIndex > -1;
-        if (enb) tableListed.addRowSelectionInterval(selectionIndex, selectionIndex);
         buttonEdit.setEnabled(enb);
-        buttonDelete.setEnabled(enb);
-        buttonDisable.setEnabled(enb);
+        buttonDelete.setEnabled(enb && isAdmin);
+        buttonDisable.setEnabled(enb && isAdmin);
+    }
+
+    private void invDeleteAccount() {
+        int[] rows = tableListed.getSelectedRows();
+        String[] accs = new String[rows.length];
+        for (int i = 0; i < rows.length; i++)
+            accs[i] = tableBacker.get(rows[i]);
+        runner.addEvent("deleteAccount", new Object[] {rows, accs});
+    }
+
+    private void invDisableAccount() {
+        int[] rows = tableListed.getSelectedRows();
+        String[] accs = new String[rows.length];
+        for (int i = 0; i < rows.length; i++)
+            accs[i] = tableBacker.get(rows[i]);
+        runner.addEvent("disableAccount", new Object[] {accs});
+    }
+
+    /**
+     * Invokes using the specified command ID and arguments.
+     *
+     * @param id The command ID.
+     * @param args The arguments.
+     * @throws CheckedException An error has occurred.
+     */
+    @Override
+    public void invoke(String id, Object[] args) throws CheckedException {
+        switch (id) {
+            case "deleteAccount" -> {
+                int[] rows = (int[]) args[0];
+                String[] accs = (String[]) args[1];
+                for (int i = rows.length - 1; i >= 0; i--) {
+                    manager.staffAccessor.deleteAccount(accs[i]);
+                    int finalI = i;
+                    SwingUtilities.invokeLater(() -> {
+                        synchronized (slock) {
+                            tableModel.removeRow(rows[finalI]);
+                            tableBacker.remove(rows[finalI]);
+                        }
+                    });
+                }
+            }
+            case "disableAccount" -> {
+                String[] accs = (String[]) args[0];
+                for (int i = accs.length - 1; i >= 0; i--)
+                    manager.staffAccessor.clearPassword(accs[i]);
+            }
+            case "refreshClear" -> {
+                SwingUtilities.invokeLater(() -> {
+                    synchronized (slock) {
+                        tableModel.setRowCount(0);
+                        tableBacker.clear();
+                    }
+                });
+            }
+            case "refreshAccounts" -> {
+                String[] accounts = manager.staffAccessor.listAccounts((isAdmin) ?
+                        StaffRole.getStaffRoleFromValue(comboBoxFilter.getSelectedIndex() - 1) : StaffRole.Advisor);
+                for (String c : accounts) addRow(c);
+                int selectionIndex = (int) args[0];
+                if (selectionIndex > -1) SwingUtilities.invokeLater(() -> tableListed.addRowSelectionInterval(selectionIndex, selectionIndex));
+            }
+        }
     }
 
     private void addRow(String email) {
-        synchronized (slock) {
-            try {
-                PersonalInformation pi = manager.staffAccessor.getPersonalInformation(email);
-                Decimal comp = manager.staffAccessor.getCommission(email);
-                tableModel.addRow(new Object[] {manager.staffAccessor.getAccountID(email), email, pi.getFirstName() + " " + pi.getLastName(),
-                        manager.staffAccessor.getAccountRole(email).toString(), manager.staffAccessor.getCurrency(email), (comp == null) ? "N/A" : comp.toString()});
-                tableBacker.add(email);
-            } catch (CheckedException e) {
+        try {
+            long id = manager.staffAccessor.getAccountID(email);
+            PersonalInformation pi = manager.staffAccessor.getPersonalInformation(email);
+            Decimal comp = manager.staffAccessor.getCommission(email);
+            StaffRole sr = manager.staffAccessor.getAccountRole(email);
+            String cr = manager.staffAccessor.getCurrency(email);
+            SwingUtilities.invokeLater(() -> {
+                synchronized (slock) {
+                    tableModel.addRow(new Object[] {id, email, pi.getFirstName() + " " + pi.getLastName(),
+                            sr.toString(), cr, (comp == null) ? "N/A" : comp.toString()});
+                    tableBacker.add(email);
+                }
+            });
+        } catch (CheckedException e) {
+            SwingUtilities.invokeLater(() -> {
                 statusBar.setStatus(e, 2500);
-            }
+            });
         }
     }
 }

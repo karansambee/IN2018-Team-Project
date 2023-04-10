@@ -54,7 +54,7 @@ public class DateField extends JPanel {
      */
     public void setup(StatusBar statusBar) throws CheckedException {
         this.statusBar = statusBar;
-        textFieldDate.setup("([0-9]{4})\\-([0-9]{1,2})\\-([0-9]{1,2})", statusBar, "Invalid Date Entered", true, true);
+        textFieldDate.setup("([0-9]{4})\\-([0-9]|0[0-9]|1[0-2])\\-([0-9]|[0-3][0-9])", statusBar, "Invalid Date Entered", true, true);
         //Setup help
         statusBar.registerComponentForHelp(textFieldDate, "Date format is yyyy-mm-dd.\nBut yyyy-m-dd, yyyy-mm-d, yyyy-m-d are also supported.");
         statusBar.registerComponentForHelp(buttonGetDate, "Gets today's date.");

@@ -44,18 +44,19 @@ public class Blank extends DatabaseEntityBase {
         assignmentDate = assignment;
     }
 
-    public Blank(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+    public Blank(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException, CheckedException {
         super(conn, locked);
-        setLoadedAndExists();
-        blankID = rs.getInt("BlankNumber");
-        assignedStaffID = rs.getLong("StaffID");
-        typeID = rs.getInt("TypeNumber");
-        description = rs.getString("BlankDescription");
-        blackListed = rs.getBoolean("BlackListed");
-        voided = rs.getBoolean("Void");
-        creationDate = Time.fromSQLDate(rs.getDate("ReceivedDate"));
-        assignmentDate = Time.fromSQLDate(ResultSetNullableReturners.getDateValue(rs, "AssignedDate"));
-        returned = Time.fromSQLDate(ResultSetNullableReturners.getDateValue(rs, "ReturnedDate"));
+        loadFrom(rs, locked);
+    }
+
+    /**
+     * Gets the ID of the object that is used for caching.
+     *
+     * @return The ID of the object.
+     */
+    @Override
+    public Object getPrimaryID() {
+        return blankID;
     }
 
     @Override
@@ -140,6 +141,29 @@ public class Blank extends DatabaseEntityBase {
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
+    }
+
+    /**
+     * This should load the current object from the passed result set.
+     *
+     * @param rs     The result set to load from.
+     * @param locked If the object is considered locked.
+     * @throws SQLException     An SQL error has occurred.
+     * @throws CheckedException An error has occurred.
+     */
+    @Override
+    public void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException {
+        setLoadedAndExists();
+        setLockedState(locked);
+        blankID = rs.getInt("BlankNumber");
+        assignedStaffID = rs.getLong("StaffID");
+        typeID = rs.getInt("TypeNumber");
+        description = rs.getString("BlankDescription");
+        blackListed = rs.getBoolean("BlackListed");
+        voided = rs.getBoolean("Void");
+        creationDate = Time.fromSQLDate(rs.getDate("ReceivedDate"));
+        assignmentDate = Time.fromSQLDate(ResultSetNullableReturners.getDateValue(rs, "AssignedDate"));
+        returned = Time.fromSQLDate(ResultSetNullableReturners.getDateValue(rs, "ReturnedDate"));
     }
 
     @Override

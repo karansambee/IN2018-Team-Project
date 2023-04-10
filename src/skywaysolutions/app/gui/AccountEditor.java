@@ -165,21 +165,31 @@ public class AccountEditor extends JDialogx {
     }
 
     private void updateInterfaceState() throws CheckedException {
+        //Readonly staff ID if not editable
         swapControl(panelStaffID, spinnerStaffID, textFieldRStaffID, (accountName == null) ? spinnerStaffID : textFieldRStaffID);
-        swapControl(panelRole, comboBoxRole, textFieldRRole, (accountName == null) ? comboBoxRole : textFieldRRole);
+        //Readonly role selection if not editable
+        swapControl(panelRole, comboBoxRole, textFieldRRole, (accountName == null ||
+                (manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator &&
+                        !manager.staffAccessor.getLoggedInAccountEmail().equals(accountName))) ? comboBoxRole : textFieldRRole);
+
         personalInformationEditor.setEmailEditable(accountName == null);
+
         boolean canChangePassword = accountName == null || accountName.equals(manager.staffAccessor.getLoggedInAccountEmail()) ||
                 manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator;
+
         labelPassword.setEnabled(canChangePassword);
         passwordFieldPassword.setEnabled(canChangePassword);
         labelCPassword.setEnabled(canChangePassword);
         passwordFieldCPassword.setEnabled(canChangePassword);
+        //Readonly currency selection if not editable
         swapControl(panelCurrency, comboBoxCurrency, textFieldRCurrency, (manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator) ?
                 comboBoxCurrency : textFieldRCurrency);
+
         switch (StaffRole.getStaffRoleFromValue(comboBoxRole.getSelectedIndex())) {
             case Advisor -> {
                 boolean canChangeCommissionRate = manager.staffAccessor.getAccountRole(null) == StaffRole.Manager ||
                         manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator;
+
                 labelCommissionRate.setEnabled(canChangeCommissionRate);
                 textFieldCommissionRate.setEnabled(canChangeCommissionRate);
             }

@@ -120,6 +120,7 @@ public interface ISalesAccessor extends IRepairable {
 
     /**
      * Gets the sale given the ID.
+     * This will also refresh the cache.
      *
      * @param saleID The sale ID.
      * @return The sale corresponding to the ID.
@@ -129,6 +130,7 @@ public interface ISalesAccessor extends IRepairable {
 
     /**
      * Gets the transaction given the ID.
+     * This will also refresh the cache.
      *
      * @param transactionID The transaction ID.
      * @return The transaction corresponding to the ID.
@@ -138,6 +140,7 @@ public interface ISalesAccessor extends IRepairable {
 
     /**
      * Gets the refund given the ID.
+     * This will also refresh the cache.
      *
      * @param refundID The refund ID.
      * @return The refund corresponding to the ID.

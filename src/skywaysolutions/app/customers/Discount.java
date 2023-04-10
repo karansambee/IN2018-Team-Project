@@ -26,13 +26,19 @@ public class Discount extends DatabaseEntityBase {
         this.percentage = percentage;
     }
 
-    public Discount(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+    public Discount(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException, CheckedException {
         super(conn, locked);
-        setLoadedAndExists();
-        planID = rs.getLong("DiscountPlanID");
-        planType = PlanType.getPlanTypeFromValue(rs.getInt("DiscountType"));
-        Double dp = ResultSetNullableReturners.getDoubleValue(rs, "DiscountPercentage");
-        percentage = (dp == null) ? null : new Decimal(dp, 6);
+        loadFrom(rs, locked);
+    }
+
+    /**
+     * Gets the ID of the object that is used for caching.
+     *
+     * @return The ID of the object.
+     */
+    @Override
+    public Object getPrimaryID() {
+        return planID;
     }
 
     /**
@@ -160,6 +166,24 @@ public class Discount extends DatabaseEntityBase {
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
+    }
+
+    /**
+     * This should load the current object from the passed result set.
+     *
+     * @param rs     The result set to load from.
+     * @param locked If the object is considered locked.
+     * @throws SQLException     An SQL error has occurred.
+     * @throws CheckedException An error has occurred.
+     */
+    @Override
+    public void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException {
+        setLoadedAndExists();
+        setLockedState(locked);
+        planID = rs.getLong("DiscountPlanID");
+        planType = PlanType.getPlanTypeFromValue(rs.getInt("DiscountType"));
+        Double dp = ResultSetNullableReturners.getDoubleValue(rs, "DiscountPercentage");
+        percentage = (dp == null) ? null : new Decimal(dp, 6);
     }
 
 

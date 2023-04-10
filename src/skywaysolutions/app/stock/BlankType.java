@@ -27,11 +27,19 @@ public class BlankType extends DatabaseEntityBase {
         blankTypeID = id;
         this.description = description;
     }
-    public BlankType(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+    public BlankType(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException, CheckedException {
         super(conn, locked);
-        setLoadedAndExists();
-        blankTypeID = rs.getInt("TypeNumber");
-        description = rs.getString("TypeDescription");
+        loadFrom(rs, locked);
+    }
+
+    /**
+     * Gets the ID of the object that is used for caching.
+     *
+     * @return The ID of the object.
+     */
+    @Override
+    public Object getPrimaryID() {
+        return blankTypeID;
     }
 
     @Override
@@ -96,6 +104,22 @@ public class BlankType extends DatabaseEntityBase {
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
+    }
+
+    /**
+     * This should load the current object from the passed result set.
+     *
+     * @param rs     The result set to load from.
+     * @param locked If the object is considered locked.
+     * @throws SQLException     An SQL error has occurred.
+     * @throws CheckedException An error has occurred.
+     */
+    @Override
+    public void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException {
+        setLoadedAndExists();
+        setLockedState(locked);
+        blankTypeID = rs.getInt("TypeNumber");
+        description = rs.getString("TypeDescription");
     }
 
     @Override

@@ -35,6 +35,17 @@ public class RateController implements IRateAccessor {
     }
 
     /**
+     * Refreshes a cached conversion rate.
+     *
+     * @param currency The currency code.
+     * @throws CheckedException The cache refresh operation failed.
+     */
+    @Override
+    public void refreshConversionRate(String currency) throws CheckedException {
+        accessor.load(currency, true);
+    }
+
+    /**
      * Assures that the USD currency is defined.
      *
      * @throws CheckedException An assurance error has occurred.
@@ -42,7 +53,7 @@ public class RateController implements IRateAccessor {
     @Override
     public void assureUSDCurrency() throws CheckedException {
         synchronized (slock) {
-            ConversionRate rate = new ConversionRate(conn, "USD", "$", new Decimal(1));
+            ConversionRate rate = accessor.load("USD", true);
             if (rate.exists(true)) {
                 try {
                     rate.lock();
@@ -53,48 +64,40 @@ public class RateController implements IRateAccessor {
                     rate.unlock();
                 }
             } else {
+                rate = new ConversionRate(conn, "USD", "$", new Decimal(1));
                 rate.store();
+                accessor.cacheOne(rate);
             }
         }
     }
 
     /**
-     * Gets the conversion rate for the specified currency to USD.
+     * Gets the conversion rate for USD to the specified currency.
      *
      * @param currency The currency code.
-     * @return The conversion rate to USD.
+     * @return The conversion rate from USD.
      * @throws CheckedException The conversion rate retrieval failed.
      */
     @Override
     public Decimal getConversionRate(String currency) throws CheckedException {
         synchronized (slock) {
-            ConversionRate crate = new ConversionRate(conn, currency);
-            try {
-                crate.lock();
-                crate.load();
-            } finally {
-                crate.unlock();
-            }
-            return crate.getConversionRate();
+            return accessor.load(currency, false).getConversionRate();
         }
     }
 
     /**
-     * Sets the conversion rate for a specified currency to USD.
+     * Sets the conversion rate for USD to a specified currency.
      *
      * @param currency The currency code.
-     * @param rate     The new conversion rate to USD.
+     * @param rate     The new conversion rate from USD.
      * @throws CheckedException The conversion rate storing failed.
      */
     @Override
     public void setConversionRate(String currency, Decimal rate) throws CheckedException {
         synchronized (slock) {
-            ConversionRate crate = new ConversionRate(conn, currency);
+            ConversionRate crate = accessor.load(currency, true);
             try {
-                if (crate.exists(true)) {
-                    crate.lock();
-                    crate.load();
-                }
+                crate.lock();
                 crate.setConversionRate(rate);
                 crate.store();
             } finally {
@@ -113,14 +116,7 @@ public class RateController implements IRateAccessor {
     @Override
     public String getCurrencySymbol(String currency) throws CheckedException {
         synchronized (slock) {
-            ConversionRate crate = new ConversionRate(conn, currency);
-            try {
-                crate.lock();
-                crate.load();
-            } finally {
-                crate.unlock();
-            }
-            return crate.getCurrencySymbol();
+            return accessor.load(currency, false).getCurrencySymbol();
         }
     }
 
@@ -134,12 +130,9 @@ public class RateController implements IRateAccessor {
     @Override
     public void setCurrencySymbol(String currency, String symbol) throws CheckedException {
         synchronized (slock) {
-            ConversionRate crate = new ConversionRate(conn, currency);
+            ConversionRate crate = accessor.load(currency, true);
             try {
-                if (crate.exists(true)) {
-                    crate.lock();
-                    crate.load();
-                }
+                crate.lock();
                 crate.setCurrencySymbol(symbol);
                 crate.store();
             } finally {
@@ -157,7 +150,7 @@ public class RateController implements IRateAccessor {
     @Override
     public void removeConversionRate(String currency) throws CheckedException {
         synchronized (slock) {
-            ConversionRate crate = new ConversionRate(conn, currency);
+            ConversionRate crate = accessor.load(currency, false);
             try {
                 crate.lock();
                 crate.delete();
@@ -217,6 +210,34 @@ public class RateController implements IRateAccessor {
         synchronized (slock) {
             conn.getTableList(true);
             if (tableName.equals("ExchangeRate")) accessor.purgeTableSchema();
+        }
+    }
+
+    /**
+     * Assures the existence of a table.
+     *
+     * @param tableName The table to assure the existence of.
+     * @throws CheckedException The table could not be assured.
+     */
+    @Override
+    public void assureExistence(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            if (tableName.equals("ExchangeRate")) accessor.assureTableSchema();
+        }
+    }
+
+    /**
+     * Refreshes the cache of a table accessor.
+     *
+     * @param tableName The name of the table to refresh the cache of.
+     * @throws CheckedException The table could not be refreshed.
+     */
+    @Override
+    public void refreshCache(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            if (tableName.equals("ExchangeRate")) accessor.refreshAll();
         }
     }
 

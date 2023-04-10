@@ -64,22 +64,19 @@ public class Transaction extends DatabaseEntityBase {
      * @param locked If the object is already locked.
      * @throws SQLException An error has occurred.
      */
-    Transaction(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+    Transaction(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException, CheckedException {
         super(conn, locked);
-        setLoadedAndExists();
-        transactionID = rs.getLong("TranscationID");
-        saleID = rs.getLong("BlankNumber");
-        currency = rs.getString("CurrencyName");
-        PaymentType payType = PaymentType.getPaymentTypeFromValue(rs.getInt("PaymentType"));
-        payment = switch (payType) {
-            case Card -> Payment.getCardPayment(new Decimal(rs.getDouble("AmountPaid"), 2), rs.getLong("CardNumber"));
-            case Invoice -> Payment.getInvoicePayment(new Decimal(rs.getDouble("AmountPaid"), 2));
-            case Cheque -> Payment.getChequePayment(new Decimal(rs.getDouble("AmountPaid"), 2), rs.getLong("ChequeNumber"));
-            default -> Payment.getCashPayment(new Decimal(rs.getDouble("AmountPaid"), 2));
-        };
-        Double apiusd = ResultSetNullableReturners.getDoubleValue(rs, "AmountPaidInUSD");
-        amountPaidInUSD = (apiusd == null) ? null : new Decimal(apiusd, 2);
-        transactionDate = Time.fromSQLDate(rs.getDate("TransactionDate"));
+        loadFrom(rs, locked);
+    }
+
+    /**
+     * Gets the ID of the object that is used for caching.
+     *
+     * @return The ID of the object.
+     */
+    @Override
+    public Object getPrimaryID() {
+        return transactionID;
     }
 
     @Override
@@ -174,6 +171,33 @@ public class Transaction extends DatabaseEntityBase {
         } catch (SQLException e) {
             throw new CheckedException(e);
         }
+    }
+
+    /**
+     * This should load the current object from the passed result set.
+     *
+     * @param rs     The result set to load from.
+     * @param locked If the object is considered locked.
+     * @throws SQLException     An SQL error has occurred.
+     * @throws CheckedException An error has occurred.
+     */
+    @Override
+    public void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException {
+        setLoadedAndExists();
+        setLockedState(locked);
+        transactionID = rs.getLong("TranscationID");
+        saleID = rs.getLong("BlankNumber");
+        currency = rs.getString("CurrencyName");
+        PaymentType payType = PaymentType.getPaymentTypeFromValue(rs.getInt("PaymentType"));
+        payment = switch (payType) {
+            case Card -> Payment.getCardPayment(new Decimal(rs.getDouble("AmountPaid"), 2), rs.getLong("CardNumber"));
+            case Invoice -> Payment.getInvoicePayment(new Decimal(rs.getDouble("AmountPaid"), 2));
+            case Cheque -> Payment.getChequePayment(new Decimal(rs.getDouble("AmountPaid"), 2), rs.getLong("ChequeNumber"));
+            default -> Payment.getCashPayment(new Decimal(rs.getDouble("AmountPaid"), 2));
+        };
+        Double apiusd = ResultSetNullableReturners.getDoubleValue(rs, "AmountPaidInUSD");
+        amountPaidInUSD = (apiusd == null) ? null : new Decimal(apiusd, 2);
+        transactionDate = Time.fromSQLDate(rs.getDate("TransactionDate"));
     }
 
     @Override

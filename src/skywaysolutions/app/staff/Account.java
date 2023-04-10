@@ -28,15 +28,7 @@ public class Account extends DatabaseEntityBase {
 
     public Account(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException, CheckedException {
         super(conn, locked);
-        setLoadedAndExists();
-        accountID = rs.getLong("StaffID");
-        currency = ResultSetNullableReturners.getStringValue(rs, "CurrencyName");
-        role = StaffRole.getStaffRoleFromValue(rs.getInt("StaffRole"));
-        Double cr = ResultSetNullableReturners.getDoubleValue(rs, "ComissionRate");
-        commission = (cr == null) ? null : new Decimal(cr, 6);
-        info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"), Time.fromSQLDate(rs.getDate("DateOfBirth")),
-                rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
-        password = new PasswordString(rs.getBytes("HashedPassword"), rs.getBytes("PasswordSalt"));
+        loadFrom(rs, locked);
     }
 
     public Account(IDB_Connector conn, PersonalInformation info, StaffRole role, Decimal commission, String currency, PasswordString password, Long id) {
@@ -47,6 +39,16 @@ public class Account extends DatabaseEntityBase {
         this.commission = commission;
         this.currency = currency;
         this.password = password;
+    }
+
+    /**
+     * Gets the ID of the object that is used for caching.
+     *
+     * @return The ID of the object.
+     */
+    @Override
+    public Object getPrimaryID() {
+        return accountID;
     }
 
     /**
@@ -211,6 +213,28 @@ public class Account extends DatabaseEntityBase {
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
+    }
+
+    /**
+     * This should load the current object from the passed result set.
+     *
+     * @param rs     The result set to load from.
+     * @param locked If the object is considered locked.
+     * @throws SQLException An SQL error has occurred.
+     * @throws CheckedException An error has occurred.
+     */
+    @Override
+    public void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException {
+        setLoadedAndExists();
+        setLockedState(locked);
+        accountID = rs.getLong("StaffID");
+        currency = ResultSetNullableReturners.getStringValue(rs, "CurrencyName");
+        role = StaffRole.getStaffRoleFromValue(rs.getInt("StaffRole"));
+        Double cr = ResultSetNullableReturners.getDoubleValue(rs, "ComissionRate");
+        commission = (cr == null) ? null : new Decimal(cr, 6);
+        info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), rs.getString("EmailAddress"), Time.fromSQLDate(rs.getDate("DateOfBirth")),
+                rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
+        password = new PasswordString(rs.getBytes("HashedPassword"), rs.getBytes("PasswordSalt"));
     }
 
     /**

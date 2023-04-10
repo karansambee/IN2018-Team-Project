@@ -40,20 +40,19 @@ public class Customer extends DatabaseEntityBase {
         customerType = type;
     }
 
-    public Customer(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+    public Customer(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException, CheckedException {
         super(conn, locked);
-        setLoadedAndExists();
-        customerID = rs.getLong("CustomerID");
-        planID = ResultSetNullableReturners.getLongValue(rs, "DiscountPlanID");
-        currency = rs.getString("CurrencyName");
-        info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), ResultSetNullableReturners.getStringValue(rs, "EmailAddress"),
-                Time.fromSQLDate(rs.getDate("DateOfBirth")), rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
-        Double adc = ResultSetNullableReturners.getDoubleValue(rs, "AccountDiscountCredit");
-        accountDiscountCredit = (adc == null) ? null : new Decimal(adc, 2);
-        purchaseAccumulation = new Decimal(rs.getDouble("PurchaseAccumulation"), 2);
-        purchaseMonthStart = Time.fromSQLDate(rs.getDate("PurchaseMonthBeginning"));
-        alias = rs.getString("Alias");
-        customerType = CustomerType.getCustomerTypeFromValue(rs.getInt("CustomerType"));
+        loadFrom(rs, locked);
+    }
+
+    /**
+     * Gets the ID of the object that is used for caching.
+     *
+     * @return The ID of the object.
+     */
+    @Override
+    public Object getPrimaryID() {
+        return customerID;
     }
 
     /**
@@ -218,6 +217,31 @@ public class Customer extends DatabaseEntityBase {
         } catch (SQLException throwables) {
             throw new CheckedException(throwables);
         }
+    }
+
+    /**
+     * This should load the current object from the passed result set.
+     *
+     * @param rs     The result set to load from.
+     * @param locked If the object is considered locked.
+     * @throws SQLException     An SQL error has occurred.
+     * @throws CheckedException An error has occurred.
+     */
+    @Override
+    public void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException {
+        setLoadedAndExists();
+        setLockedState(locked);
+        customerID = rs.getLong("CustomerID");
+        planID = ResultSetNullableReturners.getLongValue(rs, "DiscountPlanID");
+        currency = rs.getString("CurrencyName");
+        info = new PersonalInformation(rs.getString("Firstname"), rs.getString("Surname"), rs.getString("PhoneNumber"), ResultSetNullableReturners.getStringValue(rs, "EmailAddress"),
+                Time.fromSQLDate(rs.getDate("DateOfBirth")), rs.getString("Postcode"), rs.getString("HouseNumber"), rs.getString("StreetName"));
+        Double adc = ResultSetNullableReturners.getDoubleValue(rs, "AccountDiscountCredit");
+        accountDiscountCredit = (adc == null) ? null : new Decimal(adc, 2);
+        purchaseAccumulation = new Decimal(rs.getDouble("PurchaseAccumulation"), 2);
+        purchaseMonthStart = Time.fromSQLDate(rs.getDate("PurchaseMonthBeginning"));
+        alias = rs.getString("Alias");
+        customerType = CustomerType.getCustomerTypeFromValue(rs.getInt("CustomerType"));
     }
 
     /**

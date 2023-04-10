@@ -79,10 +79,11 @@ public class SaleController implements ISalesAccessor {
             if (stockAccessor.isBlankBlacklisted(blank)) throw new CheckedException("Blank blacklisted");
             if (stockAccessor.isBlankReturned(blank)) throw new CheckedException("Blank returned");
             if (stockAccessor.isBlankVoided(blank)) throw new CheckedException("Blank voided");
-            Sale sale = new Sale(conn, blank, customer, type, commissionRate, dueDate, saleDate, cost, (currency.equals("USD")) ? null : cost.mul(rateAccessor.getConversionRate(currency)),
+            Sale sale = new Sale(conn, blank, customer, type, commissionRate, dueDate, saleDate, cost, (currency.equals("USD")) ? null : cost.mul(new Decimal(1, 0).div(rateAccessor.getConversionRate(currency))),
                     tax, secondaryTax, currency, costPreDiscount);
             if (sale.exists(true)) throw new CheckedException("Sale already exists"); else {
                 sale.store();
+                saleTableAccessor.cacheOne(sale);
                 return blank;
             }
         }
@@ -103,8 +104,9 @@ public class SaleController implements ISalesAccessor {
         synchronized (slock) {
             if (!new Sale(conn, saleID).exists(true)) throw new CheckedException("Blank not sold");
             if (stockAccessor.isBlankBlacklisted(saleID)) throw new CheckedException("Blank is blacklisted");
-            Transaction transaction = new Transaction(conn, saleID, currency, payment, (currency.equals("USD")) ? null : payment.getAmount().mul(rateAccessor.getConversionRate(currency)), date);
+            Transaction transaction = new Transaction(conn, saleID, currency, payment, (currency.equals("USD")) ? null : payment.getAmount().mul(new Decimal(1, 0).div(rateAccessor.getConversionRate(currency))), date);
             transaction.store();
+            transactionTableAccessor.cacheOne(transaction);
             return transaction.getTransactionID();
         }
     }
@@ -125,13 +127,7 @@ public class SaleController implements ISalesAccessor {
     }
 
     private boolean fullyPaidInt(long saleID, Date date) throws CheckedException {
-        Sale sale = new Sale(conn, saleID);
-        try {
-            sale.lock();
-            sale.load();
-        } finally {
-            sale.unlock();
-        }
+        Sale sale = saleTableAccessor.load(saleID, false);
         Transaction[] transactions = getTransactionsInt(saleID, MultiLoadSyncMode.UnlockAfterLoad);
         Decimal paid = new Decimal();
         for (Transaction c : transactions) {
@@ -315,14 +311,7 @@ public class SaleController implements ISalesAccessor {
     @Override
     public Sale getSale(long saleID) throws CheckedException {
         synchronized (slock) {
-            Sale sale = new Sale(conn, saleID);
-            try {
-                sale.lock();
-                sale.load();
-            } finally {
-                sale.unlock();
-            }
-            return sale;
+            return saleTableAccessor.load(saleID, true);
         }
     }
 
@@ -336,14 +325,7 @@ public class SaleController implements ISalesAccessor {
     @Override
     public Transaction getTransaction(long transactionID) throws CheckedException {
         synchronized (slock) {
-            Transaction transaction = new Transaction(conn, transactionID);
-            try {
-                transaction.lock();
-                transaction.load();
-            } finally {
-                transaction.unlock();
-            }
-            return transaction;
+            return transactionTableAccessor.load(transactionID, true);
         }
     }
 
@@ -357,14 +339,7 @@ public class SaleController implements ISalesAccessor {
     @Override
     public Refund getRefund(long refundID) throws CheckedException {
         synchronized (slock) {
-            Refund refund = new Refund(conn, refundID);
-            try {
-                refund.lock();
-                refund.load();
-            } finally {
-                refund.unlock();
-            }
-            return refund;
+            return refundTableAccessor.load(refundID, true);
         }
     }
 
@@ -378,8 +353,7 @@ public class SaleController implements ISalesAccessor {
     @Override
     public boolean blankSold(long blankID) throws CheckedException {
         synchronized (slock) {
-            Sale sale = new Sale(conn, blankID);
-            return sale.exists(true);
+            return saleTableAccessor.load(blankID, false).exists(true);
         }
     }
 
@@ -424,6 +398,42 @@ public class SaleController implements ISalesAccessor {
                 case "Sale" -> saleTableAccessor.purgeTableSchema();
                 case "Transcation" -> transactionTableAccessor.purgeTableSchema();
                 case "Refund" -> refundTableAccessor.purgeTableSchema();
+            }
+        }
+    }
+
+    /**
+     * Assures the existence of a table.
+     *
+     * @param tableName The table to assure the existence of.
+     * @throws CheckedException The table could not be assured.
+     */
+    @Override
+    public void assureExistence(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            switch (tableName) {
+                case "Sale" -> saleTableAccessor.assureTableSchema();
+                case "Transcation" -> transactionTableAccessor.assureTableSchema();
+                case "Refund" -> refundTableAccessor.assureTableSchema();
+            }
+        }
+    }
+
+    /**
+     * Refreshes the cache of a table accessor.
+     *
+     * @param tableName The name of the table to refresh the cache of.
+     * @throws CheckedException The table could not be refreshed.
+     */
+    @Override
+    public void refreshCache(String tableName) throws CheckedException {
+        synchronized (slock) {
+            conn.getTableList(true);
+            switch (tableName) {
+                case "Sale" -> saleTableAccessor.refreshAll();
+                case "Transcation" -> transactionTableAccessor.refreshAll();
+                case "Refund" -> refundTableAccessor.refreshAll();
             }
         }
     }

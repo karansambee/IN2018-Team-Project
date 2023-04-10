@@ -58,13 +58,19 @@ public class Refund extends DatabaseEntityBase {
      * @param locked If the object is already locked.
      * @throws SQLException An error has occurred.
      */
-    Refund(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException {
+    Refund(IDB_Connector conn, ResultSet rs, boolean locked) throws SQLException, CheckedException {
         super(conn, locked);
-        setLoadedAndExists();
-        refundID = rs.getLong("RefundID");
-        transactionID = rs.getLong("TranscationID");
-        refundDate = Time.fromSQLDate(rs.getDate("RefundDate"));
-        refundAmount = new Decimal(rs.getDouble("LocalCurrency") ,2);
+        loadFrom(rs, locked);
+    }
+
+    /**
+     * Gets the ID of the object that is used for caching.
+     *
+     * @return The ID of the object.
+     */
+    @Override
+    public Object getPrimaryID() {
+        return refundID;
     }
 
     @Override
@@ -140,6 +146,24 @@ public class Refund extends DatabaseEntityBase {
         } catch (SQLException e) {
             throw new CheckedException(e);
         }
+    }
+
+    /**
+     * This should load the current object from the passed result set.
+     *
+     * @param rs     The result set to load from.
+     * @param locked If the object is considered locked.
+     * @throws SQLException     An SQL error has occurred.
+     * @throws CheckedException An error has occurred.
+     */
+    @Override
+    public void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException {
+        setLoadedAndExists();
+        setLockedState(locked);
+        refundID = rs.getLong("RefundID");
+        transactionID = rs.getLong("TranscationID");
+        refundDate = Time.fromSQLDate(rs.getDate("RefundDate"));
+        refundAmount = new Decimal(rs.getDouble("LocalCurrency") ,2);
     }
 
     @Override

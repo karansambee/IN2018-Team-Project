@@ -1,17 +1,14 @@
 package skywaysolutions.app.gui;
 
-import skywaysolutions.app.database.IDB_Connector;
 import skywaysolutions.app.gui.control.StatusBar;
 import skywaysolutions.app.gui.tab.AccountsTab;
 import skywaysolutions.app.gui.tab.DashboardTab;
+import skywaysolutions.app.gui.tab.DatabaseTab;
 import skywaysolutions.app.gui.tab.ITab;
-import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -36,6 +33,7 @@ public class Main extends JFrame {
     private final ArrayList<ITab> tabs = new ArrayList<>();
     private final DashboardTab dashboardTab = new DashboardTab();
     private final AccountsTab accountsTab = new AccountsTab();
+    private final DatabaseTab databaseTab = new DatabaseTab();
     private StatusBar statusBar;
     private final Prompt prompt;
     private final Login login;
@@ -43,7 +41,7 @@ public class Main extends JFrame {
     private final AccessorManager manager;
     private final CountDownLatch shutDownLatch;
 
-    public Main(String title, IDB_Connector conn, CountDownLatch shutdownLatch) throws CheckedException {
+    public Main(String title, AccessorManager accessorManager, CountDownLatch shutdownLatch) throws CheckedException {
         super(title);
         //Initialize form
         setContentPane(Root);
@@ -51,7 +49,8 @@ public class Main extends JFrame {
         //Store shutdown latch for decrementing when form terminates.
         this.shutDownLatch = shutdownLatch;
         //Define the manager that holds the accessor
-        manager = new AccessorManager(conn);
+        this.manager = accessorManager;
+        accessorManager.assureTable(null);
         this.manager.rateAccessor.assureUSDCurrency();
         this.manager.staffAccessor.assureDefaultAdministratorAccount();
         //Add window listener
@@ -65,10 +64,6 @@ public class Main extends JFrame {
                 manager.staffAccessor.logoutAccount();
                 hideFrame();
             }
-        });
-        //Add Tab Change Listener
-        tabbedPaneMain.addChangeListener(e -> {
-            if (tabbedPaneMain.getSelectedIndex() > -1) tabs.get(tabbedPaneMain.getSelectedIndex()).refresh();
         });
         //Add button events
         exitButton.addActionListener(e -> hideFrame());
@@ -87,7 +82,9 @@ public class Main extends JFrame {
         //Create and set-up tabs
         tabs.add(dashboardTab);
         tabs.add(accountsTab);
+        tabs.add(databaseTab);
         for (ITab c : tabs) c.setup(this, prompt, statusBar, manager);
+        setMinimumSize(new Dimension(640, 480));
     }
 
     private void showAbout() {
@@ -104,7 +101,10 @@ public class Main extends JFrame {
             //Add tabs
             dashboardTab.refresh();
             try {
-                for (ITab c : tabs) if (c.accessAllowed()) tabbedPaneMain.addTab(c.getCaption(), (Component) c);
+                for (ITab c : tabs) if (c.accessAllowed()) {
+                    tabbedPaneMain.addTab(c.getCaption(), (Component) c);
+                    c.refresh();
+                }
             } catch (CheckedException e) {
                 statusBar.setStatus(e, 2500);
             }

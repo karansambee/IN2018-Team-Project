@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -18,6 +19,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
     private final Object slock = new Object();
     private boolean _lock;
     protected final IDB_Connector conn;
+    protected final HashMap<Object, T> cache = new HashMap<>();
 
     /**
      * Constructs a new DatabaseTableBase with the specified connection.
@@ -133,6 +135,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
 
     /**
      * Drops the main and aux tables.
+     * Clears the cache.
      *
      * @throws CheckedException An error occurs.
      */
@@ -157,6 +160,63 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
                     throw new CheckedException(e);
                 }
             }
+            for (T c : cache.values()) c.markDeleted();
+            cache.clear();
+        }
+    }
+
+    /**
+     * Updates the cache using the specified object.
+     *
+     * @param entity The object to cache.
+     */
+    public final void cacheOne(T entity) {
+        if (entity == null || entity.getPrimaryID() == null) return;
+        synchronized (slock) {
+            cache.put(entity.getPrimaryID(), entity);
+        }
+    }
+
+    /**
+     * Gets the ID of the object in the result set position.
+     *
+     * @param rs The result set.
+     * @return The ID.
+     * @throws SQLException An SQL error has occurred.
+     */
+    protected abstract Object getObjectID(ResultSet rs) throws SQLException;
+
+    /**
+     * Loads one object via its ID.
+     *
+     * @param ID The ID of the object to load.
+     * @return The object.
+     * @throws CheckedException A load error has occurred.
+     */
+    protected abstract T loadOne(Object ID) throws CheckedException;
+
+    /**
+     * Loads an object via its ID and if it should be reloaded if it exists in the cache.
+     *
+     * @param ID The ID of the object to load.
+     * @param reLoad If the object should be reloaded if it exists in the cache.
+     * @return The object.
+     * @throws CheckedException A load error has occurred.
+     */
+    public final T load(Object ID, boolean reLoad) throws CheckedException {
+        synchronized (slock) {
+            if (!cache.containsKey(ID)) cache.put(ID, loadOne(ID)); else {
+                T obj = cache.get(ID);
+                if (reLoad || !obj.isLoaded()) {
+                    try {
+                        obj.lock();
+                        if (obj.exists(false)) obj.load();
+                    } finally {
+                        obj.unlock();
+                    }
+                }
+            }
+            return cache.get(ID);
         }
     }
 
@@ -180,8 +240,18 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
                 try (PreparedStatement sta = filter.createFilteredStatementFor(conn, "SELECT " +
                         ((syncMode == MultiLoadSyncMode.NoLoad) ? getIDColumnName() : "*") + " FROM " + getTableName() + " WHERE ")) {
                     try (ResultSet rs = sta.executeQuery()) {
-                        while (rs.next())
-                            toReturn.add((syncMode == MultiLoadSyncMode.NoLoad) ? noLoadOneFrom(rs) : loadOneFrom(rs, _lock));
+                        while (rs.next()) {
+                            Object pID = getObjectID(rs);
+                            T cLoaded;
+                            if (cache.containsKey(pID)) {
+                                cLoaded = cache.get(pID);
+                                if (syncMode != MultiLoadSyncMode.NoLoad) cLoaded.loadFrom(rs, _lock);
+                            } else {
+                                cLoaded = (syncMode == MultiLoadSyncMode.NoLoad) ? noLoadOneFrom(rs) : loadOneFrom(rs, _lock);
+                                cache.put(cLoaded.getPrimaryID(), cLoaded);
+                            }
+                            toReturn.add(cLoaded);
+                        }
                     }
                 } catch (SQLException e) {
                     throw new CheckedException(e);
@@ -191,6 +261,24 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             return toReturn;
         } finally {
             if (syncMode == MultiLoadSyncMode.UnlockAfterLoad) unlockAll(false);
+        }
+    }
+
+    /**
+     * Reloads all the cached entities, locks and unlocks the table.
+     *
+     * @throws CheckedException An error occurs.
+     */
+    public final void refreshAll() throws CheckedException {
+        assureTableSchema();
+        try {
+            lockAll();
+            synchronized (slock) {
+                if (!_lock) throw new CheckedException("Lock not applied");
+                for (T c : cache.values()) if (c.isLocked()) c.load();
+            }
+        } finally {
+            unlockAll(false);
         }
     }
 
@@ -229,6 +317,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             } catch (SQLException e) {
                 throw new CheckedException("Lock could not be obtained");
             }
+            for (T c : cache.values()) c.markLocked();
             _lock = true;
         }
     }
@@ -358,12 +447,13 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             } catch (CheckedException e) {
                 throw new CheckedException("Lock could not be released");
             }
+            for (T c : cache.values()) c.markUnlocked();
             _lock = false;
         }
     }
 
     /**
-     * Deletes all the rows.
+     * Deletes all the rows and clears the cache.
      * {@link #isAllLocked()} should be true.
      *
      * @throws CheckedException An error occurs.
@@ -382,6 +472,8 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             } catch (SQLException e) {
                 throw new CheckedException(e);
             }
+            for (T c : cache.values()) c.markDeleted();
+            cache.clear();
             _lock = false;
         }
     }
@@ -393,5 +485,23 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
      */
     public final boolean isAllLocked() {
         return _lock;
+    }
+
+    /**
+     * Loads the passed entity.
+     * Useful for {@link #loadOne(Object)}.
+     *
+     * @param toLoad The entity to load.
+     * @return The loaded entity.
+     * @throws CheckedException A load failure has occurred.
+     */
+    protected final T internalLoad(T toLoad) throws CheckedException {
+        try {
+            toLoad.lock();
+            if (toLoad.exists(false)) toLoad.load();
+        } finally {
+            toLoad.unlock();
+        }
+        return toLoad;
     }
 }

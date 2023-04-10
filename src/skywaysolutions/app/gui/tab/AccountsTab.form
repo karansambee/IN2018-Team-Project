@@ -60,7 +60,7 @@
       <component id="189dc" class="javax.swing.JComboBox" binding="comboBoxFilter">
         <constraints>
           <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
-          <gridbag weightx="0.25" weighty="0.15"/>
+          <gridbag top="0" left="2" bottom="0" right="2" weightx="0.25" weighty="0.15"/>
         </constraints>
         <properties>
           <model>
@@ -78,7 +78,8 @@
           <gridbag weightx="1.0" weighty="0.85"/>
         </constraints>
         <properties>
-          <preferredSize width="200" height="428"/>
+          <preferredSize width="200" height="150"/>
+          <verticalScrollBarPolicy value="22"/>
         </properties>
         <border type="none"/>
         <children>
@@ -86,6 +87,7 @@
             <constraints/>
             <properties>
               <fillsViewportHeight value="true"/>
+              <preferredScrollableViewportSize width="200" height="150"/>
               <preferredSize width="-1" height="-1"/>
             </properties>
           </component>

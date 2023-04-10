@@ -118,11 +118,25 @@ public final class Decimal {
      * @return The result.
      */
     public Decimal div(Decimal dec) {
-        //Gets stored values at the largest amount of decimal places
-        int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10,(targetDecimals - dec.getDecimalPlaces())));
-        return Decimal.fromStored(current / passed, targetDecimals);
+        //Got to normalize the decimals first (No extra decimal places)
+        int currentDecActual = _decimals;
+        int passedDecActual = dec.getDecimalPlaces();
+        long current = _value;
+        long passed = dec.getStoredValue();
+        if (passed != 0) {
+            while (passed % 10 == 0) {
+                passedDecActual--;
+                passed /= 10;
+            }
+        }
+        //Make sure current is not normalized more than the normalization of passed
+        if (current != 0) {
+            while (current % 10 == 0 && currentDecActual - passedDecActual > 0) {
+                currentDecActual--;
+                current /= 10;
+            }
+        }
+        return Decimal.fromStored(current / passed, currentDecActual - passedDecActual);
     }
 
     /**
@@ -132,11 +146,25 @@ public final class Decimal {
      * @return The result.
      */
     public Decimal mod(Decimal dec) {
-        //Gets stored values at the largest amount of decimal places
-        int targetDecimals = Math.max(dec.getDecimalPlaces(), _decimals);
-        long current = _value * ((targetDecimals == _decimals) ? 1 : (long) Math.pow(10,(targetDecimals - _decimals)));
-        long passed = dec.getStoredValue() * ((targetDecimals == dec.getDecimalPlaces()) ? 1 : (long) Math.pow(10,(targetDecimals - dec.getDecimalPlaces())));
-        return Decimal.fromStored(current % passed, targetDecimals);
+        //Got to normalize the decimals first (No extra decimal places)
+        int currentDecActual = _decimals;
+        int passedDecActual = dec.getDecimalPlaces();
+        long current = _value;
+        long passed = dec.getStoredValue();
+        if (passed != 0) {
+            while (passed % 10 == 0) {
+                passedDecActual--;
+                passed /= 10;
+            }
+        }
+        //Make sure current is not normalized more than the normalization of passed
+        if (current != 0) {
+            while (current % 10 == 0 && currentDecActual - passedDecActual > 0) {
+                currentDecActual--;
+                current /= 10;
+            }
+        }
+        return Decimal.fromStored(current % passed, currentDecActual - passedDecActual);
     }
 
     /**

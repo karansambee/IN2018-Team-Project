@@ -12,6 +12,22 @@ import java.util.Date;
  */
 public interface IStockAccessor extends IRepairable {
     /**
+     * Refreshes a blank's cache given the ID.
+     *
+     * @param id The ID of the blank.
+     * @throws CheckedException A refresh error has occurred.
+     */
+    void refreshBlank(long id) throws CheckedException;
+
+    /**
+     * Refreshes a blank type's cache given the ID.
+     *
+     * @param id The ID of the blank.
+     * @throws CheckedException A refresh error has occurred.
+     */
+    void refreshBlankType(int id) throws CheckedException;
+
+    /**
      * Creates a blank with the specified ID,
      * an ID of a staff member it's assigned to (Not assigned if -1),
      * a description of the blanks contents, the date of the creation
