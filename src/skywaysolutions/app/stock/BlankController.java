@@ -275,7 +275,6 @@ public class BlankController implements IStockAccessor {
             BlankType blankType = blankTypeTableAccessor.load(typeCode, true);
             try {
                 blankType.lock();
-                blankType.load();
                 blankType.setDescription(description);
                 blankType.store();
             } finally {

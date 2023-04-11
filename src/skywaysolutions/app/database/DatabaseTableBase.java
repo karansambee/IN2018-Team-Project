@@ -275,7 +275,7 @@ public abstract class DatabaseTableBase<T extends DatabaseEntityBase> {
             lockAll();
             synchronized (slock) {
                 if (!_lock) throw new CheckedException("Lock not applied");
-                for (T c : cache.values()) if (c.isLocked()) c.load();
+                for (T c : cache.values()) if (c.isLocked() && c.exists(true)) c.load();
             }
         } finally {
             unlockAll(false);
