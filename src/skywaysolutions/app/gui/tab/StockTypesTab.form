@@ -13,7 +13,6 @@
           <gridbag weightx="1.0" weighty="0.85"/>
         </constraints>
         <properties>
-          <preferredSize width="200" height="150"/>
           <verticalScrollBarPolicy value="22"/>
         </properties>
         <border type="none"/>
@@ -23,7 +22,6 @@
             <properties>
               <fillsViewportHeight value="true"/>
               <preferredScrollableViewportSize width="200" height="150"/>
-              <preferredSize width="-1" height="-1"/>
             </properties>
           </component>
         </children>

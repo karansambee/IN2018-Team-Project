@@ -118,6 +118,15 @@ public interface IStaffAccessor extends IRepairable {
     long getAccountID(String emailAddress) throws CheckedException;
 
     /**
+     * Gets the account email.
+     *
+     * @param id The ID of the account.
+     * @return The email.
+     * @throws CheckedException The account could not be retrieved.
+     */
+    String getAccountEmail(long id) throws CheckedException;
+
+    /**
      * Gets the account staff role.
      *
      * @param emailAddress The email address of the account (Null for the current logged-in account).

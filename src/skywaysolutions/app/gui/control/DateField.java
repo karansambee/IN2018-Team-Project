@@ -69,6 +69,7 @@ public class DateField extends JPanel {
                 value = cal.getTime();
                 fireActionPerformed(event);
             } catch (NumberFormatException ex) {
+                setValue(value);
             }
         }
     }
@@ -79,6 +80,7 @@ public class DateField extends JPanel {
      * @param date The date to set the field to.
      */
     public void setValue(Date date) {
+        if (date == null) return;
         if (date.before(lower)) value = lower;
         else if (date.after(upper)) value = upper;
         else value = date;
@@ -93,6 +95,14 @@ public class DateField extends JPanel {
      */
     public Date getValue() {
         return value;
+    }
+
+    /**
+     * Clears the date field.
+     */
+    public void clearValue() {
+        value = null;
+        textFieldDate.setText("");
     }
 
     /**

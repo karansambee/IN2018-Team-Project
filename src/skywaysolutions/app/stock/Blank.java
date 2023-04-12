@@ -128,7 +128,7 @@ public class Blank extends DatabaseEntityBase {
             sta.setLong(1, blankID);
             try (ResultSet rs = sta.executeQuery()) {
                 if (!rs.next()) throw new CheckedException("No Row Exists!");
-                blankID = rs.getInt("BlankNumber");
+                blankID = rs.getLong("BlankNumber");
                 assignedStaffID = rs.getLong("StaffID");
                 typeID = rs.getInt("TypeNumber");
                 description = rs.getString("BlankDescription");
@@ -155,7 +155,7 @@ public class Blank extends DatabaseEntityBase {
     public void loadFrom(ResultSet rs, boolean locked) throws SQLException, CheckedException {
         setLoadedAndExists();
         setLockedState(locked);
-        blankID = rs.getInt("BlankNumber");
+        blankID = rs.getLong("BlankNumber");
         assignedStaffID = rs.getLong("StaffID");
         typeID = rs.getInt("TypeNumber");
         description = rs.getString("BlankDescription");

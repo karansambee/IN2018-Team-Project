@@ -47,7 +47,7 @@ public class StockTypesTab extends JPanel implements ITab, IHostInvokable {
         runner = new HostRunner(this, statusBar);
         runner.start();
         //Populate table
-        tableModel = new NonEditableDefaultTableModel(new Object[] {"Type Number"}, 0);
+        tableModel = new NonEditableDefaultTableModel(new Object[] {"Type Number", "Type Description"}, 0);
         tableListed.getTableHeader().setReorderingAllowed(false);
         tableListed.getTableHeader().setResizingAllowed(true);
         tableListed.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -198,12 +198,21 @@ public class StockTypesTab extends JPanel implements ITab, IHostInvokable {
     }
 
     private void addRow(int stype) {
-        SwingUtilities.invokeLater(() -> {
-            synchronized (slock) {
-                tableModel.addRow(new Object[] {stype});
-                tableBacker.add(stype);
-            }
-        });
+        try {
+            String desc = manager.stockAccessor.getBlankTypeDescription(stype);
+            if (desc.length() > 32) desc = desc.substring(0, 32);
+            String finalDesc = desc;
+            SwingUtilities.invokeLater(() -> {
+                synchronized (slock) {
+                    tableModel.addRow(new Object[]{stype, finalDesc});
+                    tableBacker.add(stype);
+                }
+            });
+        } catch (CheckedException e) {
+            SwingUtilities.invokeLater(() -> {
+                statusBar.setStatus(e, 2500);
+            });
+        }
     }
 
     private void refresh(int selectionIndex) {

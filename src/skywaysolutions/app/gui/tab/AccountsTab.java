@@ -181,7 +181,6 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
             statusBar.setStatus(e, 2500);
         }
         buttonAdd.setEnabled(isAdmin);
-        buttonDisable.setEnabled(isAdmin);
         boolean enb = selectionIndex > -1;
         buttonEdit.setEnabled(enb);
         buttonDelete.setEnabled(enb && isAdmin);

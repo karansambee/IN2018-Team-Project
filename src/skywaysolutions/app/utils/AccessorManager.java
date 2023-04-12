@@ -115,6 +115,24 @@ public final class AccessorManager {
     }
 
     /**
+     * Refreshes the cache of a table.
+     *
+     * @param table The table to refresh the cache of.
+     * @throws CheckedException The refresh operation has failed.
+     */
+    public void refreshCache(String table) throws CheckedException {
+        if (table != null) {
+            rateAccessor.refreshCache(table);
+            staffAccessor.refreshCache(table);
+            stockAccessor.refreshCache(table);
+            customerAccessor.refreshCache(table);
+            salesAccessor.refreshCache(table);
+        } else {
+            for (String c : tables) assureTable(c);
+        }
+    }
+
+    /**
      * Backups the database contents to a file.
      *
      * @param file The file to backup the database too.

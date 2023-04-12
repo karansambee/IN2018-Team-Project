@@ -159,6 +159,15 @@ public interface IStockAccessor extends IRepairable {
     Date getBlankAssignmentDate(long id) throws CheckedException;
 
     /**
+     * Gets the blank assignment staff ID or null if it has not been assigned.
+     *
+     * @param id The ID of the blank.
+     * @return The ID of the staff member.
+     * @throws CheckedException The blank could not be retrieved.
+     */
+    Long getBlankAssignmentID(long id) throws CheckedException;
+
+    /**
      * Creates a new blank type with a description.
      *
      * @param typeCode The 3 digit type code.
