@@ -7,7 +7,6 @@ import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
@@ -27,6 +26,8 @@ public class DatabaseTab extends JPanel implements ITab {
     private JButton buttonPurgeAll;
     private JButton buttonBackup;
     private JButton buttonRestore;
+    private JButton buttonAssure;
+    private JButton buttonRefresh;
 
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     private Prompt prompt;
@@ -44,6 +45,28 @@ public class DatabaseTab extends JPanel implements ITab {
         dbStoreChooser.setFileFilter(new FileNameExtensionFilter("Binary SQL DB Dump (.bns)", "bns"));
         dbStoreChooser.setMultiSelectionEnabled(false);
         //Add button events
+        buttonAssure.addActionListener(e -> {
+            if (setupNotDone || statusBar.isInHelpMode()) return;
+            if (listEntityTables.getSelectedIndex() > -1) {
+                String ctable = listModel.get(listEntityTables.getSelectedIndex());
+                try {
+                    manager.assureTable(ctable);
+                } catch (CheckedException ex) {
+                    statusBar.setStatus(ex, 2500);
+                }
+            }
+        });
+        buttonRefresh.addActionListener(e -> {
+            if (setupNotDone || statusBar.isInHelpMode()) return;
+            if (listEntityTables.getSelectedIndex() > -1) {
+                String ctable = listModel.get(listEntityTables.getSelectedIndex());
+                try {
+                    manager.refreshCache(ctable);
+                } catch (CheckedException ex) {
+                    statusBar.setStatus(ex, 2500);
+                }
+            }
+        });
         buttonForceUnlock.addActionListener(e -> {
             if (setupNotDone || statusBar.isInHelpMode()) return;
             if (listEntityTables.getSelectedIndex() > -1) {

@@ -291,6 +291,21 @@ public class AccountController implements IStaffAccessor {
     }
 
     /**
+     * Gets the account email.
+     *
+     * @param id The ID of the account.
+     * @return The email.
+     * @throws CheckedException The account could not be retrieved.
+     */
+    @Override
+    public String getAccountEmail(long id) throws CheckedException {
+        if (currentAccount == null) throw new CheckedException("No Logged in Account");
+        synchronized (slock) {
+            return accessor.load(id, false).getEmail();
+        }
+    }
+
+    /**
      * Gets the account staff role.
      *
      * @param emailAddress The email address of the account (Null for the current logged-in account).

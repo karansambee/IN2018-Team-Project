@@ -100,7 +100,8 @@ public class AccountEditor extends JDialogx {
                         comboBoxCurrency.setSelectedItem(c);
                         break;
                     }
-                } else if (comboBoxCurrency.getItemCount() > 0) comboBoxCurrency.setSelectedItem("USD");
+                }
+                if (comboBoxCurrency.getSelectedIndex() < 0 && comboBoxCurrency.getItemCount() > 0) comboBoxCurrency.setSelectedItem("USD");
             }
         });
         buttonCancel.addActionListener(e -> {

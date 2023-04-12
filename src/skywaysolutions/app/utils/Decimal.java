@@ -232,7 +232,7 @@ public final class Decimal {
     public String toString() {
         if (_decimals < 0) return String.valueOf(_value*Math.pow(10,(-1*_decimals)));
         String sValue = String.valueOf(_value);
-        return sValue.substring(0, sValue.length() - _decimals) + ((_decimals > 0) ? "." + sValue.substring(sValue.length() - _decimals) : "");
+        return ((sValue.length() - _decimals == 0) ? "0" : sValue.substring(0, sValue.length() - _decimals)) + ((_decimals > 0) ? "." + sValue.substring(sValue.length() - _decimals) : "");
     }
 
     /**

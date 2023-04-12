@@ -1,10 +1,7 @@
 package skywaysolutions.app.gui;
 
 import skywaysolutions.app.gui.control.StatusBar;
-import skywaysolutions.app.gui.tab.AccountsTab;
-import skywaysolutions.app.gui.tab.DashboardTab;
-import skywaysolutions.app.gui.tab.DatabaseTab;
-import skywaysolutions.app.gui.tab.ITab;
+import skywaysolutions.app.gui.tab.*;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 
@@ -32,7 +29,10 @@ public class Main extends JFrame {
     private JTabbedPane tabbedPaneMain;
     private final ArrayList<ITab> tabs = new ArrayList<>();
     private final DashboardTab dashboardTab = new DashboardTab();
+    private final StockTab stockTab = new StockTab();
     private final AccountsTab accountsTab = new AccountsTab();
+    private final RatesTab ratesTab = new RatesTab();
+    private final StockTypesTab stockTypesTab = new StockTypesTab();
     private final DatabaseTab databaseTab = new DatabaseTab();
     private StatusBar statusBar;
     private final Prompt prompt;
@@ -81,7 +81,10 @@ public class Main extends JFrame {
         statusBar.createPrompt(this);
         //Create and set-up tabs
         tabs.add(dashboardTab);
+        tabs.add(stockTab);
         tabs.add(accountsTab);
+        tabs.add(ratesTab);
+        tabs.add(stockTypesTab);
         tabs.add(databaseTab);
         for (ITab c : tabs) c.setup(this, prompt, statusBar, manager);
         setMinimumSize(new Dimension(640, 480));

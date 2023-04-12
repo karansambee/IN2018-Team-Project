@@ -19,8 +19,8 @@
         <children>
           <component id="2823f" class="javax.swing.JButton" binding="buttonForceUnlock">
             <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="0.5" weighty="0.1"/>
+              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.25" weighty="0.1"/>
             </constraints>
             <properties>
               <maximumSize width="78" height="30"/>
@@ -31,8 +31,8 @@
           </component>
           <component id="5fbfe" class="javax.swing.JButton" binding="buttonPurge">
             <constraints>
-              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="0.5" weighty="0.1"/>
+              <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.25" weighty="0.1"/>
             </constraints>
             <properties>
               <text value="Purge"/>
@@ -40,7 +40,7 @@
           </component>
           <scrollpane id="1aca7">
             <constraints>
-              <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <grid row="1" column="0" row-span="1" col-span="4" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
               <gridbag weightx="1.0" weighty="0.9"/>
             </constraints>
             <properties>
@@ -52,12 +52,32 @@
               <component id="6d180" class="javax.swing.JList" binding="listEntityTables">
                 <constraints/>
                 <properties>
-                  <preferredSize width="156" height="100"/>
                   <selectionMode value="0"/>
                 </properties>
               </component>
             </children>
           </scrollpane>
+          <component id="a03d" class="javax.swing.JButton" binding="buttonAssure">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.25" weighty="0.1"/>
+            </constraints>
+            <properties>
+              <text value="Assure"/>
+            </properties>
+          </component>
+          <component id="7d7b0" class="javax.swing.JButton" binding="buttonRefresh">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.25" weighty="0.1"/>
+            </constraints>
+            <properties>
+              <maximumSize width="78" height="30"/>
+              <minimumSize width="78" height="30"/>
+              <preferredSize width="78" height="30"/>
+              <text value="Refresh Cache"/>
+            </properties>
+          </component>
         </children>
       </grid>
       <grid id="5974a" layout-manager="GridBagLayout">

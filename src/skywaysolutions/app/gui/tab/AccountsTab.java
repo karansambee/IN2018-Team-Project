@@ -6,7 +6,6 @@ import skywaysolutions.app.gui.control.NonEditableDefaultTableModel;
 import skywaysolutions.app.gui.control.StatusBar;
 import skywaysolutions.app.gui.hoster.HostRunner;
 import skywaysolutions.app.gui.hoster.IHostInvokable;
-import skywaysolutions.app.staff.Account;
 import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
@@ -44,6 +43,9 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
     private boolean isAdmin = false;
     private final HostRunner runner;
 
+    /**
+     * Constructs a new instance of the AccountsTab.
+     */
     public AccountsTab() {
         super(true);
         //Create host runner
@@ -179,7 +181,6 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
             statusBar.setStatus(e, 2500);
         }
         buttonAdd.setEnabled(isAdmin);
-        buttonDisable.setEnabled(isAdmin);
         boolean enb = selectionIndex > -1;
         buttonEdit.setEnabled(enb);
         buttonDelete.setEnabled(enb && isAdmin);

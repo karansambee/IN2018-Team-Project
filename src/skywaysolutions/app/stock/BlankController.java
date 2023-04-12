@@ -70,6 +70,7 @@ public class BlankController implements IStockAccessor {
     public void createBlank(long id, long assignedID, String description, Date creationDate, Date assignmentDate) throws CheckedException {
         synchronized (slock) {
             if (assignedID < -1) assignedID = -1;
+            if (assignedID == -1) assignedID = 1;
             Blank newBlank = new Blank(conn, id, assignedID, description, creationDate, assignmentDate);
             if (newBlank.exists(true)){
                 throw new CheckedException("Blank already exists");
@@ -275,7 +276,6 @@ public class BlankController implements IStockAccessor {
             BlankType blankType = blankTypeTableAccessor.load(typeCode, true);
             try {
                 blankType.lock();
-                blankType.load();
                 blankType.setDescription(description);
                 blankType.store();
             } finally {
@@ -380,7 +380,7 @@ public class BlankController implements IStockAccessor {
     @Override
     public Date getBlankCreationDate(long id) throws CheckedException {
         synchronized (slock) {
-            return blankTableAccessor.load(id, false).getAssignmentDate();
+            return blankTableAccessor.load(id, false).getCreationDate();
         }
     }
 
@@ -410,6 +410,21 @@ public class BlankController implements IStockAccessor {
     public Date getBlankAssignmentDate(long id) throws CheckedException {
         synchronized (slock) {
             return blankTableAccessor.load(id, false).getAssignmentDate();
+        }
+    }
+
+    /**
+     * Gets the blank assignment staff ID or null if it has not been assigned.
+     *
+     * @param id The ID of the blank.
+     * @return The ID of the staff member.
+     * @throws CheckedException The blank could not be retrieved.
+     */
+    @Override
+    public Long getBlankAssignmentID(long id) throws CheckedException {
+        synchronized (slock) {
+            long rid = blankTableAccessor.load(id, false).getAssignedStaffID();
+            return (rid == 1) ? null : rid;
         }
     }
 
