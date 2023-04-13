@@ -49,7 +49,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
         runner = new HostRunner(this, statusBar);
         runner.start();
         //Populate table
-        tableModel = new NonEditableDefaultTableModel(new Object[] {"ID", "Type", "Assigned Staff", "State"}, 0);
+        tableModel = new NonEditableDefaultTableModel(new Object[]{"ID", "Type", "Assigned Staff", "State"}, 0);
         tableListed.getTableHeader().setReorderingAllowed(false);
         tableListed.getTableHeader().setResizingAllowed(true);
         tableListed.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -75,7 +75,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
                 try {
                     blankEditor.setBlankID(tableBacker.get(tableListed.getSelectedRow()));
                     blankEditor.showDialog();
-                refresh(tableListed.getSelectedRow());
+                    refresh(tableListed.getSelectedRow());
                 } catch (CheckedException ex) {
                     statusBar.setStatus(ex, 2500);
                 }
@@ -86,7 +86,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
                 prompt.setTitle("Are You Sure?");
                 prompt.setContents("Are you sure you want to return the blanks(s)?\nThis is permanent and the current date is used.");
-                prompt.setButtons(new String[] {"No", "Yes"}, 0);
+                prompt.setButtons(new String[]{"No", "Yes"}, 0);
                 prompt.showDialog();
                 if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes")) {
                     invReturnStock();
@@ -99,7 +99,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
                 prompt.setTitle("Are You Sure?");
                 prompt.setContents("Are you sure you want to blacklist the blanks(s)?\nThis is permanent.");
-                prompt.setButtons(new String[] {"No", "Yes"}, 0);
+                prompt.setButtons(new String[]{"No", "Yes"}, 0);
                 prompt.showDialog();
                 if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes")) {
                     invBlacklistStock();
@@ -178,7 +178,8 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
                 long[] stock = manager.stockAccessor.getBlanks((csRole == StaffRole.Administrator) ? ((filter == 1) ? -2 : -1) : manager.staffAccessor.getLoggedInAccountID());
                 for (long c : stock) addRow(c, filter);
                 int selectionIndex = (int) args[0];
-                if (selectionIndex > -1) SwingUtilities.invokeLater(() -> tableListed.addRowSelectionInterval(selectionIndex, selectionIndex));
+                if (selectionIndex > -1)
+                    SwingUtilities.invokeLater(() -> tableListed.addRowSelectionInterval(selectionIndex, selectionIndex));
             }
         }
     }
@@ -201,7 +202,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
             String finalBAStaff = bAStaff;
             SwingUtilities.invokeLater(() -> {
                 synchronized (slock) {
-                    tableModel.addRow(new Object[] {id, bType, finalBAStaff, bState});
+                    tableModel.addRow(new Object[]{id, bType, finalBAStaff, bState});
                     tableBacker.add(id);
                 }
             });
@@ -214,7 +215,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
 
     private void invAddStock() {
         if (blankEditor.getStartBlank() == null) return;
-        runner.addEvent("addStock", new Object[] {blankEditor.getStartBlank(), blankEditor.getEndBlank(),
+        runner.addEvent("addStock", new Object[]{blankEditor.getStartBlank(), blankEditor.getEndBlank(),
                 blankEditor.getBlankAssigned(), blankEditor.getBlankAssignedDate(), blankEditor.getBlankCreateDate(), blankEditor.getBlankDescription()});
     }
 
@@ -223,7 +224,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
         long[] stks = new long[rows.length];
         for (int i = 0; i < rows.length; i++)
             stks[i] = tableBacker.get(rows[i]);
-        runner.addEvent("returnStock", new Object[] {stks, Time.now()});
+        runner.addEvent("returnStock", new Object[]{stks, Time.now()});
     }
 
     private void invBlacklistStock() {
@@ -231,7 +232,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
         long[] stks = new long[rows.length];
         for (int i = 0; i < rows.length; i++)
             stks[i] = tableBacker.get(rows[i]);
-        runner.addEvent("blacklistStock", new Object[] {stks});
+        runner.addEvent("blacklistStock", new Object[]{stks});
     }
 
     /**
@@ -265,7 +266,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
         runner.addEvent("refreshClear", null);
         try {
             csRole = manager.staffAccessor.getAccountRole(null);
-            runner.addEvent("refreshStock", new Object[] {selectionIndex});
+            runner.addEvent("refreshStock", new Object[]{selectionIndex});
         } catch (CheckedException e) {
             csRole = null;
             statusBar.setStatus(e, 2500);
@@ -296,5 +297,114 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
     @Override
     public String getCaption() {
         return "Stock Manager";
+    }
+
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        Root = new JPanel();
+        Root.setLayout(new GridBagLayout());
+        final JScrollPane scrollPane1 = new JScrollPane();
+        scrollPane1.setVerticalScrollBarPolicy(22);
+        GridBagConstraints gbc;
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 6;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.85;
+        gbc.fill = GridBagConstraints.BOTH;
+        Root.add(scrollPane1, gbc);
+        tableListed = new JTable();
+        tableListed.setFillsViewportHeight(true);
+        tableListed.setPreferredScrollableViewportSize(new Dimension(200, 150));
+        scrollPane1.setViewportView(tableListed);
+        buttonCreate = new JButton();
+        buttonCreate.setPreferredSize(new Dimension(30, 30));
+        buttonCreate.setText("Create");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.15;
+        gbc.weighty = 0.15;
+        gbc.fill = GridBagConstraints.BOTH;
+        Root.add(buttonCreate, gbc);
+        buttonModify = new JButton();
+        buttonModify.setPreferredSize(new Dimension(30, 30));
+        buttonModify.setText("Modify");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 0.15;
+        gbc.weighty = 0.15;
+        gbc.fill = GridBagConstraints.BOTH;
+        Root.add(buttonModify, gbc);
+        buttonReturn = new JButton();
+        buttonReturn.setPreferredSize(new Dimension(30, 30));
+        buttonReturn.setText("Return");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.weightx = 0.15;
+        gbc.weighty = 0.15;
+        gbc.fill = GridBagConstraints.BOTH;
+        Root.add(buttonReturn, gbc);
+        buttonBlacklist = new JButton();
+        buttonBlacklist.setPreferredSize(new Dimension(30, 30));
+        buttonBlacklist.setText("Blacklist");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 3;
+        gbc.gridy = 0;
+        gbc.weightx = 0.15;
+        gbc.weighty = 0.15;
+        gbc.fill = GridBagConstraints.BOTH;
+        Root.add(buttonBlacklist, gbc);
+        buttonRefresh = new JButton();
+        buttonRefresh.setPreferredSize(new Dimension(30, 30));
+        buttonRefresh.setText("Refresh");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 4;
+        gbc.gridy = 0;
+        gbc.weightx = 0.15;
+        gbc.weighty = 0.15;
+        gbc.fill = GridBagConstraints.BOTH;
+        Root.add(buttonRefresh, gbc);
+        comboBoxFilter = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
+        defaultComboBoxModel1.addElement("All");
+        defaultComboBoxModel1.addElement("Unassigned (Available)");
+        defaultComboBoxModel1.addElement("Assigned (Available)");
+        defaultComboBoxModel1.addElement("Sold");
+        defaultComboBoxModel1.addElement("Unavailable");
+        comboBoxFilter.setModel(defaultComboBoxModel1);
+        comboBoxFilter.setPreferredSize(new Dimension(50, 30));
+        gbc = new GridBagConstraints();
+        gbc.gridx = 5;
+        gbc.gridy = 0;
+        gbc.weightx = 0.25;
+        gbc.weighty = 0.15;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 2, 0, 2);
+        Root.add(comboBoxFilter, gbc);
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return Root;
     }
 }
