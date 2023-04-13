@@ -64,7 +64,7 @@ public final class DB_Connector implements IDB_Connector {
     public void close() throws CheckedException {
         try {
             conn.close();
-            tables.clear();
+            if (tables != null) tables.clear();
             dbName = null;
         } catch (SQLException e) {
             throw new CheckedException(e);
