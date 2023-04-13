@@ -49,7 +49,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
         runner = new HostRunner(this, statusBar);
         runner.start();
         //Populate table
-        tableModel = new NonEditableDefaultTableModel(new Object[] {"ID", "Type", "Assigned Staff", "State"}, 0);
+        tableModel = new NonEditableDefaultTableModel(new Object[]{"ID", "Type", "Assigned Staff", "State"}, 0);
         tableListed.getTableHeader().setReorderingAllowed(false);
         tableListed.getTableHeader().setResizingAllowed(true);
         tableListed.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -75,18 +75,18 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
                 try {
                     blankEditor.setBlankID(tableBacker.get(tableListed.getSelectedRow()));
                     blankEditor.showDialog();
-                refresh(tableListed.getSelectedRow());
+                    refresh(tableListed.getSelectedRow());
                 } catch (CheckedException ex) {
                     statusBar.setStatus(ex, 2500);
                 }
             }
         });
-        buttonBlacklist.addActionListener(e -> {
+        buttonReturn.addActionListener(e -> {
             if (setupNotDone) return;
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
                 prompt.setTitle("Are You Sure?");
                 prompt.setContents("Are you sure you want to return the blanks(s)?\nThis is permanent and the current date is used.");
-                prompt.setButtons(new String[] {"No", "Yes"}, 0);
+                prompt.setButtons(new String[]{"No", "Yes"}, 0);
                 prompt.showDialog();
                 if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes")) {
                     invReturnStock();
@@ -99,7 +99,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
                 prompt.setTitle("Are You Sure?");
                 prompt.setContents("Are you sure you want to blacklist the blanks(s)?\nThis is permanent.");
-                prompt.setButtons(new String[] {"No", "Yes"}, 0);
+                prompt.setButtons(new String[]{"No", "Yes"}, 0);
                 prompt.showDialog();
                 if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes")) {
                     invBlacklistStock();
@@ -178,7 +178,8 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
                 long[] stock = manager.stockAccessor.getBlanks((csRole == StaffRole.Administrator) ? ((filter == 1) ? -2 : -1) : manager.staffAccessor.getLoggedInAccountID());
                 for (long c : stock) addRow(c, filter);
                 int selectionIndex = (int) args[0];
-                if (selectionIndex > -1) SwingUtilities.invokeLater(() -> tableListed.addRowSelectionInterval(selectionIndex, selectionIndex));
+                if (selectionIndex > -1)
+                    SwingUtilities.invokeLater(() -> tableListed.addRowSelectionInterval(selectionIndex, selectionIndex));
             }
         }
     }
@@ -201,7 +202,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
             String finalBAStaff = bAStaff;
             SwingUtilities.invokeLater(() -> {
                 synchronized (slock) {
-                    tableModel.addRow(new Object[] {id, bType, finalBAStaff, bState});
+                    tableModel.addRow(new Object[]{id, bType, finalBAStaff, bState});
                     tableBacker.add(id);
                 }
             });
@@ -214,7 +215,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
 
     private void invAddStock() {
         if (blankEditor.getStartBlank() == null) return;
-        runner.addEvent("addStock", new Object[] {blankEditor.getStartBlank(), blankEditor.getEndBlank(),
+        runner.addEvent("addStock", new Object[]{blankEditor.getStartBlank(), blankEditor.getEndBlank(),
                 blankEditor.getBlankAssigned(), blankEditor.getBlankAssignedDate(), blankEditor.getBlankCreateDate(), blankEditor.getBlankDescription()});
     }
 
@@ -223,7 +224,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
         long[] stks = new long[rows.length];
         for (int i = 0; i < rows.length; i++)
             stks[i] = tableBacker.get(rows[i]);
-        runner.addEvent("returnStock", new Object[] {stks, Time.now()});
+        runner.addEvent("returnStock", new Object[]{stks, Time.now()});
     }
 
     private void invBlacklistStock() {
@@ -231,7 +232,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
         long[] stks = new long[rows.length];
         for (int i = 0; i < rows.length; i++)
             stks[i] = tableBacker.get(rows[i]);
-        runner.addEvent("blacklistStock", new Object[] {stks});
+        runner.addEvent("blacklistStock", new Object[]{stks});
     }
 
     /**
@@ -265,7 +266,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
         runner.addEvent("refreshClear", null);
         try {
             csRole = manager.staffAccessor.getAccountRole(null);
-            runner.addEvent("refreshStock", new Object[] {selectionIndex});
+            runner.addEvent("refreshStock", new Object[]{selectionIndex});
         } catch (CheckedException e) {
             csRole = null;
             statusBar.setStatus(e, 2500);
@@ -297,4 +298,5 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
     public String getCaption() {
         return "Stock Manager";
     }
+
 }

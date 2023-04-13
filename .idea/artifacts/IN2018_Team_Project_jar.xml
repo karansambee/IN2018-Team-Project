@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact name="IN2018-Team-Project:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/IN2018_Team_Project_jar</output-path>
+    <root id="root">
+      <element id="archive" name="IN2018-Team-Project.jar">
+        <element id="module-output" name="IN2018-Team-Project" />
+      </element>
+      <element id="library" level="project" name="mysql-connector-j-8.0.32" />
+    </root>
+  </artifact>
+</component>

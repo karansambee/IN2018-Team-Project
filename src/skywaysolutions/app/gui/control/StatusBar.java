@@ -73,7 +73,7 @@ public class StatusBar extends JPanel {
     /**
      * Registers a component with the specified help text.
      *
-     * @param component The component.
+     * @param component       The component.
      * @param helpInformation The help text attached to the component.
      */
     public void registerComponentForHelp(Component component, String helpInformation) {
@@ -107,7 +107,7 @@ public class StatusBar extends JPanel {
     /**
      * Set the status using an exception.
      *
-     * @param ex The exception to use.
+     * @param ex            The exception to use.
      * @param statusTimeout The timeout of the status message (0 To Disable).
      */
     public void setStatus(CheckedException ex, int statusTimeout) {
@@ -118,9 +118,9 @@ public class StatusBar extends JPanel {
     /**
      * Set the status using a string and optional extended status.
      *
-     * @param status The status to display.
+     * @param status         The status to display.
      * @param extendedStatus The extended status to display in the prompt (null to not have any).
-     * @param statusTimeout The timeout of the status message (0 To Disable).
+     * @param statusTimeout  The timeout of the status message (0 To Disable).
      */
     public void setStatus(String status, String extendedStatus, int statusTimeout) {
         synchronized (slock) {

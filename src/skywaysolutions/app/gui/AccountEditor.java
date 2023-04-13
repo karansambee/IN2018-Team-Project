@@ -2,6 +2,7 @@ package skywaysolutions.app.gui;
 
 import skywaysolutions.app.gui.control.PersonalInformationEditor;
 import skywaysolutions.app.gui.control.StatusBar;
+import skywaysolutions.app.gui.control.VTextField;
 import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
@@ -9,6 +10,9 @@ import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.PersonalInformation;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +20,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Locale;
 
 /**
  * This class provides an AccountEditor that can create and edit staff accounts.
@@ -28,7 +33,7 @@ public class AccountEditor extends JDialogx {
     private JButton buttonCancel;
     private JButton buttonOk;
     private JSpinner spinnerStaffID;
-    private skywaysolutions.app.gui.control.VTextField textFieldCommissionRate;
+    private VTextField textFieldCommissionRate;
     private JComboBox comboBoxCurrency;
     private JComboBox comboBoxRole;
     private PersonalInformationEditor personalInformationEditor;
@@ -50,9 +55,9 @@ public class AccountEditor extends JDialogx {
     /**
      * Constructs a new instance of AccountEditor with the specified owner, if reusable and the accessor manager instance.
      *
-     * @param owner The window owner or null.
+     * @param owner    The window owner or null.
      * @param reusable If this dialog is reusable.
-     * @param manager The accessor manager instance.
+     * @param manager  The accessor manager instance.
      */
     public AccountEditor(Window owner, boolean reusable, AccessorManager manager) {
         super(owner, "", reusable);
@@ -66,7 +71,7 @@ public class AccountEditor extends JDialogx {
         textFieldRStaffID.setEditable(false);
         //Setup form contents
         setContentPane(Root);
-        getRootPane().setDefaultButton(buttonOk);
+        //getRootPane().setDefaultButton(buttonOk);
         //Setup form closing events
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -96,12 +101,14 @@ public class AccountEditor extends JDialogx {
             if (!statusBar.isInHelpMode() && comboBoxCurrency.getSelectedIndex() < 0) {
                 Object selectedItem = comboBoxCurrency.getSelectedItem();
                 if (selectedItem instanceof String str) {
-                    for (String c : currencies) if (c.startsWith(str) || str.startsWith(c)) {
-                        comboBoxCurrency.setSelectedItem(c);
-                        break;
-                    }
+                    for (String c : currencies)
+                        if (c.startsWith(str) || str.startsWith(c)) {
+                            comboBoxCurrency.setSelectedItem(c);
+                            break;
+                        }
                 }
-                if (comboBoxCurrency.getSelectedIndex() < 0 && comboBoxCurrency.getItemCount() > 0) comboBoxCurrency.setSelectedItem("USD");
+                if (comboBoxCurrency.getSelectedIndex() < 0 && comboBoxCurrency.getItemCount() > 0)
+                    comboBoxCurrency.setSelectedItem("USD");
             }
         });
         buttonCancel.addActionListener(e -> {
@@ -147,7 +154,8 @@ public class AccountEditor extends JDialogx {
                             if (sRole == StaffRole.Administrator) {
                                 manager.staffAccessor.setAccountRole(emailAddr, StaffRole.getStaffRoleFromValue(comboBoxRole.getSelectedIndex()));
                                 manager.staffAccessor.setCurrency(emailAddr, comboBoxCurrency.getItemAt(comboBoxCurrency.getSelectedIndex()).toString());
-                                if (passwordFieldCPassword.getPassword().length > 0) manager.staffAccessor.changePassword(emailAddr, String.valueOf(passwordFieldCPassword.getPassword()));
+                                if (passwordFieldCPassword.getPassword().length > 0)
+                                    manager.staffAccessor.changePassword(emailAddr, String.valueOf(passwordFieldCPassword.getPassword()));
                             }
                         }
                         manager.staffAccessor.setPersonalInformation(emailAddr, personalInformationEditor.getInformation());
@@ -252,4 +260,5 @@ public class AccountEditor extends JDialogx {
         statusBar.deactivateHelp();
         super.hideDialog();
     }
+
 }

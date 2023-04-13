@@ -1,6 +1,7 @@
 package skywaysolutions.app.gui;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -20,10 +21,10 @@ public class About extends JDialogx {
     /**
      * Constructs a new instance of About with the specified parent, if the control can be reshown, description and license.
      *
-     * @param owner The parent window of this dialog.
-     * @param reusable If the dialog can be reshown.
+     * @param owner       The parent window of this dialog.
+     * @param reusable    If the dialog can be reshown.
      * @param description The description of the program.
-     * @param license The license of the program.
+     * @param license     The license of the program.
      */
     public About(Window owner, boolean reusable, String description, String license) {
         super(owner, "About", reusable);
@@ -47,4 +48,5 @@ public class About extends JDialogx {
         pack();
         dsize = getSize();
     }
+
 }

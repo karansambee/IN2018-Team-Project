@@ -98,6 +98,7 @@ public class RateController implements IRateAccessor {
             ConversionRate crate = accessor.load(currency, true);
             try {
                 crate.lock();
+                if (crate.getCurrencySymbol() == null) crate.setCurrencySymbol("");
                 crate.setConversionRate(rate);
                 crate.store();
             } finally {
@@ -133,6 +134,7 @@ public class RateController implements IRateAccessor {
             ConversionRate crate = accessor.load(currency, true);
             try {
                 crate.lock();
+                if (crate.getConversionRate() == null) crate.setConversionRate(new Decimal());
                 crate.setCurrencySymbol(symbol);
                 crate.store();
             } finally {

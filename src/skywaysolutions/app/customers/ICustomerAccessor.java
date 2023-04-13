@@ -104,7 +104,7 @@ public interface ICustomerAccessor extends IRepairable {
      * @return The plan ID.
      * @throws CheckedException The plan ID could not be obtained.
      */
-    long getAccountPlan(long customer) throws CheckedException;
+    Long getAccountPlan(long customer) throws CheckedException;
 
     /**
      * Sets the account plan of a customer.
@@ -113,7 +113,7 @@ public interface ICustomerAccessor extends IRepairable {
      * @param plan The plan ID.
      * @throws CheckedException The plan of the customer could not be set.
      */
-    void setAccountPlan(long customer, long plan) throws CheckedException;
+    void setAccountPlan(long customer, Long plan) throws CheckedException;
 
     /**
      * Deletes a customer account.
@@ -321,4 +321,8 @@ public interface ICustomerAccessor extends IRepairable {
      * @throws CheckedException Storing the customer information has failed.
      */
     void setCustomerType(long customer, CustomerType type) throws CheckedException;
+
+    String getCurrency(long customer) throws CheckedException;
+
+    void setCurrency(long customer, String currency) throws CheckedException;
 }

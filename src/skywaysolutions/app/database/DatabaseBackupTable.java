@@ -50,7 +50,7 @@ public final class DatabaseBackupTable {
                     Object[] row = new Object[columnTypes.size()];
                     for (int i = 0; i < columnTypes.size(); ++i) {
                         row[i] = switch (columnTypes.get(i)) {
-                            case Types.BOOLEAN -> ResultSetNullableReturners.getBooleanValue(rs, i + 1);
+                            case Types.BOOLEAN, Types.BIT -> ResultSetNullableReturners.getBooleanValue(rs, i + 1);
                             case Types.TINYINT -> getBooleanFromByte(rs, i + 1);
                             case Types.INTEGER -> ResultSetNullableReturners.getIntegerValue(rs, i + 1);
                             case Types.BIGINT -> ResultSetNullableReturners.getLongValue(rs, i + 1);
@@ -91,12 +91,12 @@ public final class DatabaseBackupTable {
                 Object[] row = new Object[columnCount];
                 for (int i = 0; i < columnTypes.size(); ++i) {
                     row[i] = switch (columnTypes.get(i)) {
-                        case Types.BOOLEAN, Types.TINYINT -> getNullableBool(is.read());
+                        case Types.BOOLEAN, Types.TINYINT, Types.BIT -> getNullableBool(is.read());
                         case Types.INTEGER -> Stream.readNullableInteger(is);
                         case Types.BIGINT, Types.DATE, Types.NUMERIC, Types.DECIMAL, Types.DOUBLE, Types.FLOAT -> Stream.readNullableLong(is);
                         case Types.CHAR, Types.VARCHAR -> getNullableString(Stream.readBytes(is));
                         case Types.BINARY, Types.VARBINARY -> Stream.readBytes(is);
-                        default -> 0;
+                        default -> null;
                     };
                 }
                 rows.add(row);
@@ -130,13 +130,14 @@ public final class DatabaseBackupTable {
                 for (int i = 0; i < columnTypes.size(); ++i) {
                     if (row[i] == null) sta.setNull(i + 1, columnTypes.get(i)); else {
                         switch (columnTypes.get(i)) {
-                            case Types.BOOLEAN, Types.TINYINT -> sta.setBoolean(i + 1, (boolean) row[i]);
+                            case Types.BOOLEAN, Types.TINYINT, Types.BIT -> sta.setBoolean(i + 1, (boolean) row[i]);
                             case Types.INTEGER -> sta.setInt(i + 1, (int) row[i]);
                             case Types.BIGINT -> sta.setLong(i + 1, (long) row[i]);
                             case Types.CHAR, Types.VARCHAR -> sta.setString(i + 1, (String) row[i]);
                             case Types.BINARY, Types.VARBINARY -> sta.setBytes(i + 1, (byte[]) row[i]);
                             case Types.NUMERIC, Types.DECIMAL, Types.DOUBLE, Types.FLOAT -> sta.setDouble(i + 1, Decimal.fromStored((long) row[i], 8).getValue());
                             case Types.DATE -> sta.setDate(i + 1, Time.toSQLDate(new Date((long) row[i])));
+                            default -> sta.setNull(i + 1, columnTypes.get(i));
                         }
                     }
                 }
@@ -169,7 +170,7 @@ public final class DatabaseBackupTable {
             for (Object[] row : rows) {
                 for (int i = 0; i < columnTypes.size(); ++i) {
                     switch (columnTypes.get(i)) {
-                        case Types.BOOLEAN, Types.TINYINT -> os.write(toNullableBool((Boolean) row[i]));
+                        case Types.BOOLEAN, Types.TINYINT, Types.BIT -> os.write(toNullableBool((Boolean) row[i]));
                         case Types.INTEGER -> Stream.writeNullableInteger(os, (Integer) row[i]);
                         case Types.BIGINT, Types.DATE, Types.NUMERIC, Types.DECIMAL, Types.DOUBLE, Types.FLOAT -> Stream.writeNullableLong(os, (Long) row[i]);
                         case Types.CHAR, Types.VARCHAR -> Stream.writeBytes(os, toNullableString((String) row[i]));
@@ -222,7 +223,7 @@ public final class DatabaseBackupTable {
                     while (rs.next()) {
                         for (int i = 0; i < rsm.getColumnCount(); ++i) {
                             switch (columnTypes.get(i)) {
-                                case Types.BOOLEAN -> os.write(toNullableBool(ResultSetNullableReturners.getBooleanValue(rs, i + 1)));
+                                case Types.BOOLEAN, Types.BIT -> os.write(toNullableBool(ResultSetNullableReturners.getBooleanValue(rs, i + 1)));
                                 case Types.TINYINT -> os.write(toNullableBool(getBooleanFromByte(rs, i + 1)));
                                 case Types.INTEGER -> Stream.writeNullableInteger(os, ResultSetNullableReturners.getIntegerValue(rs, i + 1));
                                 case Types.BIGINT -> Stream.writeNullableLong(os, ResultSetNullableReturners.getLongValue(rs, i + 1));
@@ -275,7 +276,7 @@ public final class DatabaseBackupTable {
                 for (int j = 0; j < rowCount; ++j) {
                     for (int i = 0; i < columnTypes.size(); ++i) {
                         switch (columnTypes.get(i)) {
-                            case Types.BOOLEAN, Types.TINYINT -> {
+                            case Types.BOOLEAN, Types.TINYINT, Types.BIT -> {
                                 v = getNullableBool(is.read());
                                 if (v != null) sta.setBoolean(i+1, (boolean) v);
                             }
@@ -305,6 +306,7 @@ public final class DatabaseBackupTable {
                             }
                         }
                         if (v == null) sta.setNull(i + 1, columnTypes.get(i));
+                        v = null;
                     }
                     sta.addBatch();
                 }

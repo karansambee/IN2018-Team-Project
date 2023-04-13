@@ -1,13 +1,17 @@
 package skywaysolutions.app.gui;
 
 import skywaysolutions.app.gui.control.StatusBar;
+import skywaysolutions.app.gui.control.VTextField;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 
 import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Locale;
 
 /**
  * This class provides the login interface.
@@ -18,7 +22,7 @@ public class Login extends JDialogx {
     private JPanel Root;
     private JPanel contentPanel;
     private JPanel headerPanel;
-    private skywaysolutions.app.gui.control.VTextField loginTextField;
+    private VTextField loginTextField;
     private JLabel passwordLabel;
     private JPasswordField passwordPasswordField;
     private JButton buttonExit;
@@ -28,9 +32,9 @@ public class Login extends JDialogx {
     /**
      * This constructs a new instance of the login dialog.
      *
-     * @param owner The owner of the dialog or null for no owner.
+     * @param owner    The owner of the dialog or null for no owner.
      * @param reusable If the dialog can be shown again after being hidden.
-     * @param manager The accessor manager containing all the interfaces.
+     * @param manager  The accessor manager containing all the interfaces.
      */
     public Login(Frame owner, boolean reusable, AccessorManager manager) {
         super(owner, "Login", reusable);
@@ -85,4 +89,5 @@ public class Login extends JDialogx {
         statusBar.deactivateHelp();
         super.hideDialog();
     }
+
 }

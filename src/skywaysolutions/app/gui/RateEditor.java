@@ -32,16 +32,16 @@ public class RateEditor extends JDialogx {
     /**
      * Constructs a new instance of RateEditor with the specified owner, if reusable and the accessor manager instance.
      *
-     * @param owner The window owner or null.
+     * @param owner    The window owner or null.
      * @param reusable If this dialog is reusable.
-     * @param manager The accessor manager instance.
+     * @param manager  The accessor manager instance.
      */
     public RateEditor(Window owner, boolean reusable, AccessorManager manager) {
         super(owner, "", reusable);
         this.manager = manager;
         //Setup form contents
         setContentPane(Root);
-        getRootPane().setDefaultButton(buttonOk);
+        //getRootPane().setDefaultButton(buttonOk);
         //Setup form closing events
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -142,4 +142,5 @@ public class RateEditor extends JDialogx {
         statusBar.deactivateHelp();
         super.hideDialog();
     }
+
 }

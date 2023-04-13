@@ -83,11 +83,11 @@ public class CustomerController implements ICustomerAccessor {
         synchronized (slock) {
             if (alias == null || alias.equals("")) alias = info.getFirstName() + info.getLastName() + Time.now().getTime();
             Customer aliasAccount = getCustomerFromAlias(alias, true);
-            if (aliasAccount == null) throw new CheckedException("Account already exists");
+            if (aliasAccount != null) throw new CheckedException("Account already exists");
             Customer newAccount = new Customer(this.conn, info, planID, customerDiscountCredited, currency, alias, type);
             newAccount.store();
             customerTableAccessor.cacheOne(newAccount);
-            return newAccount.getPlanID();
+            return newAccount.getCustomerID();
         }
     }
 
@@ -190,7 +190,7 @@ public class CustomerController implements ICustomerAccessor {
      * @throws CheckedException The plan ID could not be obtained.
      */
     @Override
-    public long getAccountPlan(long customer) throws CheckedException {
+    public Long getAccountPlan(long customer) throws CheckedException {
         synchronized (slock) {
             return customerTableAccessor.load(customer, false).getPlanID();
         }
@@ -204,7 +204,7 @@ public class CustomerController implements ICustomerAccessor {
      * @throws CheckedException The plan of the customer could not be set.
      */
     @Override
-    public void setAccountPlan(long customer, long plan) throws CheckedException {
+    public void setAccountPlan(long customer, Long plan) throws CheckedException {
         synchronized (slock) {
             Customer account = customerTableAccessor.load(customer, true);
             try {
@@ -680,6 +680,27 @@ public class CustomerController implements ICustomerAccessor {
             try {
                 account.lock();
                 account.setCustomerType(type);
+                account.store();
+            } finally {
+                account.unlock();
+            }
+        }
+    }
+
+    @Override
+    public String getCurrency(long customer) throws CheckedException {
+        synchronized (slock) {
+            return customerTableAccessor.load(customer, false).getCurrency();
+        }
+    }
+
+    @Override
+    public void setCurrency(long customer, String currency) throws CheckedException {
+        synchronized (slock) {
+            Customer account = customerTableAccessor.load(customer, true);
+            try {
+                account.lock();
+                account.setCurrency(currency);
                 account.store();
             } finally {
                 account.unlock();

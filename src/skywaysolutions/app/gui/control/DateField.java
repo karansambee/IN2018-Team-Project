@@ -4,6 +4,7 @@ import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Time;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -65,7 +66,7 @@ public class DateField extends JPanel {
         if (splt.length == 3) {
             try {
                 Calendar cal = Calendar.getInstance();
-                cal.set(Integer.parseInt(splt[0]), Integer.parseInt(splt[1])-1, Integer.parseInt(splt[2]));
+                cal.set(Integer.parseInt(splt[0]), Integer.parseInt(splt[1]) - 1, Integer.parseInt(splt[2]));
                 value = cal.getTime();
                 fireActionPerformed(event);
             } catch (NumberFormatException ex) {
@@ -165,15 +166,16 @@ public class DateField extends JPanel {
     protected void fireActionPerformed(ActionEvent event) {
         Object[] listeners = listenerList.getListenerList();
         ActionEvent e = null;
-        for (int i = listeners.length-2; i>=0; i-=2) {
-            if (listeners[i]==ActionListener.class) {
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == ActionListener.class) {
                 if (e == null) e = new ActionEvent(this,
                         ActionEvent.ACTION_PERFORMED,
                         event.getActionCommand(),
                         event.getWhen(),
                         event.getModifiers());
-                ((ActionListener)listeners[i+1]).actionPerformed(e);
+                ((ActionListener) listeners[i + 1]).actionPerformed(e);
             }
         }
     }
+
 }

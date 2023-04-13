@@ -6,10 +6,13 @@ import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 
 import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -30,6 +33,7 @@ public class Main extends JFrame {
     private final ArrayList<ITab> tabs = new ArrayList<>();
     private final DashboardTab dashboardTab = new DashboardTab();
     private final StockTab stockTab = new StockTab();
+    private final CustomerTab customerTab = new CustomerTab();
     private final AccountsTab accountsTab = new AccountsTab();
     private final RatesTab ratesTab = new RatesTab();
     private final StockTypesTab stockTypesTab = new StockTypesTab();
@@ -59,6 +63,7 @@ public class Main extends JFrame {
             public void windowOpened(WindowEvent e) {
                 newLogin();
             }
+
             @Override
             public void windowClosing(WindowEvent e) {
                 manager.staffAccessor.logoutAccount();
@@ -82,6 +87,7 @@ public class Main extends JFrame {
         //Create and set-up tabs
         tabs.add(dashboardTab);
         tabs.add(stockTab);
+        tabs.add(customerTab);
         tabs.add(accountsTab);
         tabs.add(ratesTab);
         tabs.add(stockTypesTab);
@@ -104,10 +110,11 @@ public class Main extends JFrame {
             //Add tabs
             dashboardTab.refresh();
             try {
-                for (ITab c : tabs) if (c.accessAllowed()) {
-                    tabbedPaneMain.addTab(c.getCaption(), (Component) c);
-                    c.refresh();
-                }
+                for (ITab c : tabs)
+                    if (c.accessAllowed()) {
+                        tabbedPaneMain.addTab(c.getCaption(), (Component) c);
+                        c.refresh();
+                    }
             } catch (CheckedException e) {
                 statusBar.setStatus(e, 2500);
             }
@@ -119,4 +126,5 @@ public class Main extends JFrame {
         dispose();
         shutDownLatch.countDown();
     }
+
 }

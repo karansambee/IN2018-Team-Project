@@ -4,6 +4,8 @@ import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.PersonalInformation;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
 import java.awt.event.*;
 
 /**
@@ -54,7 +56,7 @@ public class PersonalInformationEditor extends JPanel {
     /**
      * Set-ups the editor with the specified status bar and if the email field is editable.
      *
-     * @param statusBar The status bar.
+     * @param statusBar     The status bar.
      * @param emailEditable If the email field is editable.
      * @throws CheckedException Initializing the fields has failed.
      */
@@ -119,6 +121,7 @@ public class PersonalInformationEditor extends JPanel {
 
         /**
          * Invoked when an action occurs.
+         *
          * @param e the event to be processed
          */
         @Override
@@ -135,6 +138,7 @@ public class PersonalInformationEditor extends JPanel {
 
         /**
          * Invoked when a component gains the keyboard focus.
+         *
          * @param e the event to be processed
          */
         @Override
@@ -143,6 +147,7 @@ public class PersonalInformationEditor extends JPanel {
 
         /**
          * Invoked when a component loses the keyboard focus.
+         *
          * @param e the event to be processed
          */
         @Override

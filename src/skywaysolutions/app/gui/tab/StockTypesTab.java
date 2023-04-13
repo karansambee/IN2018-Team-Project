@@ -47,7 +47,7 @@ public class StockTypesTab extends JPanel implements ITab, IHostInvokable {
         runner = new HostRunner(this, statusBar);
         runner.start();
         //Populate table
-        tableModel = new NonEditableDefaultTableModel(new Object[] {"Type Number", "Type Description"}, 0);
+        tableModel = new NonEditableDefaultTableModel(new Object[]{"Type Number", "Type Description"}, 0);
         tableListed.getTableHeader().setReorderingAllowed(false);
         tableListed.getTableHeader().setResizingAllowed(true);
         tableListed.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -82,7 +82,7 @@ public class StockTypesTab extends JPanel implements ITab, IHostInvokable {
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
                 prompt.setTitle("Are You Sure?");
                 prompt.setContents("Are you sure you want to delete the stock type(s)?\nThis operation may fail.");
-                prompt.setButtons(new String[] {"No", "Yes"}, 0);
+                prompt.setButtons(new String[]{"No", "Yes"}, 0);
                 prompt.showDialog();
                 if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes"))
                     invDeleteSType();
@@ -218,7 +218,7 @@ public class StockTypesTab extends JPanel implements ITab, IHostInvokable {
     private void refresh(int selectionIndex) {
         if (setupNotDone) return;
         runner.addEvent("refreshClear", null);
-        runner.addEvent("refreshSTypes", new Object[] {selectionIndex});
+        runner.addEvent("refreshSTypes", new Object[]{selectionIndex});
         boolean enb = selectionIndex > -1;
         buttonEdit.setEnabled(enb);
         buttonDelete.setEnabled(enb);
@@ -229,6 +229,7 @@ public class StockTypesTab extends JPanel implements ITab, IHostInvokable {
         int[] curs = new int[rows.length];
         for (int i = 0; i < rows.length; i++)
             curs[i] = tableBacker.get(rows[i]);
-        runner.addEvent("deleteSType", new Object[] {rows, curs});
+        runner.addEvent("deleteSType", new Object[]{rows, curs});
     }
+
 }

@@ -2,12 +2,14 @@ package skywaysolutions.app.gui;
 
 import skywaysolutions.app.gui.control.DateField;
 import skywaysolutions.app.gui.control.StatusBar;
+import skywaysolutions.app.gui.control.VTextField;
 import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Time;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -19,8 +21,8 @@ public class BlankEditor extends JDialogx {
     private JPanel Root;
     private JPanel panelBlankSelection;
     private JPanel panelBlankSelector;
-    private skywaysolutions.app.gui.control.VTextField textFieldBlankSelectorA;
-    private skywaysolutions.app.gui.control.VTextField textFieldBlankSelectorB;
+    private VTextField textFieldBlankSelectorA;
+    private VTextField textFieldBlankSelectorB;
     private JComboBox comboBoxType;
     private JComboBox comboBoxAssign;
     private DateField dateFieldDate;
@@ -62,14 +64,14 @@ public class BlankEditor extends JDialogx {
     /**
      * Constructs a new instance of BlankEditor with the specified owner, if reusable and the accessor manager instance.
      *
-     * @param owner The window owner or null.
+     * @param owner    The window owner or null.
      * @param reusable If this dialog is reusable.
-     * @param manager The accessor manager instance.
+     * @param manager  The accessor manager instance.
      */
     public BlankEditor(Window owner, boolean reusable, AccessorManager manager) {
         super(owner, "", reusable);
         this.manager = manager;
-        prompt = new Prompt(owner, "Are you sure?", "", new String[] {"No", "Yes"}, 0, true);
+        prompt = new Prompt(owner, "Are you sure?", "", new String[]{"No", "Yes"}, 0, true);
         //Setup readonly textfields (Used as readonly controls that swap with controls that have to be disabled to be readonly)
         textFieldRBlankSelector = new JTextField();
         textFieldRBlankSelector.setEditable(false);
@@ -85,7 +87,7 @@ public class BlankEditor extends JDialogx {
         textFieldRDate.setEditable(false);
         //Setup form contents
         setContentPane(Root);
-        getRootPane().setDefaultButton(buttonOk);
+        //getRootPane().setDefaultButton(buttonOk);
         //Setup form closing events
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -98,6 +100,9 @@ public class BlankEditor extends JDialogx {
         try {
             textFieldBlankSelectorA.setup("[0-9]{6,8}", statusBar, "Invalid blank extension number!", false, true);
             textFieldBlankSelectorB.setup("[0-9]{6,8}", statusBar, "Invalid blank extension number!", false, true);
+            dateFieldDate.setup(statusBar);
+            dateFieldCreated.setup(statusBar);
+            dateFieldReturn.setup(statusBar);
         } catch (CheckedException e) {
             statusBar.setStatus(e, 2500);
         }
@@ -106,12 +111,14 @@ public class BlankEditor extends JDialogx {
             if (comboBoxType.getSelectedIndex() < 0) {
                 Object selectedItem = comboBoxType.getSelectedItem();
                 if (selectedItem instanceof String str) {
-                    for (String c : dispBlankTypes) if (c.startsWith(str) || c.contains(str)) {
-                        comboBoxType.setSelectedItem(c);
-                        break;
-                    }
+                    for (String c : dispBlankTypes)
+                        if (c.startsWith(str) || c.contains(str)) {
+                            comboBoxType.setSelectedItem(c);
+                            break;
+                        }
                 }
-                if (comboBoxType.getSelectedIndex() < 0 && comboBoxType.getItemCount() > 0) comboBoxType.setSelectedIndex(0);
+                if (comboBoxType.getSelectedIndex() < 0 && comboBoxType.getItemCount() > 0)
+                    comboBoxType.setSelectedIndex(0);
             } else {
                 String v = String.valueOf(blankTypes[comboBoxType.getSelectedIndex()]);
                 labelBlankSelectorA.setText(v);
@@ -122,10 +129,11 @@ public class BlankEditor extends JDialogx {
             if (!statusBar.isInHelpMode() && comboBoxAssign.getSelectedIndex() < 0) {
                 Object selectedItem = comboBoxAssign.getSelectedItem();
                 if (selectedItem instanceof String str) {
-                    for (String c : dispStaff) if (c.startsWith(str) || c.contains(str)) {
-                        comboBoxAssign.setSelectedItem(c);
-                        break;
-                    }
+                    for (String c : dispStaff)
+                        if (c.startsWith(str) || c.contains(str)) {
+                            comboBoxAssign.setSelectedItem(c);
+                            break;
+                        }
                 }
             }
         });
@@ -167,7 +175,8 @@ public class BlankEditor extends JDialogx {
                             if (dateFieldDate.getValue() == null) dateFieldDate.setValue(Time.now());
                             manager.stockAccessor.reAssignBlank(id, manager.staffAccessor.getAccountID(staff[comboBoxAssign.getSelectedIndex()]), dateFieldDate.getValue());
                         }
-                        if (dateFieldReturn.getValue() != null) manager.stockAccessor.returnBlank(id, dateFieldReturn.getValue());
+                        if (dateFieldReturn.getValue() != null)
+                            manager.stockAccessor.returnBlank(id, dateFieldReturn.getValue());
                         hideDialog();
                     }
                 } catch (CheckedException ex) {
@@ -363,7 +372,7 @@ public class BlankEditor extends JDialogx {
                 } else {
                     textFieldRBlankSelector.setText(String.valueOf(id));
                     int bType = manager.stockAccessor.getBlankType(id);
-                    comboBoxType.setSelectedIndex(Arrays.binarySearch(blankTypes , bType));
+                    comboBoxType.setSelectedIndex(Arrays.binarySearch(blankTypes, bType));
                     textFieldRType.setText(String.valueOf(bType));
                     dateFieldCreated.setValue(manager.stockAccessor.getBlankCreationDate(id));
                     Long bAssignID = manager.stockAccessor.getBlankAssignmentID(id);
@@ -398,4 +407,5 @@ public class BlankEditor extends JDialogx {
         statusBar.deactivateHelp();
         super.hideDialog();
     }
+
 }

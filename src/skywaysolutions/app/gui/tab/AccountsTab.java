@@ -52,7 +52,7 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
         runner = new HostRunner(this, statusBar);
         runner.start();
         //Populate table
-        tableModel = new NonEditableDefaultTableModel(new Object[] {"ID", "Email", "Name", "Role", "Currency", "Commission %"}, 0);
+        tableModel = new NonEditableDefaultTableModel(new Object[]{"ID", "Email", "Name", "Role", "Currency", "Commission %"}, 0);
         tableListed.getTableHeader().setReorderingAllowed(false);
         tableListed.getTableHeader().setResizingAllowed(true);
         tableListed.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -81,7 +81,7 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
                 prompt.setTitle("Are You Sure?");
                 prompt.setContents("Are you sure you want to delete the account(s)?\nThis operation may fail.");
-                prompt.setButtons(new String[] {"No", "Yes"}, 0);
+                prompt.setButtons(new String[]{"No", "Yes"}, 0);
                 prompt.showDialog();
                 if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes"))
                     invDeleteAccount();
@@ -120,10 +120,10 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
     /**
      * Set-ups the tab with the specified owner, prompt, status bar and accessor manager.
      *
-     * @param owner The parent window the control is contained on.
-     * @param prompt The prompt to use.
+     * @param owner     The parent window the control is contained on.
+     * @param prompt    The prompt to use.
      * @param statusBar The status bar to use.
-     * @param manager The accessor manager to use.
+     * @param manager   The accessor manager to use.
      */
     @Override
     public void setup(Window owner, Prompt prompt, StatusBar statusBar, AccessorManager manager) {
@@ -175,7 +175,7 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
         runner.addEvent("refreshClear", null);
         try {
             isAdmin = manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator;
-            runner.addEvent("refreshAccounts", new Object[] {selectionIndex});
+            runner.addEvent("refreshAccounts", new Object[]{selectionIndex});
         } catch (CheckedException e) {
             isAdmin = false;
             statusBar.setStatus(e, 2500);
@@ -192,7 +192,7 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
         String[] accs = new String[rows.length];
         for (int i = 0; i < rows.length; i++)
             accs[i] = tableBacker.get(rows[i]);
-        runner.addEvent("deleteAccount", new Object[] {rows, accs});
+        runner.addEvent("deleteAccount", new Object[]{rows, accs});
     }
 
     private void invDisableAccount() {
@@ -200,13 +200,13 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
         String[] accs = new String[rows.length];
         for (int i = 0; i < rows.length; i++)
             accs[i] = tableBacker.get(rows[i]);
-        runner.addEvent("disableAccount", new Object[] {accs});
+        runner.addEvent("disableAccount", new Object[]{accs});
     }
 
     /**
      * Invokes using the specified command ID and arguments.
      *
-     * @param id The command ID.
+     * @param id   The command ID.
      * @param args The arguments.
      * @throws CheckedException An error has occurred.
      */
@@ -245,7 +245,8 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
                         StaffRole.getStaffRoleFromValue(comboBoxFilter.getSelectedIndex() - 1) : StaffRole.Advisor);
                 for (String c : accounts) addRow(c);
                 int selectionIndex = (int) args[0];
-                if (selectionIndex > -1) SwingUtilities.invokeLater(() -> tableListed.addRowSelectionInterval(selectionIndex, selectionIndex));
+                if (selectionIndex > -1)
+                    SwingUtilities.invokeLater(() -> tableListed.addRowSelectionInterval(selectionIndex, selectionIndex));
             }
         }
     }
@@ -259,7 +260,7 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
             String cr = manager.staffAccessor.getCurrency(email);
             SwingUtilities.invokeLater(() -> {
                 synchronized (slock) {
-                    tableModel.addRow(new Object[] {id, email, pi.getFirstName() + " " + pi.getLastName(),
+                    tableModel.addRow(new Object[]{id, email, pi.getFirstName() + " " + pi.getLastName(),
                             sr.toString(), cr, (comp == null) ? "N/A" : comp.toString()});
                     tableBacker.add(email);
                 }
@@ -270,4 +271,5 @@ public class AccountsTab extends JPanel implements ITab, IHostInvokable {
             });
         }
     }
+
 }

@@ -7,6 +7,7 @@ import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
@@ -129,7 +130,8 @@ public class DatabaseTab extends JPanel implements ITab {
             if (setupNotDone || statusBar.isInHelpMode()) return;
             dbStoreChooser.setCurrentDirectory(Paths.get(".").toFile());
             if (dbStoreChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
-                if (!dbStoreChooser.getFileFilter().accept(dbStoreChooser.getSelectedFile())) dbStoreChooser.setSelectedFile(new File(dbStoreChooser.getSelectedFile().getAbsolutePath() + ".bns"));
+                if (!dbStoreChooser.getFileFilter().accept(dbStoreChooser.getSelectedFile()))
+                    dbStoreChooser.setSelectedFile(new File(dbStoreChooser.getSelectedFile().getAbsolutePath() + ".bns"));
                 try {
                     manager.assureTable(null);
                     manager.backup(dbStoreChooser.getSelectedFile());
@@ -220,4 +222,5 @@ public class DatabaseTab extends JPanel implements ITab {
     public String getCaption() {
         return "Database Manager";
     }
+
 }

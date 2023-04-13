@@ -8,6 +8,7 @@ import skywaysolutions.app.utils.Decimal;
 import skywaysolutions.app.utils.PersonalInformation;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -32,9 +33,9 @@ public class BlankTypeEditor extends JDialogx {
     /**
      * Constructs a new instance of AccountEditor with the specified owner, if reusable and the accessor manager instance.
      *
-     * @param owner The window owner or null.
+     * @param owner    The window owner or null.
      * @param reusable If this dialog is reusable.
-     * @param manager The accessor manager instance.
+     * @param manager  The accessor manager instance.
      */
     public BlankTypeEditor(Window owner, boolean reusable, AccessorManager manager) {
         super(owner, "", reusable);
@@ -44,7 +45,7 @@ public class BlankTypeEditor extends JDialogx {
         textFieldRTypeCode.setEditable(false);
         //Setup form contents
         setContentPane(Root);
-        getRootPane().setDefaultButton(buttonOk);
+        //getRootPane().setDefaultButton(buttonOk);
         //Setup form closing events
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -92,7 +93,7 @@ public class BlankTypeEditor extends JDialogx {
      */
     public void setBlankTypeID(Integer id) throws CheckedException {
         this.id = id;
-        if(id != null) manager.stockAccessor.refreshBlankType(id);
+        if (id != null) manager.stockAccessor.refreshBlankType(id);
     }
 
     @Override
@@ -121,4 +122,5 @@ public class BlankTypeEditor extends JDialogx {
         statusBar.deactivateHelp();
         super.hideDialog();
     }
+
 }

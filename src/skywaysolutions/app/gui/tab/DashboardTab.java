@@ -9,6 +9,7 @@ import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.*;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
@@ -53,7 +54,7 @@ public class DashboardTab extends JPanel implements ITab {
             if (indx > -1) {
                 prompt.setTitle("Notification");
                 prompt.setContents(extendedNotifications.get(indx));
-                prompt.setButtons(new String[] {"Close", "Dismiss"}, 0);
+                prompt.setButtons(new String[]{"Close", "Dismiss"}, 0);
                 prompt.showDialog();
                 if (prompt.getLastButton() != null && prompt.getLastButton().equals("Dismiss")) {
                     listModel.remove(indx);
@@ -81,10 +82,10 @@ public class DashboardTab extends JPanel implements ITab {
     /**
      * Set-ups the tab with the specified owner, prompt, status bar and accessor manager.
      *
-     * @param owner The parent window the control is contained on.
-     * @param prompt The prompt to use.
+     * @param owner     The parent window the control is contained on.
+     * @param prompt    The prompt to use.
      * @param statusBar The status bar to use.
-     * @param manager The accessor manager to use.
+     * @param manager   The accessor manager to use.
      */
     @Override
     public void setup(Window owner, Prompt prompt, StatusBar statusBar, AccessorManager manager) {
@@ -106,10 +107,10 @@ public class DashboardTab extends JPanel implements ITab {
             labelEmailAddress.setText("Email: " + manager.staffAccessor.getLoggedInAccountEmail());
             accountEditor.setAccountName(manager.staffAccessor.getLoggedInAccountEmail());
             StaffRole accRole = manager.staffAccessor.getAccountRole(null);
-            labelRole.setText("Role: " +accRole.toString());
+            labelRole.setText("Role: " + accRole.toString());
             PersonalInformation pi = manager.staffAccessor.getPersonalInformation(null);
             long sID = manager.staffAccessor.getAccountID(null);
-            labelName.setText("Name ["+ sID + "]: " + pi.getFirstName() + " " + pi.getLastName());
+            labelName.setText("Name [" + sID + "]: " + pi.getFirstName() + " " + pi.getLastName());
             labelCommission.setText("Commission: " + ((accRole == StaffRole.Advisor) ? manager.staffAccessor.getCommission(null).toString() + "%" : "N/A"));
             //Gather notifications
             extendedNotifications.clear();
@@ -117,14 +118,15 @@ public class DashboardTab extends JPanel implements ITab {
             long[] lateSales = (accRole == StaffRole.Advisor) ? manager.salesAccessor.getSalesByStaff(null, PaymentType.Any, manager.staffAccessor.getCurrency(null), sID) :
                     manager.salesAccessor.getSales(null, PaymentType.Any, manager.staffAccessor.getCurrency(null));
             //Output notifications to list
-            for (long c : lateSales) if (manager.salesAccessor.late(c, Time.now())) {
-                Sale sale = manager.salesAccessor.getSale(c);
-                listModel.addElement("Overdue Sale: " + c + " ; " + manager.customerAccessor.getAccountAlias(sale.getCustomerID()));
-                PersonalInformation info = manager.customerAccessor.getPersonalInformation(sale.getCustomerID());
-                extendedNotifications.add("The Sale: " + c +"\nBy Customer: " + info.getFirstName() + " " + info.getLastName()+"\nIs Late.\n\n"
-                + "Payments Were Due: " + sale.getDueDate().toString()+"\nThe customer owes:\n" + manager.rateAccessor.getCurrencySymbol(sale.getCurrency())
-                + getOwed(sale).toString());
-            }
+            for (long c : lateSales)
+                if (manager.salesAccessor.late(c, Time.now())) {
+                    Sale sale = manager.salesAccessor.getSale(c);
+                    listModel.addElement("Overdue Sale: " + c + " ; " + manager.customerAccessor.getAccountAlias(sale.getCustomerID()));
+                    PersonalInformation info = manager.customerAccessor.getPersonalInformation(sale.getCustomerID());
+                    extendedNotifications.add("The Sale: " + c + "\nBy Customer: " + info.getFirstName() + " " + info.getLastName() + "\nIs Late.\n\n"
+                            + "Payments Were Due: " + sale.getDueDate().toString() + "\nThe customer owes:\n" + manager.rateAccessor.getCurrencySymbol(sale.getCurrency())
+                            + getOwed(sale).toString());
+                }
             //If there are notifications, select the first one
             if (listModel.size() > 0) listNotifications.setSelectedIndex(0);
             updateNotificationButtons();
@@ -167,4 +169,5 @@ public class DashboardTab extends JPanel implements ITab {
         buttonViewNotification.setEnabled(listNotifications.getSelectedIndex() > -1);
         buttonRemoveNotification.setEnabled(listNotifications.getSelectedIndex() > -1);
     }
+
 }

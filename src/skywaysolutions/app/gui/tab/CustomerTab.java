@@ -1,7 +1,9 @@
 package skywaysolutions.app.gui.tab;
 
+import skywaysolutions.app.customers.CustomerType;
+import skywaysolutions.app.gui.AccountEditor;
+import skywaysolutions.app.gui.CustomerEditor;
 import skywaysolutions.app.gui.Prompt;
-import skywaysolutions.app.gui.RateEditor;
 import skywaysolutions.app.gui.control.NonEditableDefaultTableModel;
 import skywaysolutions.app.gui.control.StatusBar;
 import skywaysolutions.app.gui.hoster.HostRunner;
@@ -10,6 +12,7 @@ import skywaysolutions.app.staff.StaffRole;
 import skywaysolutions.app.utils.AccessorManager;
 import skywaysolutions.app.utils.CheckedException;
 import skywaysolutions.app.utils.Decimal;
+import skywaysolutions.app.utils.PersonalInformation;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -17,61 +20,52 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This class provides the rate management tab.
- *
- * @author Alfred Manville
- */
-public class RatesTab extends JPanel implements ITab, IHostInvokable {
-    private JPanel Root;
-    private JButton buttonCreate;
-    private JButton buttonUpdate;
+public class CustomerTab extends JPanel implements ITab, IHostInvokable {
+    private JTable tableListed;
+    private JButton buttonAdd;
+    private JButton buttonEdit;
     private JButton buttonDelete;
     private JButton buttonRefresh;
-    private JTable tableListed;
+    private JPanel Root;
     private final DefaultTableModel tableModel;
-    private final List<String> tableBacker = new ArrayList<>();
-    private Prompt prompt;
-    private RateEditor rateEditor;
+    private final List<Long> tableBacker = new ArrayList<>();
+    private CustomerEditor customerEditor;
     private StatusBar statusBar;
     private AccessorManager manager;
     private final Object slock = new Object();
     private boolean setupNotDone = true;
     private final HostRunner runner;
+    private Prompt prompt;
 
-    /**
-     * Constructs a new instance of RatesTab.
-     */
-    public RatesTab() {
+    public CustomerTab() {
         super(true);
         //Create host runner
         runner = new HostRunner(this, statusBar);
         runner.start();
         //Populate table
-        tableModel = new NonEditableDefaultTableModel(new Object[]{"Currency Code", "Symbol", "Conversion Rate"}, 0);
+        tableModel = new NonEditableDefaultTableModel(new Object[]{"Alias", "Email", "Name", "Type", "Currency", "Discount ID"}, 0);
         tableListed.getTableHeader().setReorderingAllowed(false);
         tableListed.getTableHeader().setResizingAllowed(true);
         tableListed.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         tableListed.setModel(tableModel);
-        //Define control events
-        buttonCreate.addActionListener(e -> {
+        buttonAdd.addActionListener(e -> {
             if (setupNotDone) return;
             if (!statusBar.isInHelpMode()) {
                 try {
-                    rateEditor.setCurrency(null);
+                    customerEditor.setCustomerID(null);
+                    customerEditor.showDialog();
+                    refresh();
                 } catch (CheckedException ex) {
                     statusBar.setStatus(ex, 2500);
                 }
-                rateEditor.showDialog();
-                refresh();
             }
         });
-        buttonUpdate.addActionListener(e -> {
+        buttonEdit.addActionListener(e -> {
             if (setupNotDone) return;
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRow() > -1) {
                 try {
-                    rateEditor.setCurrency(tableBacker.get(tableListed.getSelectedRow()));
-                    rateEditor.showDialog();
+                    customerEditor.setCustomerID(tableBacker.get(tableListed.getSelectedRow()));
+                    customerEditor.showDialog();
                     refresh(tableListed.getSelectedRow());
                 } catch (CheckedException ex) {
                     statusBar.setStatus(ex, 2500);
@@ -82,11 +76,11 @@ public class RatesTab extends JPanel implements ITab, IHostInvokable {
             if (setupNotDone) return;
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
                 prompt.setTitle("Are You Sure?");
-                prompt.setContents("Are you sure you want to delete the rate(s)?\nThis operation may fail.");
+                prompt.setContents("Are you sure you want to delete the account(s)?\nThis operation may fail.");
                 prompt.setButtons(new String[]{"No", "Yes"}, 0);
                 prompt.showDialog();
                 if (prompt.getLastButton() != null && prompt.getLastButton().equals("Yes"))
-                    invDeleteCurrency();
+                    invDeleteAccount();
             }
         });
         buttonRefresh.addActionListener(e -> {
@@ -95,7 +89,7 @@ public class RatesTab extends JPanel implements ITab, IHostInvokable {
         });
         tableListed.getSelectionModel().addListSelectionListener(e -> {
             boolean enb = tableListed.getSelectedRows().length > 0;
-            buttonUpdate.setEnabled(enb);
+            buttonEdit.setEnabled(enb);
             buttonDelete.setEnabled(enb);
         });
         //Setup contents (Tab requires explicit adding)
@@ -117,12 +111,11 @@ public class RatesTab extends JPanel implements ITab, IHostInvokable {
     @Override
     public void invoke(String id, Object[] args) throws CheckedException {
         switch (id) {
-            case "deleteRate" -> {
+            case "deleteAccount" -> {
                 int[] rows = (int[]) args[0];
-                String[] curs = (String[]) args[1];
+                long[] accs = (long[]) args[1];
                 for (int i = rows.length - 1; i >= 0; i--) {
-                    if (curs[i].equals("USD")) continue;
-                    manager.rateAccessor.removeConversionRate(curs[i]);
+                    manager.customerAccessor.deleteAccount(accs[i]);
                     int finalI = i;
                     SwingUtilities.invokeLater(() -> {
                         synchronized (slock) {
@@ -140,14 +133,36 @@ public class RatesTab extends JPanel implements ITab, IHostInvokable {
                     }
                 });
             }
-            case "refreshCurrencies" -> {
-                manager.rateAccessor.refreshCache("ExchangeRate");
-                String[] currencies = manager.rateAccessor.getConvertableCurrencies();
-                for (String c : currencies) addRow(c);
+            case "refreshAccounts" -> {
+                long[] accounts = manager.customerAccessor.listAccounts(CustomerType.Any);
+                for (long c : accounts) addRow(c);
                 int selectionIndex = (int) args[0];
                 if (selectionIndex > -1)
                     SwingUtilities.invokeLater(() -> tableListed.addRowSelectionInterval(selectionIndex, selectionIndex));
             }
+        }
+    }
+
+    private void addRow(long id) {
+        try {
+            String alias = manager.customerAccessor.getAccountAlias(id);
+            PersonalInformation cpi = manager.customerAccessor.getPersonalInformation(id);
+            String email = cpi.getEmailAddress();
+            String name = cpi.getFirstName() + " " + cpi.getLastName();
+            String type = manager.customerAccessor.getCustomerType(id).toString();
+            String currency = manager.customerAccessor.getCurrency(id);
+            Long discID = manager.customerAccessor.getAccountPlan(id);
+            SwingUtilities.invokeLater(() -> {
+                synchronized (slock) {
+                    tableModel.addRow(new Object[]{alias, email, name,
+                            type, currency, (discID == null) ? "N/A" : discID.toString()});
+                    tableBacker.add(id);
+                }
+            });
+        } catch (CheckedException e) {
+            SwingUtilities.invokeLater(() -> {
+                statusBar.setStatus(e, 2500);
+            });
         }
     }
 
@@ -161,10 +176,10 @@ public class RatesTab extends JPanel implements ITab, IHostInvokable {
      */
     @Override
     public void setup(Window owner, Prompt prompt, StatusBar statusBar, AccessorManager manager) {
-        this.prompt = prompt;
-        rateEditor = new RateEditor(owner, true, manager);
+        customerEditor = new CustomerEditor(owner, true, manager);
         this.statusBar = statusBar;
         this.manager = manager;
+        this.prompt = prompt;
         setupNotDone = false;
     }
 
@@ -177,6 +192,23 @@ public class RatesTab extends JPanel implements ITab, IHostInvokable {
         refresh(-1);
     }
 
+    private void refresh(int selectionIndex) {
+        if (setupNotDone) return;
+        runner.addEvent("refreshClear", null);
+        runner.addEvent("refreshAccounts", new Object[]{selectionIndex});
+        boolean enb = selectionIndex > -1;
+        buttonEdit.setEnabled(enb);
+        buttonDelete.setEnabled(enb);
+    }
+
+    private void invDeleteAccount() {
+        int[] rows = tableListed.getSelectedRows();
+        long[] accs = new long[rows.length];
+        for (int i = 0; i < rows.length; i++)
+            accs[i] = tableBacker.get(rows[i]);
+        runner.addEvent("deleteAccount", new Object[]{rows, accs});
+    }
+
     /**
      * If the tab can be accessed by the current, logged in, account.
      *
@@ -185,7 +217,7 @@ public class RatesTab extends JPanel implements ITab, IHostInvokable {
      */
     @Override
     public boolean accessAllowed() throws CheckedException {
-        return (manager.staffAccessor.getAccountRole(null) == StaffRole.Administrator);
+        return true;
     }
 
     /**
@@ -195,41 +227,7 @@ public class RatesTab extends JPanel implements ITab, IHostInvokable {
      */
     @Override
     public String getCaption() {
-        return "Rates Manager";
-    }
-
-    private void addRow(String currency) {
-        try {
-            String symbol = manager.rateAccessor.getCurrencySymbol(currency);
-            Decimal rate = manager.rateAccessor.getConversionRate(currency);
-            SwingUtilities.invokeLater(() -> {
-                synchronized (slock) {
-                    tableModel.addRow(new Object[]{currency, symbol, rate.toString()});
-                    tableBacker.add(currency);
-                }
-            });
-        } catch (CheckedException e) {
-            SwingUtilities.invokeLater(() -> {
-                statusBar.setStatus(e, 2500);
-            });
-        }
-    }
-
-    private void refresh(int selectionIndex) {
-        if (setupNotDone) return;
-        runner.addEvent("refreshClear", null);
-        runner.addEvent("refreshCurrencies", new Object[]{selectionIndex});
-        boolean enb = selectionIndex > -1;
-        buttonUpdate.setEnabled(enb);
-        buttonDelete.setEnabled(enb);
-    }
-
-    private void invDeleteCurrency() {
-        int[] rows = tableListed.getSelectedRows();
-        String[] curs = new String[rows.length];
-        for (int i = 0; i < rows.length; i++)
-            curs[i] = tableBacker.get(rows[i]);
-        runner.addEvent("deleteRate", new Object[]{rows, curs});
+        return "Customer Manager";
     }
 
 }
