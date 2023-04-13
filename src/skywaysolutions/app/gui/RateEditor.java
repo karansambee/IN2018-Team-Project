@@ -41,7 +41,7 @@ public class RateEditor extends JDialogx {
         this.manager = manager;
         //Setup form contents
         setContentPane(Root);
-        getRootPane().setDefaultButton(buttonOk);
+        //getRootPane().setDefaultButton(buttonOk);
         //Setup form closing events
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {

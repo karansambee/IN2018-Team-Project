@@ -81,7 +81,7 @@ public class StockTab extends JPanel implements ITab, IHostInvokable {
                 }
             }
         });
-        buttonBlacklist.addActionListener(e -> {
+        buttonReturn.addActionListener(e -> {
             if (setupNotDone) return;
             if (!statusBar.isInHelpMode() && tableListed.getSelectedRows().length > 0) {
                 prompt.setTitle("Are You Sure?");

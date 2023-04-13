@@ -300,7 +300,7 @@ public class Customer extends DatabaseEntityBase {
         this.info = info;
     }
 
-    public long getPlanID() {
+    public Long getPlanID() {
         return planID;
     }
 

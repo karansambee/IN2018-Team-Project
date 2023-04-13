@@ -85,7 +85,7 @@ public class BlankEditor extends JDialogx {
         textFieldRDate.setEditable(false);
         //Setup form contents
         setContentPane(Root);
-        getRootPane().setDefaultButton(buttonOk);
+        //getRootPane().setDefaultButton(buttonOk);
         //Setup form closing events
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -98,6 +98,9 @@ public class BlankEditor extends JDialogx {
         try {
             textFieldBlankSelectorA.setup("[0-9]{6,8}", statusBar, "Invalid blank extension number!", false, true);
             textFieldBlankSelectorB.setup("[0-9]{6,8}", statusBar, "Invalid blank extension number!", false, true);
+            dateFieldDate.setup(statusBar);
+            dateFieldCreated.setup(statusBar);
+            dateFieldReturn.setup(statusBar);
         } catch (CheckedException e) {
             statusBar.setStatus(e, 2500);
         }

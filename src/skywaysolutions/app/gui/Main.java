@@ -30,6 +30,7 @@ public class Main extends JFrame {
     private final ArrayList<ITab> tabs = new ArrayList<>();
     private final DashboardTab dashboardTab = new DashboardTab();
     private final StockTab stockTab = new StockTab();
+    private final CustomerTab customerTab = new CustomerTab();
     private final AccountsTab accountsTab = new AccountsTab();
     private final RatesTab ratesTab = new RatesTab();
     private final StockTypesTab stockTypesTab = new StockTypesTab();
@@ -82,6 +83,7 @@ public class Main extends JFrame {
         //Create and set-up tabs
         tabs.add(dashboardTab);
         tabs.add(stockTab);
+        tabs.add(customerTab);
         tabs.add(accountsTab);
         tabs.add(ratesTab);
         tabs.add(stockTypesTab);

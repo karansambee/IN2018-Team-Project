@@ -66,7 +66,7 @@ public class AccountEditor extends JDialogx {
         textFieldRStaffID.setEditable(false);
         //Setup form contents
         setContentPane(Root);
-        getRootPane().setDefaultButton(buttonOk);
+        //getRootPane().setDefaultButton(buttonOk);
         //Setup form closing events
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
