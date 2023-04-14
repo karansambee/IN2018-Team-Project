@@ -35,16 +35,16 @@ public class StaffTableAccessor extends DatabaseTableBase<Account> {
     }
 
     /**
-     * This loads one instance of {@link T} from the current result set.
+     * This loads one instance of {@link Account} from the current result set.
      * DO NOT call {@link ResultSet#next()}.
      * <p>
-     * This means that the class extending {@link DatabaseEntityBase} should have a
+     * This means that the class extending {@link skywaysolutions.app.database.DatabaseEntityBase} should have a
      * constructor that takes a {@link IDB_Connector} and {@link ResultSet}
      * to allow for a direct load to occur.
      * </p>
      *
      * @param rs The result set to use for loading.
-     * @return An instance of {@link T}.
+     * @return An instance of {@link Account}.
      */
     @Override
     protected Account loadOneFrom(ResultSet rs, boolean locked) throws CheckedException {
