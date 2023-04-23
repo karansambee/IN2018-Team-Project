@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="skywaysolutions.app.gui.Seller">
+  <grid id="27dc6" layout-manager="GridBagLayout">
+    <constraints>
+      <xy x="20" y="20" width="500" height="655"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <component id="fa1a7" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Blank:"/>
+        </properties>
+      </component>
+      <component id="7fed8" class="javax.swing.JComboBox" binding="comboBoxBlank">
+        <constraints>
+          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+        </properties>
+      </component>
+      <component id="a3315" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Customer:"/>
+        </properties>
+      </component>
+      <component id="7cbe2" class="javax.swing.JComboBox" binding="comboBoxCustomer">
+        <constraints>
+          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+          <popupVisible value="false"/>
+        </properties>
+      </component>
+      <component id="fc08f" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Sale Currency:"/>
+        </properties>
+      </component>
+      <component id="63165" class="javax.swing.JComboBox" binding="comboBoxCurrency">
+        <constraints>
+          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+          <preferredSize width="144" height="30"/>
+        </properties>
+      </component>
+      <component id="ea06e" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Commission Rate:"/>
+        </properties>
+      </component>
+      <component id="728b3" class="skywaysolutions.app.gui.control.VTextField" binding="textFieldCommissionRate">
+        <constraints>
+          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+          <preferredSize width="144" height="30"/>
+        </properties>
+      </component>
+      <component id="6d00c" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Sale Cost: "/>
+        </properties>
+      </component>
+      <component id="a994d" class="skywaysolutions.app.gui.control.VTextField" binding="textFieldSaleCost">
+        <constraints>
+          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+          <preferredSize width="144" height="30"/>
+        </properties>
+      </component>
+      <component id="447ac" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Sale Cost (USD):"/>
+        </properties>
+      </component>
+      <component id="7cfbd" class="javax.swing.JTextField" binding="textFieldCostUSD">
+        <constraints>
+          <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+          <preferredSize width="144" height="30"/>
+        </properties>
+      </component>
+      <component id="f366e" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Date Sold:"/>
+        </properties>
+      </component>
+      <nested-form id="ee2b9" form-file="skywaysolutions/app/gui/control/DateField.form" binding="dateFieldSold">
+        <constraints>
+          <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+      </nested-form>
+      <component id="a622d" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Date Due:"/>
+        </properties>
+      </component>
+      <nested-form id="2a71e" form-file="skywaysolutions/app/gui/control/DateField.form" binding="dateFieldDue">
+        <constraints>
+          <grid row="10" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+      </nested-form>
+      <grid id="cb288" layout-manager="GridBagLayout">
+        <constraints>
+          <grid row="11" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="1.0" weighty="0.6"/>
+        </constraints>
+        <properties/>
+        <border type="line" title="Transactions">
+          <color color="-4473925"/>
+        </border>
+        <children>
+          <component id="d441f" class="javax.swing.JButton" binding="buttonTransact">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.33" weighty="0.2"/>
+            </constraints>
+            <properties>
+              <text value="New"/>
+            </properties>
+          </component>
+          <component id="26770" class="javax.swing.JButton" binding="buttonModify">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.33" weighty="0.2"/>
+            </constraints>
+            <properties>
+              <text value="Modify"/>
+            </properties>
+          </component>
+          <component id="e4c08" class="javax.swing.JList" binding="listTransactions">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                <preferred-size width="150" height="50"/>
+              </grid>
+              <gridbag weightx="1.0" weighty="0.8"/>
+            </constraints>
+            <properties>
+              <selectionMode value="0"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <component id="e2b04" class="javax.swing.JButton" binding="buttonCancel">
+        <constraints>
+          <grid row="12" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.0"/>
+        </constraints>
+        <properties>
+          <alignmentX value="0.5"/>
+          <maximumSize width="65" height="30"/>
+          <minimumSize width="65" height="30"/>
+          <preferredSize width="65" height="30"/>
+          <text value="Cancel"/>
+        </properties>
+      </component>
+      <component id="896e0" class="javax.swing.JButton" binding="buttonOk">
+        <constraints>
+          <grid row="12" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.0"/>
+        </constraints>
+        <properties>
+          <alignmentX value="0.5"/>
+          <maximumSize width="65" height="30"/>
+          <minimumSize width="65" height="30"/>
+          <preferredSize width="65" height="30"/>
+          <text value="Ok"/>
+        </properties>
+      </component>
+      <nested-form id="9707a" form-file="skywaysolutions/app/gui/control/StatusBar.form" binding="statusBar">
+        <constraints>
+          <grid row="13" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="1.0" weighty="0.0"/>
+        </constraints>
+      </nested-form>
+      <component id="a2e60" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Tax:"/>
+        </properties>
+      </component>
+      <component id="d586f" class="skywaysolutions.app.gui.control.VTextField" binding="textFieldTax">
+        <constraints>
+          <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+          <preferredSize width="144" height="30"/>
+        </properties>
+      </component>
+      <component id="1d3a4" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Extra Tax:"/>
+        </properties>
+      </component>
+      <component id="ede75" class="skywaysolutions.app.gui.control.VTextField" binding="textFieldTaxExtra">
+        <constraints>
+          <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <editable value="true"/>
+          <preferredSize width="144" height="30"/>
+        </properties>
+      </component>
+      <component id="79dfb" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="2" bottom="0" right="0" weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <preferredSize width="144" height="16"/>
+          <text value="Sale Type:"/>
+        </properties>
+      </component>
+      <component id="93a0" class="javax.swing.JComboBox" binding="comboBoxSaleType">
+        <constraints>
+          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.5" weighty="0.05"/>
+        </constraints>
+        <properties>
+          <editable value="false"/>
+          <model>
+            <item value="Domestic"/>
+            <item value="Interline"/>
+          </model>
+          <preferredSize width="144" height="30"/>
+        </properties>
+      </component>
+    </children>
+  </grid>
+</form>
